@@ -970,7 +970,7 @@ textarea {
 .progress-container {
   margin-top: var(--space-md);
   background: var(--bg-glass);
-  border-radius: var(--radius-full);
+  border-radius: 20px;
   height: 30px;
   position: relative;
   overflow: hidden;
@@ -980,7 +980,7 @@ textarea {
 .progress-bar {
   height: 100%;
   background: var(--gradient-primary);
-  border-radius: var(--radius-full);
+  border-radius: 20px;
   width: 0%;
   transition: width 0.3s ease;
   position: relative;
