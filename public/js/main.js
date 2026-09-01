@@ -443,106 +443,68 @@ function mostrarNotas() {
   });
 }
 
-// Funciones para importar exámenes
-
-function showExamImport(type) {
-    const jsonSection = document.getElementById('importJsonSection');
-    const docxSection = document.getElementById('importDocxSection');
-    
-    if (type === 'json') {
-        jsonSection.style.display = 'block';
-        docxSection.style.display = 'none';
-    } else {
-        jsonSection.style.display = 'none';
-        docxSection.style.display = 'block';
-    }
-}
-
+// Función unificada para cargar examen JSON
 async function importJsonExam() {
     const jsonInput = document.getElementById('jsonExamInput');
+    const titleInput = document.getElementById('examTitle');
     const grade = document.getElementById('activityTargetGrade').value;
+    const uploadBtn = document.getElementById('importExamBtn');
+    const btnText = document.getElementById('importBtnText');
+    const spinner = document.getElementById('importSpinner');
     
-    try {
-        const examData = JSON.parse(jsonInput.value);
-        
-        if (!examData.title || !examData.questions) {
-            showAlert('❌ El JSON debe tener "title" y "questions"');
-            return;
-        }
-        
-        const res = await fetch('/api/exams/json', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: examData.title,
-                grade: grade,
-                questions: examData.questions
-            })
-        });
-        
-        const result = await res.json();
-        if (result.success) {
-            showAlert(`✅ Examen "${examData.title}" importado con ${result.questions_count} preguntas`);
-            jsonInput.value = '';
-        } else {
-            showAlert('❌ Error al importar el examen');
-        }
-    } catch (error) {
-        console.error('Error importando JSON:', error);
-        showAlert('❌ Error: Asegurate de que el JSON sea válido');
-    }
-}
-
-async function importDocxExam() {
-    const fileInput = document.getElementById('docxFile');
-    const titleInput = document.getElementById('docxTitle');
-    const uploadBtn = document.getElementById('docxUploadBtn');
-    const btnText = document.getElementById('docxBtnText');
-    const spinner = document.getElementById('docxSpinner');
-    
-    if (!fileInput.files.length) {
-        showAlert('❌ Seleccioná un archivo Word');
+    if (!jsonInput.value.trim()) {
+        showAlert('❌ Pegá el JSON del examen');
         return;
     }
     
     // Mostrar loader
     uploadBtn.disabled = true;
-    btnText.textContent = 'IMPORTANDO...';
+    btnText.textContent = 'CARGANDO...';
     spinner.style.display = 'inline-block';
     
-    const formData = new FormData();
-    formData.append('exam', fileInput.files[0]);
-    formData.append('title', titleInput.value || 'Examen importado');
-    formData.append('grade', document.getElementById('activityTargetGrade').value);
-    
     try {
-        const res = await fetch('/api/exams/docx', {
+        const examData = JSON.parse(jsonInput.value);
+        
+        // Aceptar array directo o objeto con questions
+        const questions = Array.isArray(examData) ? examData : examData.questions;
+        
+        if (!questions || !Array.isArray(questions)) {
+            throw new Error('El JSON debe ser un array de preguntas o tener una propiedad "questions"');
+        }
+        
+        const title = titleInput.value.trim() || 'Examen sin título';
+        
+        const res = await fetch('/api/exams', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                grade: grade,
+                questions: questions
+            })
         });
         
         const result = await res.json();
         
         // Resetear UI
         uploadBtn.disabled = false;
-        btnText.textContent = 'IMPORTAR WORD';
+        btnText.textContent = 'CARGAR EXAMEN';
         spinner.style.display = 'none';
         
         if (result.success) {
-            showAlert(`✅ Examen importado con ${result.questions_count} preguntas`);
-            fileInput.value = '';
-            document.getElementById('docxFileText').textContent = 'Seleccionar archivo Word';
+            showAlert(`✅ "${title}" cargado con ${result.questions_count} preguntas`);
+            jsonInput.value = '';
             titleInput.value = '';
         } else {
-            showAlert(`❌ ${result.error || 'Error al importar'}`);
+            showAlert(`❌ ${result.error || 'Error al cargar'}`);
         }
     } catch (error) {
         uploadBtn.disabled = false;
-        btnText.textContent = 'IMPORTAR WORD';
+        btnText.textContent = 'CARGAR EXAMEN';
         spinner.style.display = 'none';
         
-        console.error('Error importando DOCX:', error);
-        showAlert('❌ Error al importar el archivo');
+        console.error('Error:', error);
+        showAlert('❌ Error: ' + error.message);
     }
 }
 
@@ -550,22 +512,5 @@ async function importDocxExam() {
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('teacherPanel')) {
         loadStudents();
-    }
-    
-    // Manejar cambio de archivo DOCX
-    const docxInput = document.getElementById('docxFile');
-    if (docxInput) {
-        docxInput.addEventListener('change', function() {
-            const label = this.closest('.file-upload-wrapper').querySelector('.file-upload-label');
-            const text = document.getElementById('docxFileText');
-            
-            if (this.files && this.files.length > 0) {
-                text.textContent = this.files[0].name;
-                label.classList.add('has-file');
-            } else {
-                text.textContent = 'Seleccionar archivo Word';
-                label.classList.remove('has-file');
-            }
-        });
     }
 });

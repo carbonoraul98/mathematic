@@ -201,41 +201,19 @@
         </button>
 
         <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl);">
-          <h3>📄 Importar Examen</h3>
+          <h3>📄 Cargar Examen (JSON)</h3>
           
-          <div style="display: flex; gap: var(--space-md); margin-bottom: var(--space-md);">
-            <button class="btn btn--secondary" onclick="showExamImport('json')" id="btnImportJson">
-              📋 JSON
-            </button>
-            <button class="btn btn--secondary" onclick="showExamImport('docx')" id="btnImportDocx">
-              📝 Word
-            </button>
-          </div>
-
-          <!-- Import JSON -->
-          <div id="importJsonSection" style="display: none;">
-            <textarea id="jsonExamInput" placeholder="Pegá aquí el JSON del examen..." 
-              style="width: 100%; min-height: 150px; background: var(--bg-input); color: var(--text-primary); 
-              border: 1px solid var(--color-primary); border-radius: var(--radius-md); padding: var(--space-md); 
-              font-family: monospace; margin-bottom: var(--space-md);"></textarea>
-            <button class="btn" onclick="importJsonExam()">IMPORTAR JSON</button>
-          </div>
-
-          <!-- Import DOCX -->
-          <div id="importDocxSection" style="display: none;">
-            <div class="file-upload-wrapper">
-              <input type="file" id="docxFile" accept=".docx" class="file-upload-input" />
-              <label for="docxFile" class="file-upload-label">
-                <span class="file-upload-icon">📁</span>
-                <span class="file-upload-text" id="docxFileText">Seleccionar archivo Word</span>
-              </label>
-            </div>
-            <input type="text" id="docxTitle" placeholder="Título del examen" style="margin-bottom: var(--space-md);" />
-            <button class="btn" onclick="importDocxExam()" id="docxUploadBtn">
-              <span id="docxBtnText">IMPORTAR WORD</span>
-              <div class="spinner" id="docxSpinner" style="display: none;"></div>
-            </button>
-          </div>
+          <input type="text" id="examTitle" placeholder="Título del examen" style="margin-bottom: var(--space-md);" />
+          
+          <textarea id="jsonExamInput" placeholder="Pegá aquí el JSON con las preguntas..." 
+            style="width: 100%; min-height: 200px; background: var(--bg-input); color: var(--text-primary); 
+            border: 1px solid var(--color-primary); border-radius: var(--radius-md); padding: var(--space-md); 
+            font-family: monospace; margin-bottom: var(--space-md); resize: vertical;"></textarea>
+            
+          <button class="btn" onclick="importJsonExam()" id="importExamBtn">
+            <span id="importBtnText">CARGAR EXAMEN</span>
+            <div class="spinner" id="importSpinner" style="display: none;"></div>
+          </button>
         </div>
       </div>
 
