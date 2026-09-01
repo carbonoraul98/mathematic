@@ -448,6 +448,7 @@ h1,
   backdrop-filter: blur(15px);
   box-shadow: var(--shadow-panel);
   text-align: center;
+  margin: auto;
 }
 
 .panel--sm {
@@ -470,6 +471,7 @@ h1,
 #studentPanel .panel {
   max-height: 85vh;
   overflow: auto;
+  margin: auto;
 }
 
 /* -----------------------------------------------------------
