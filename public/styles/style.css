@@ -105,6 +105,8 @@
 html,
 body {
   height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -155,6 +157,8 @@ body {
   align-items: center;
   animation: fade 0.7s var(--transition-base);
   z-index: 10;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .screen.active {
@@ -170,6 +174,8 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 200;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: radial-gradient(
     circle at center,
     rgba(36, 0, 70, 0.95),
