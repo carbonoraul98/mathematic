@@ -1,3 +1,17 @@
+-- Tabla de profesores
+CREATE TABLE IF NOT EXISTS teachers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name TEXT NOT NULL,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    is_admin BOOLEAN DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insertar admin por defecto
+INSERT OR IGNORE INTO teachers (full_name, username, password, is_admin) VALUES
+('Jorge Pajon', 'Jorge Pajon', '1234', 1);
+
 -- Tabla de grupos (hojas del Excel)
 CREATE TABLE IF NOT EXISTS groups (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -176,15 +176,29 @@ function showScreen(id) {
   document.getElementById(id).classList.add("active");
 }
 
-function teacherLogin() {
+async function teacherLogin() {
   let user = document.getElementById("teacherUser").value;
   let pass = document.getElementById("teacherPass").value;
-  if (user === "Jorge Pajon" && pass === "1234") {
-    showScreen("teacherPanel");
-    loadStudents();
-  } else {
+
+  try {
+    const res = await fetch('/api/teachers/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass })
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      showScreen("teacherPanel");
+      loadStudents();
+    } else {
+      document.getElementById("teacherResult").innerHTML =
+        "<br>❌ Usuario o contraseña incorrecta";
+    }
+  } catch (error) {
+    console.error('Error en login de profesor:', error);
     document.getElementById("teacherResult").innerHTML =
-      "<br>❌ Usuario o contraseña incorrecta";
+      "<br>❌ Error de conexión";
   }
 }
 

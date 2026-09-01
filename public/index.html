@@ -16,86 +16,206 @@
 
   <!-- PORTADA -->
 
-  <div class="cover">
-    <img src="https://mendozadocente.weebly.com/uploads/5/8/6/1/58617155/4144174_orig.png" alt="Logo" class="logo" />
+  <div class="screen active" id="home">
+    <img src="https://mendozadocente.weebly.com/uploads/5/8/6/1/58617155/4144174_orig.png" class="logo" />
 
-    <h1 class="main-title">Mathematic's Adventure</h1>
+    <h1 class="main-title">MATHEMATIC'S ADVENTURE</h1>
 
-    <button class="start-btn" onclick="startIntro()">INICIAR</button>
-    <br>
-    <a class="start-btn" type="button" href="index1.html">Ir a INDEX 1</a>
+    <div class="subtitle">Plataforma Inteligente de Matemáticas</div>
+
+    <button class="btn" onclick="showScreen('portal')">INICIAR</button>
   </div>
 
-  <!-- INTRO -->
+  <!-- PORTALES -->
 
-  <div class="intro" id="intro">
-    <div class="portal"></div>
+  <div class="screen" id="portal">
+    <h1 class="main-title">SELECCIONA PORTAL</h1>
 
-    <div class="ring r1"></div>
-    <div class="ring r2"></div>
-    <div class="ring r3"></div>
+    <div class="options">
+      <button class="btn" onclick="showScreen('teacherLogin')">
+        PORTAL PROFESOR
+      </button>
 
-    <div class="crack c1"></div>
-    <div class="crack c2"></div>
-    <div class="crack c3"></div>
-    <div class="crack c4"></div>
+      <button class="btn" onclick="showScreen('studentLogin')">
+        PORTAL ESTUDIANTE
+      </button>
+    </div>
   </div>
 
-  <!-- MENU -->
+  <!-- LOGIN PROFESOR -->
 
-  <div class="menu" id="menu">
+  <div class="screen" id="teacherLogin">
     <div class="panel">
-      <h1>MATHEMATIC'S ADVENTURE</h1>
+      <h1>LOGIN PROFESOR</h1>
 
-      <div class="menu-screen">
-        <div class="section-title">Selecciona el grado</div>
+      <input type="text" id="teacherUser" placeholder="Usuario" />
 
-        <div class="options">
-          <button class="option-btn grade" onclick="selectGrade(1, this)">
-            1°
-          </button>
+      <input type="password" id="teacherPass" placeholder="Contraseña" />
 
-          <button class="option-btn grade" onclick="selectGrade(2, this)">
-            2°
-          </button>
+      <div id="teacherResult"></div>
 
-          <button class="option-btn grade" onclick="selectGrade(3, this)">
-            3°
-          </button>
-
-          <button class="option-btn grade" onclick="selectGrade(4, this)">
-            4°
-          </button>
-
-          <button class="option-btn grade" onclick="selectGrade(5, this)">
-            5°
-          </button>
-        </div>
-
-        <button class="play-btn" onclick="startGame()">JUGAR</button>
-      </div>
-
-      <div class="game">
-        <div class="info" id="gradeText">Grado 1</div>
-
-        <div class="question" id="question">5 + 5</div>
-
-        <input type="number" id="answer" placeholder="Respuesta" />
-
-        <br />
-
-        <button class="play-btn" onclick="checkAnswer()">RESPONDER</button>
-
-        <div class="result" id="result"></div>
-
-        <div class="info" id="score">Puntos: 0</div>
-
-        <div class="info" id="timer">Tiempo: 60</div>
+      <div class="button-group">
+        <button class="btn" onclick="teacherLogin()">INGRESAR</button>
+        <button class="btn btn--secondary" onclick="showScreen('portal')">VOLVER</button>
       </div>
     </div>
   </div>
 
+  <!-- LOGIN ESTUDIANTE -->
+
+  <div class="screen" id="studentLogin">
+    <div class="panel">
+      <h1>PORTAL ESTUDIANTE</h1>
+
+      <input type="text" id="studentLoginUser" placeholder="Usuario" />
+
+      <input type="password" id="studentLoginPass" placeholder="Contraseña" />
+
+      <div class="button-group">
+        <button class="btn" onclick="studentLogin()">ENTRAR</button>
+        <button class="btn btn--secondary" onclick="showScreen('portal')">VOLVER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL PROFESOR -->
+
+  <div class="screen" id="teacherPanel">
+    <div class="panel">
+      <h1>PANEL DEL PROFESOR</h1>
+
+      <div class="menu-buttons">
+        <button class="menu-btn" onclick="showTeacherSection('studentsSection')">
+          📘 Crear estudiantes
+        </button>
+
+        <button class="menu-btn" onclick="showTeacherSection('activitiesSection')">
+          📝 Crear actividades
+        </button>
+
+        <button class="menu-btn" onclick="showTeacherSection('gradesSection')">
+          📊 Ver notas
+        </button>
+      </div>
+
+      <!-- ESTUDIANTES -->
+
+      <div class="section" id="studentsSection">
+        <h2>Crear estudiantes</h2>
+
+        <select id="studentGrade">
+          <option>1A</option>
+          <option>1B</option>
+          <option>1C</option>
+          <option>1D</option>
+
+          <option>2A</option>
+          <option>2B</option>
+          <option>2C</option>
+          <option>2D</option>
+
+          <option>3A</option>
+          <option>3B</option>
+          <option>3C</option>
+          <option>3D</option>
+
+          <option>4A</option>
+          <option>4B</option>
+          <option>4C</option>
+          <option>4D</option>
+
+          <option>5A</option>
+          <option>5B</option>
+          <option>5C</option>
+          <option>5D</option>
+        </select>
+
+        <input type="text" id="studentName" placeholder="Nombre completo" />
+
+        <input type="text" id="studentUser" placeholder="Usuario" />
+
+        <input type="password" id="studentPassword" placeholder="Contraseña" />
+
+        <button class="btn" onclick="crearEstudiante()">
+          CREAR ESTUDIANTE
+        </button>
+
+        <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl);">
+          <h3>📥 Cargar desde Excel</h3>
+          <input type="file" id="excelFile" accept=".xlsx" style="margin-bottom: var(--space-md);" />
+          <button class="btn" onclick="uploadExcel()">CARGAR EXCEL</button>
+        </div>
+
+        <div id="studentsList"></div>
+      </div>
+
+      <!-- ACTIVIDADES -->
+
+      <div class="section" id="activitiesSection">
+        <h2>Crear actividad</h2>
+
+        <select id="activityTargetGrade">
+          <option value="1">Grado 1</option>
+          <option value="2">Grado 2</option>
+          <option value="3">Grado 3</option>
+          <option value="4">Grado 4</option>
+          <option value="5">Grado 5</option>
+        </select>
+
+        <select id="activityType" style="margin-top: var(--space-md);">
+          <option>Examen</option>
+          <option>Actividad</option>
+          <option>Quiz</option>
+          <option>Refuerzo</option>
+          <option>Recreativo</option>
+        </select>
+
+        <input type="text" id="activityTheme" placeholder="Tema" />
+
+        <button class="btn" onclick="agregarPregunta()">
+          AGREGAR PREGUNTA
+        </button>
+
+        <div id="questionsList"></div>
+
+        <button class="btn" onclick="crearActividad()">
+          GUARDAR ACTIVIDAD
+        </button>
+      </div>
+
+      <!-- NOTAS -->
+
+      <div class="section" id="gradesSection">
+        <h2>Notas</h2>
+
+        <button class="btn" onclick="downloadGrades()" style="margin-bottom: var(--space-xl);">📊 DESCARGAR CALIFICACIONES</button>
+
+        <div id="gradesList"></div>
+      </div>
+
+      <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="showScreen('portal')">
+        CERRAR SESIÓN
+      </button>
+    </div>
+  </div>
+
+  <!-- PANEL ESTUDIANTE -->
+
+  <div class="screen" id="studentPanel">
+    <div class="panel">
+      <h1>PANEL ESTUDIANTE</h1>
+
+      <div id="studentActivities"></div>
+
+      <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="showScreen('portal')">
+        CERRAR SESIÓN
+      </button>
+    </div>
+  </div>
+
   <script src="js/components/custom-alert.js"></script>
+  <script src="js/components/question-modal.js"></script>
+  <script src="js/components/activity-player.js"></script>
   <script src="js/main.js"></script>
 </body>
 
