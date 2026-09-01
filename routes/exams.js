@@ -76,6 +76,20 @@ router.post('/', async (req, res) => {
     }
 });
 
+// Listar todas las actividades/exámenes
+router.get('/', async (req, res) => {
+    try {
+        const stmt = await db.prepare(
+            'SELECT * FROM activities ORDER BY created_at DESC'
+        );
+        const activities = await stmt.all();
+        res.json(activities);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Obtener preguntas de un examen
 router.get('/:activityId/questions', async (req, res) => {
     try {

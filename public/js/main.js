@@ -402,6 +402,8 @@ function showTeacherSection(id) {
   
   if (id === "gradesSection") {
     mostrarNotas();
+  } else if (id === "viewActivitiesSection") {
+    loadActivities();
   }
 }
 
@@ -505,6 +507,37 @@ async function importJsonExam() {
         
         console.error('Error:', error);
         showAlert('❌ Error: ' + error.message);
+    }
+}
+
+async function loadActivities() {
+    const container = document.getElementById('activitiesList');
+    container.innerHTML = '<p>Cargando actividades...</p>';
+    
+    try {
+        const res = await fetch('/api/exams');
+        const activities = await res.json();
+        
+        if (activities.length === 0) {
+            container.innerHTML = '<p>No hay actividades cargadas aún.</p>';
+            return;
+        }
+        
+        let html = '';
+        activities.forEach(act => {
+            html += `
+                <div class="card" style="text-align: left; margin-bottom: var(--space-md);">
+                    <h3>📝 ${act.title}</h3>
+                    <p>📚 ${act.theme || 'Sin grado'}</p>
+                    <p>📅 ${new Date(act.created_at).toLocaleDateString()}</p>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error cargando actividades:', error);
+        container.innerHTML = '<p>❌ Error al cargar actividades</p>';
     }
 }
 

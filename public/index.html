@@ -86,7 +86,7 @@
     <div class="panel">
       <h1>PANEL DEL PROFESOR</h1>
 
-      <div class="section show" id="menuPrincipal">
+        <div class="section show" id="menuPrincipal">
         <div class="menu-buttons">
           <button class="menu-btn" onclick="showTeacherSection('studentsSection')">
             📘 Crear estudiantes
@@ -94,6 +94,10 @@
 
           <button class="menu-btn" onclick="showTeacherSection('activitiesSection')">
             📝 Crear actividades
+          </button>
+
+          <button class="menu-btn" onclick="showTeacherSection('viewActivitiesSection')">
+            📋 Ver actividades
           </button>
 
           <button class="menu-btn" onclick="showTeacherSection('gradesSection')">
@@ -219,6 +223,14 @@
             <div class="spinner" id="importSpinner" style="display: none;"></div>
           </button>
         </div>
+      </div>
+
+      <!-- VER ACTIVIDADES -->
+
+      <div class="section" id="viewActivitiesSection">
+        <button class="back-btn" onclick="showTeacherSection('menuPrincipal')">← Volver al menú</button>
+        <h2>📋 Actividades Cargadas</h2>
+        <div id="activitiesList"></div>
       </div>
 
       <!-- NOTAS -->
