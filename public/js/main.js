@@ -443,9 +443,129 @@ function mostrarNotas() {
   });
 }
 
+// Funciones para importar exámenes
+
+function showExamImport(type) {
+    const jsonSection = document.getElementById('importJsonSection');
+    const docxSection = document.getElementById('importDocxSection');
+    
+    if (type === 'json') {
+        jsonSection.style.display = 'block';
+        docxSection.style.display = 'none';
+    } else {
+        jsonSection.style.display = 'none';
+        docxSection.style.display = 'block';
+    }
+}
+
+async function importJsonExam() {
+    const jsonInput = document.getElementById('jsonExamInput');
+    const grade = document.getElementById('activityTargetGrade').value;
+    
+    try {
+        const examData = JSON.parse(jsonInput.value);
+        
+        if (!examData.title || !examData.questions) {
+            showAlert('❌ El JSON debe tener "title" y "questions"');
+            return;
+        }
+        
+        const res = await fetch('/api/exams/json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: examData.title,
+                grade: grade,
+                questions: examData.questions
+            })
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+            showAlert(`✅ Examen "${examData.title}" importado con ${result.questions_count} preguntas`);
+            jsonInput.value = '';
+        } else {
+            showAlert('❌ Error al importar el examen');
+        }
+    } catch (error) {
+        console.error('Error importando JSON:', error);
+        showAlert('❌ Error: Asegurate de que el JSON sea válido');
+    }
+}
+
+async function importDocxExam() {
+    const fileInput = document.getElementById('docxFile');
+    const titleInput = document.getElementById('docxTitle');
+    const uploadBtn = document.getElementById('docxUploadBtn');
+    const btnText = document.getElementById('docxBtnText');
+    const spinner = document.getElementById('docxSpinner');
+    
+    if (!fileInput.files.length) {
+        showAlert('❌ Seleccioná un archivo Word');
+        return;
+    }
+    
+    // Mostrar loader
+    uploadBtn.disabled = true;
+    btnText.textContent = 'IMPORTANDO...';
+    spinner.style.display = 'inline-block';
+    
+    const formData = new FormData();
+    formData.append('exam', fileInput.files[0]);
+    formData.append('title', titleInput.value || 'Examen importado');
+    formData.append('grade', document.getElementById('activityTargetGrade').value);
+    
+    try {
+        const res = await fetch('/api/exams/docx', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await res.json();
+        
+        // Resetear UI
+        uploadBtn.disabled = false;
+        btnText.textContent = 'IMPORTAR WORD';
+        spinner.style.display = 'none';
+        
+        if (result.success) {
+            showAlert(`✅ Examen importado con ${result.questions_count} preguntas`);
+            fileInput.value = '';
+            document.getElementById('docxFileText').textContent = 'Seleccionar archivo Word';
+            titleInput.value = '';
+        } else {
+            showAlert(`❌ ${result.error || 'Error al importar'}`);
+        }
+    } catch (error) {
+        uploadBtn.disabled = false;
+        btnText.textContent = 'IMPORTAR WORD';
+        spinner.style.display = 'none';
+        
+        console.error('Error importando DOCX:', error);
+        showAlert('❌ Error al importar el archivo');
+    }
+}
+
 // Cargar estudiantes al iniciar si estamos en el panel del profesor
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('teacherPanel')) {
         loadStudents();
+    }
+    
+    // Manejar cambio de archivo DOCX
+    const docxInput = document.getElementById('docxFile');
+    if (docxInput) {
+        docxInput.addEventListener('change', function() {
+            const label = this.closest('.file-upload-wrapper').querySelector('.file-upload-label');
+            const text = document.getElementById('docxFileText');
+            
+            if (this.files && this.files.length > 0) {
+                text.textContent = this.files[0].name;
+                label.classList.add('has-file');
+            } else {
+                text.textContent = 'Seleccionar archivo Word';
+                label.classList.remove('has-file');
+            }
+        });
     }
 });

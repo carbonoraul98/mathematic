@@ -45,6 +45,20 @@ CREATE TABLE IF NOT EXISTS activities (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tabla de preguntas (para exámenes)
+CREATE TABLE IF NOT EXISTS questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    activity_id INTEGER NOT NULL,
+    question_text TEXT NOT NULL,
+    question_type TEXT DEFAULT 'multiple_choice',
+    options TEXT,
+    correct_answer TEXT NOT NULL,
+    points INTEGER DEFAULT 10,
+    order_num INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (activity_id) REFERENCES activities(id)
+);
+
 -- Tabla de calificaciones/intentos
 CREATE TABLE IF NOT EXISTS attempts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -15,7 +15,9 @@
   "type": "commonjs",
   "dependencies": {
     "better-sqlite3": "^13.0.3",
+    "docx-parser": "^0.2.1",
     "express": "^5.2.1",
+    "mammoth": "^1.12.2",
     "multer": "^2.3.0",
     "pg": "^8.23.0",
     "xlsx": "^0.18.5"
