@@ -1,5 +1,5 @@
 node_modules/
 database.sqlite
-uploads/*.xlsx
+uploads/
 .DS_Store
 *.log
