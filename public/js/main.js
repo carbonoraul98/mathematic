@@ -349,34 +349,76 @@ function mostrarPreguntas() {
   });
 }
 
-function crearActividad() {
+async function crearActividad() {
   let gradoBase = document.getElementById("activityTargetGrade").value;
   let tipo = document.getElementById("activityType").value;
   let tema = document.getElementById("activityTheme").value;
-  let actividad = { tipo, tema, gradoBase, preguntas: [...preguntasTemp] };
-  actividades.push(actividad);
-  preguntasTemp = [];
-  mostrarPreguntas();
-  showAlert("✅ Actividad creada para Grado " + gradoBase);
   
-  // Limpiar campo
-  document.getElementById("activityTheme").value = "";
+  if (!tema) {
+    showAlert('❌ Escribí un tema para la actividad');
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: tema,
+        type: tipo,
+        theme: `Grado ${gradoBase}`,
+        grade: gradoBase
+      })
+    });
+    
+    const result = await res.json();
+    if (result.success) {
+      // Limpiar
+      preguntasTemp = [];
+      mostrarPreguntas();
+      document.getElementById("activityTheme").value = "";
+      showAlert(`✅ Actividad "${tema}" guardada en la base de datos`);
+    } else {
+      showAlert('❌ Error al guardar la actividad');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showAlert('❌ Error de conexión');
+  }
 }
 
-function mostrarPendientes() {
+async function mostrarPendientes() {
   let contenedor = document.getElementById("studentActivities");
-  contenedor.innerHTML = "";
+  contenedor.innerHTML = "<p>Cargando actividades...</p>";
   
   if (!estudianteActual) return;
   
   let gradoAlumnoBase = estudianteActual.grado.charAt(0); // Ej: de "1B" extrae "1"
   
-  actividades.forEach((a, index) => {
-    // Solo muestra actividades cuyo gradoBase coincida con el número del estudiante
-    if (a.gradoBase === gradoAlumnoBase || !a.gradoBase) {
-      contenedor.innerHTML += `<div class="card"><h2>📚 ${a.tema}</h2><p>📝 ${a.tipo}</p><p>⏳ Pendiente</p><button class="btn" onclick="realizarActividad(${index})">REALIZAR</button></div>`;
+  try {
+    const res = await fetch('/api/activities');
+    const todasActividades = await res.json();
+    
+    contenedor.innerHTML = "";
+    
+    // Filtrar actividades del grado del estudiante
+    const actividadesFiltradas = todasActividades.filter(a => {
+      const gradoActividad = a.theme ? a.theme.replace('Grado ', '') : '';
+      return gradoActividad === gradoAlumnoBase || !gradoActividad;
+    });
+    
+    if (actividadesFiltradas.length === 0) {
+      contenedor.innerHTML = "<p>No hay actividades pendientes para tu grado.</p>";
+      return;
     }
-  });
+    
+    actividadesFiltradas.forEach((a, index) => {
+      contenedor.innerHTML += `<div class="card"><h2>📚 ${a.title}</h2><p>📝 ${a.type}</p><p>⏳ Pendiente</p><button class="btn" onclick="realizarActividad(${a.id})">REALIZAR</button></div>`;
+    });
+  } catch (error) {
+    console.error('Error cargando actividades:', error);
+    contenedor.innerHTML = "<p>❌ Error al cargar actividades</p>";
+  }
 }
 
 function realizarActividad(index) {
@@ -515,7 +557,7 @@ async function loadActivities() {
     container.innerHTML = '<p>Cargando actividades...</p>';
     
     try {
-        const res = await fetch('/api/exams');
+        const res = await fetch('/api/activities');
         const activities = await res.json();
         
         if (activities.length === 0) {
@@ -525,9 +567,11 @@ async function loadActivities() {
         
         let html = '';
         activities.forEach(act => {
+            const icono = act.type === 'Examen' ? '📝' : '📚';
             html += `
                 <div class="card" style="text-align: left; margin-bottom: var(--space-md);">
-                    <h3>📝 ${act.title}</h3>
+                    <h3>${icono} ${act.title}</h3>
+                    <p>📝 Tipo: ${act.type}</p>
                     <p>📚 ${act.theme || 'Sin grado'}</p>
                     <p>📅 ${new Date(act.created_at).toLocaleDateString()}</p>
                 </div>

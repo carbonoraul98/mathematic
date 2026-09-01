@@ -10,6 +10,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Rutas API
 app.use('/api/students', require('./routes/students'));
 app.use('/api/teachers', require('./routes/teachers'));
+app.use('/api/activities', require('./routes/activities'));
 app.use('/api/exams', require('./routes/exams'));
 app.use('/api/grades', require('./routes/grades'));
 
