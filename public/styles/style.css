@@ -1,0 +1,895 @@
+/* ============================================================
+   Mathematic Pixel — Design System CSS v2.0
+   Base: Variables CSS + BEM simétrico
+   ============================================================ */
+
+/* -----------------------------------------------------------
+   1. Variables Globales
+   ----------------------------------------------------------- */
+:root {
+  /* Colores Primarios */
+  --color-primary: #7b2cff;
+  --color-secondary: #3b82f6;
+  --color-accent: #8b5cf6;
+
+  /* Colores Complementarios */
+  --color-cyan: #00d4ff;
+  --color-magenta: #ff00aa;
+  --color-gold: #ffd700;
+  --color-mint: #00ff88;
+  --color-coral: #ff4757;
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #7b2cff, #3b82f6);
+  --gradient-accent: linear-gradient(135deg, #8b5cf6, #00d4ff);
+  --gradient-warm: linear-gradient(45deg, #ff00aa, #ffd700);
+  --gradient-glass: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  /* Fondos */
+  --bg-glass: rgba(255, 255, 255, 0.05);
+  --bg-glass-hover: rgba(255, 255, 255, 0.08);
+  --bg-input: #111;
+  --bg-dark: #0a0a0f;
+  --bg-void: #000000;
+
+  /* Texto */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-muted: rgba(255, 255, 255, 0.5);
+
+  /* Estados */
+  --state-success: #00ff88;
+  --state-error: #ff4757;
+  --state-warning: #ffd700;
+  --state-info: #00d4ff;
+
+  /* Glows y Sombras */
+  --glow-primary: 0 0 20px #8b5cf6, 0 0 40px #3b82f6;
+  --glow-intense: 0 0 30px #7b2cff, 0 0 60px #3b82f6;
+  --glow-cyan: 0 0 20px #00d4ff, 0 0 40px rgba(0, 212, 255, 0.5);
+  --glow-gold: 0 0 20px #ffd700, 0 0 40px rgba(255, 215, 0, 0.5);
+  --shadow-panel: 0 0 40px rgba(123, 44, 255, 0.3);
+
+  /* Border Radius */
+  --radius-sm: 12px;
+  --radius-md: 15px;
+  --radius-lg: 18px;
+  --radius-xl: 20px;
+  --radius-panel: 25px;
+  --radius-full: 50%;
+
+  /* Espaciado (base 4px) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 40px;
+  --space-5xl: 48px;
+
+  /* Tipografía */
+  --font-base: "Arial", "Helvetica", sans-serif;
+  --text-xs: 14px;
+  --text-sm: 16px;
+  --text-md: 18px;
+  --text-lg: 22px;
+  --text-xl: 25px;
+  --text-2xl: 28px;
+  --text-3xl: 45px;
+  --text-4xl: 55px;
+  --text-5xl: 65px;
+
+  /* Transiciones */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* -----------------------------------------------------------
+   2. Reset & Base
+   ----------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-base);
+  background: var(--bg-void);
+  color: var(--text-primary);
+}
+
+/* -----------------------------------------------------------
+   3. Layout — Background & Screens
+   ----------------------------------------------------------- */
+
+/* Space background */
+.space {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    #240046 0%,
+    #10002b 40%,
+    #000000 100%
+  );
+  z-index: 0;
+}
+
+/* Fog overlay */
+.fog {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.2),
+    transparent 70%
+  );
+  animation: fogMove 8s infinite alternate;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Screen system (SPA-like views) */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  animation: fade 0.7s var(--transition-base);
+  z-index: 10;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* Legacy cover (index.html portada) */
+.cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+  background: radial-gradient(
+    circle at center,
+    rgba(36, 0, 70, 0.95),
+    rgba(0, 0, 0, 1)
+  );
+}
+
+/* Legacy menu & intro containers */
+.intro,
+.menu {
+  position: absolute;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.menu {
+  flex-direction: column;
+}
+
+/* Inner menu layout */
+.menu-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game {
+  display: none;
+}
+
+/* -----------------------------------------------------------
+   4. Tipografía
+   ----------------------------------------------------------- */
+h1,
+.h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-2xl);
+  text-shadow: var(--glow-primary);
+}
+
+.main-title {
+  font-size: var(--text-4xl);
+  text-align: center;
+  text-shadow: var(--glow-primary);
+  margin-top: var(--space-xl);
+}
+
+.subtitle {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-3xl);
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+}
+
+.section-title {
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-md);
+  font-size: var(--text-xl);
+}
+
+.question {
+  font-size: var(--text-4xl);
+  margin: var(--space-3xl) 0;
+}
+
+.info {
+  margin-top: var(--space-xl);
+  font-size: var(--text-lg);
+}
+
+.result {
+  margin-top: var(--space-xl);
+  font-size: var(--text-2xl);
+}
+
+/* -----------------------------------------------------------
+   5. Botones (Base + Modificadores)
+   ----------------------------------------------------------- */
+
+/* Base button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-3xl);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: var(--glow-primary);
+}
+
+/* Legacy: start-btn (CTA grande de portada) */
+.start-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-5xl);
+  margin-top: var(--space-3xl);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--gradient-primary);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-2xl);
+  cursor: pointer;
+  transition: var(--transition-base);
+  text-decoration: none;
+}
+
+.start-btn:hover {
+  transform: scale(1.08);
+  box-shadow: var(--glow-intense);
+}
+
+/* Legacy: play-btn */
+.play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--space-xl);
+  padding: var(--space-lg) var(--space-4xl);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.play-btn:hover {
+  transform: scale(1.05);
+  box-shadow: var(--glow-primary);
+}
+
+/* Legacy: option-btn */
+.option-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-3xl);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.option-btn:hover {
+  transform: scale(1.05);
+  box-shadow: var(--glow-primary);
+}
+
+/* Legacy: menu-btn (secondary/outline style) */
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-2xl);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.menu-btn:hover {
+  background: var(--gradient-primary);
+  transform: scale(1.05);
+  box-shadow: var(--glow-primary);
+}
+
+/* Modificadores de tamaño */
+.btn--sm {
+  padding: var(--space-md) var(--space-xl);
+  font-size: var(--text-sm);
+}
+
+.btn--lg {
+  padding: var(--space-xl) var(--space-4xl);
+  font-size: var(--text-xl);
+  border-radius: var(--radius-lg);
+}
+
+.btn--xl {
+  padding: var(--space-2xl) var(--space-5xl);
+  font-size: var(--text-2xl);
+  border-radius: var(--radius-lg);
+}
+
+/* Modificadores de estilo */
+.btn--secondary {
+  background: var(--bg-glass);
+}
+
+.btn--secondary:hover {
+  background: var(--gradient-primary);
+}
+
+.btn--outline {
+  background: transparent;
+  border: 2px solid var(--color-accent);
+}
+
+.btn--outline:hover {
+  background: var(--color-accent);
+}
+
+.btn--gold {
+  background: linear-gradient(45deg, #ffd700, #ffaa00);
+  color: #000;
+}
+
+.btn--gold:hover {
+  box-shadow: var(--glow-gold);
+}
+
+.btn--success {
+  background: var(--state-success);
+  color: #000;
+}
+
+.btn--danger {
+  background: var(--state-error);
+}
+
+/* Button groups */
+.options,
+.menu-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2xl);
+  margin-top: var(--space-xl);
+}
+
+.button-group {
+  display: flex;
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+  width: 100%;
+}
+
+.button-group .btn {
+  flex: 1;
+}
+
+/* -----------------------------------------------------------
+   6. Paneles (Glassmorphism)
+   ----------------------------------------------------------- */
+.panel {
+  width: 100%;
+  max-width: 950px;
+  padding: var(--space-3xl);
+  border-radius: var(--radius-panel);
+  background: var(--bg-glass);
+  backdrop-filter: blur(15px);
+  box-shadow: var(--shadow-panel);
+  text-align: center;
+}
+
+.panel--sm {
+  max-width: 700px;
+  padding: var(--space-2xl);
+}
+
+.panel--lg {
+  max-width: 1200px;
+  padding: var(--space-4xl);
+}
+
+.panel--glass {
+  background: var(--gradient-glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Legacy: panel con scroll para index1 */
+#teacherPanel .panel,
+#studentPanel .panel {
+  max-height: 85vh;
+  overflow: auto;
+}
+
+/* -----------------------------------------------------------
+   7. Inputs
+   ----------------------------------------------------------- */
+input,
+select,
+textarea,
+.input {
+  width: 100%;
+  height: 55px; /* Alto fijo para igualarlos */
+  padding: var(--space-lg);
+  margin-top: var(--space-md);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  font-size: var(--text-md);
+  transition: var(--transition-base);
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-accent), var(--glow-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Legacy: input centrado del juego */
+input[type="number"] {
+  width: 220px;
+  font-size: var(--text-2xl);
+  text-align: center;
+}
+
+/* Modificadores */
+.input--center {
+  text-align: center;
+}
+
+.input--lg {
+  font-size: var(--text-2xl);
+  padding: var(--space-xl);
+}
+
+.input--inline {
+  width: auto;
+  display: inline-block;
+}
+
+textarea {
+  height: 120px;
+  resize: none;
+}
+
+/* -----------------------------------------------------------
+   8. Cards
+   ----------------------------------------------------------- */
+.card {
+  margin-top: var(--space-lg);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.06);
+  transition: var(--transition-base);
+}
+
+.card:hover {
+  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Modificadores */
+.card--success {
+  border-left: 4px solid var(--state-success);
+}
+
+.card--error {
+  border-left: 4px solid var(--state-error);
+}
+
+.card--gold {
+  border: 1px solid var(--color-gold);
+  box-shadow: var(--glow-gold);
+}
+
+/* -----------------------------------------------------------
+   9. Logo
+   ----------------------------------------------------------- */
+.logo {
+  width: 240px;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--glow-intense);
+  animation: float 3s infinite ease-in-out;
+}
+
+.logo--sm {
+  width: 120px;
+}
+
+.logo--lg {
+  width: 320px;
+}
+
+/* -----------------------------------------------------------
+   10. Estados
+   ----------------------------------------------------------- */
+.selected {
+  border: 3px solid var(--state-selected) !important;
+}
+
+.active {
+  display: flex;
+}
+
+.show {
+  display: block;
+}
+
+/* Section visibility */
+.section {
+  display: none;
+  max-width: 600px;
+  margin: var(--space-2xl) auto 0;
+  padding: var(--space-2xl);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.04);
+  animation: fade 0.5s var(--transition-base);
+}
+
+.section.show {
+  display: block;
+}
+
+.section .btn {
+  margin-top: var(--space-xl);
+}
+
+.grade-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: var(--space-xl);
+  margin-top: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+.grade-card h3 {
+  margin: 0 0 var(--space-xs);
+  color: var(--text-primary);
+  font-size: var(--text-md);
+}
+
+.grade-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.score-badge {
+  background: var(--primary);
+  color: var(--text-primary);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: var(--text-md);
+  box-shadow: 0 0 10px rgba(111, 0, 255, 0.5);
+}
+
+/* -----------------------------------------------------------
+   11. Modal (Glassmorphism)
+   ----------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  animation: fade 0.3s var(--transition-base);
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 600px;
+  padding: var(--space-3xl);
+  border-radius: var(--radius-panel);
+  background: var(--gradient-glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-panel);
+  text-align: center;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* -----------------------------------------------------------
+   12. Efectos Especiales (Intro Animation)
+   ----------------------------------------------------------- */
+.portal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-full);
+  background: white;
+  box-shadow: 0 0 40px white, 0 0 80px #8b5cf6, 0 0 160px #3b82f6;
+  animation: portalBurst 4s forwards;
+}
+
+.ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  animation: ring 4s infinite;
+}
+
+.r1 {
+  animation-delay: 0s;
+}
+.r2 {
+  animation-delay: 1s;
+}
+.r3 {
+  animation-delay: 2s;
+}
+
+.crack {
+  position: absolute;
+  width: 18px;
+  height: 0;
+  bottom: 0;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(
+    to bottom,
+    #ffffff,
+    #8b5cf6,
+    #3b82f6,
+    transparent
+  );
+  box-shadow: 0 0 20px #8b5cf6, 0 0 40px #3b82f6;
+  animation: rise 4s ease-out forwards;
+}
+
+.c1 {
+  left: 35%;
+  animation-delay: 0.2s;
+}
+.c2 {
+  left: 45%;
+  animation-delay: 0.5s;
+}
+.c3 {
+  left: 55%;
+  animation-delay: 0.8s;
+}
+.c4 {
+  left: 65%;
+  animation-delay: 1s;
+}
+
+/* Stars background */
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: var(--radius-full);
+  animation: twinkle 2s infinite alternate;
+}
+
+/* -----------------------------------------------------------
+   12. Animaciones Keyframes
+   ----------------------------------------------------------- */
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes twinkle {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fogMove {
+  from {
+    transform: translateX(-50px);
+  }
+  to {
+    transform: translateX(50px);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes portalBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(18);
+    opacity: 0;
+  }
+}
+
+@keyframes ring {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    width: 1200px;
+    height: 1200px;
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+  100% {
+    height: 100vh;
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: var(--glow-primary);
+  }
+  50% {
+    box-shadow: 0 0 40px #8b5cf6, 0 0 80px #3b82f6;
+  }
+}
+
+/* -----------------------------------------------------------
+   13. Utilidades Responsive
+   ----------------------------------------------------------- */
+@media (max-width: 768px) {
+  .main-title {
+    font-size: var(--text-3xl);
+  }
+
+  .panel {
+    padding: var(--space-xl);
+    max-width: 95%;
+  }
+
+  .logo {
+    width: 180px;
+  }
+
+  .start-btn {
+    padding: var(--space-lg) var(--space-3xl);
+    font-size: var(--text-lg);
+  }
+
+  .question {
+    font-size: var(--text-3xl);
+  }
+
+  .options,
+  .menu-buttons {
+    gap: var(--space-md);
+  }
+}
