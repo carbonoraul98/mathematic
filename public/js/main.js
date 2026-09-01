@@ -134,13 +134,35 @@ async function loadStudents() {
     }
 }
 
-// Subir Excel
+// Subir Excel con loader
 async function uploadExcel() {
     const fileInput = document.getElementById('excelFile');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadBtnText = document.getElementById('uploadBtnText');
+    const uploadSpinner = document.getElementById('uploadSpinner');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
     if (!fileInput.files.length) {
         showAlert('❌ Seleccioná un archivo Excel');
         return;
     }
+
+    // Mostrar loader
+    uploadBtn.disabled = true;
+    uploadBtnText.textContent = 'CARGANDO...';
+    uploadSpinner.style.display = 'inline-block';
+    progressContainer.style.display = 'block';
+
+    // Simular progreso (0% a 90%)
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+        progressText.textContent = Math.round(progress) + '%';
+    }, 300);
 
     const formData = new FormData();
     formData.append('excel', fileInput.files[0]);
@@ -151,18 +173,64 @@ async function uploadExcel() {
             body: formData
         });
 
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressText.textContent = '100%';
+
         const result = await res.json();
-        if (result.success) {
-            showAlert(`✅ ${result.count} estudiantes cargados`);
-            loadStudents();
-        } else {
-            showAlert('❌ Error al cargar el Excel');
-        }
+        
+        setTimeout(() => {
+            // Resetear UI
+            uploadBtn.disabled = false;
+            uploadBtnText.textContent = 'CARGAR EXCEL';
+            uploadSpinner.style.display = 'none';
+            progressContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+            
+            // Resetear input
+            fileInput.value = '';
+            document.getElementById('fileUploadText').textContent = 'Seleccionar archivo Excel';
+            document.querySelector('.file-upload-label').classList.remove('has-file');
+
+            if (result.success) {
+                showAlert(`✅ ${result.count} estudiantes cargados`);
+                loadStudents();
+            } else {
+                showAlert('❌ Error al cargar el Excel');
+            }
+        }, 500);
     } catch (error) {
+        clearInterval(progressInterval);
+        
+        uploadBtn.disabled = false;
+        uploadBtnText.textContent = 'CARGAR EXCEL';
+        uploadSpinner.style.display = 'none';
+        progressContainer.style.display = 'none';
+        
         console.error('Error subiendo Excel:', error);
         showAlert('❌ Error al subir el archivo');
     }
 }
+
+// Manejar selección de archivo
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('excelFile');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const label = document.querySelector('.file-upload-label');
+            const text = document.getElementById('fileUploadText');
+            
+            if (this.files && this.files.length > 0) {
+                const fileName = this.files[0].name;
+                text.textContent = fileName;
+                label.classList.add('has-file');
+            } else {
+                text.textContent = 'Seleccionar archivo Excel';
+                label.classList.remove('has-file');
+            }
+        });
+    }
+});
 
 // Descargar calificaciones
 function downloadGrades() {

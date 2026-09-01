@@ -45,6 +45,7 @@
   <!-- LOGIN PROFESOR -->
 
   <div class="screen" id="teacherLogin">
+    <button class="back-btn" onclick="showScreen('portal')">Volver</button>
     <div class="panel">
       <h1>LOGIN PROFESOR</h1>
 
@@ -64,6 +65,7 @@
   <!-- LOGIN ESTUDIANTE -->
 
   <div class="screen" id="studentLogin">
+    <button class="back-btn" onclick="showScreen('portal')">Volver</button>
     <div class="panel">
       <h1>PORTAL ESTUDIANTE</h1>
 
@@ -142,8 +144,24 @@
 
         <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl);">
           <h3>📥 Cargar desde Excel</h3>
-          <input type="file" id="excelFile" accept=".xlsx" style="margin-bottom: var(--space-md);" />
-          <button class="btn" onclick="uploadExcel()">CARGAR EXCEL</button>
+          
+          <div class="file-upload-wrapper">
+            <input type="file" id="excelFile" accept=".xlsx" class="file-upload-input" />
+            <label for="excelFile" class="file-upload-label">
+              <span class="file-upload-icon">📁</span>
+              <span class="file-upload-text" id="fileUploadText">Seleccionar archivo Excel</span>
+            </label>
+          </div>
+          
+          <button class="btn" onclick="uploadExcel()" id="uploadBtn">
+            <span id="uploadBtnText">CARGAR EXCEL</span>
+            <div class="spinner" id="uploadSpinner" style="display: none;"></div>
+          </button>
+          
+          <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar" id="progressBar"></div>
+            <div class="progress-text" id="progressText">0%</div>
+          </div>
         </div>
 
         <div id="studentsList"></div>
@@ -202,6 +220,7 @@
   <!-- PANEL ESTUDIANTE -->
 
   <div class="screen" id="studentPanel">
+    <button class="back-btn" onclick="showScreen('portal')">Salir</button>
     <div class="panel">
       <h1>PANEL ESTUDIANTE</h1>
 

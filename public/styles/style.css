@@ -893,3 +893,166 @@ textarea {
     gap: var(--space-md);
   }
 }
+
+/* ============================================================
+   File Upload Custom + Loader + Back Button
+   ============================================================ */
+
+/* Custom File Input */
+.file-upload-wrapper {
+  position: relative;
+  margin-bottom: var(--space-md);
+}
+
+.file-upload-input {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-glass);
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.file-upload-label:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--color-cyan);
+  transform: translateY(-2px);
+}
+
+.file-upload-label.has-file {
+  border-style: solid;
+  border-color: var(--state-success);
+  background: rgba(0, 255, 136, 0.05);
+}
+
+.file-upload-icon {
+  font-size: 1.5rem;
+}
+
+.file-upload-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spinner / Loader */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid transparent;
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  margin-left: var(--space-sm);
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Progress Bar */
+.progress-container {
+  margin-top: var(--space-md);
+  background: var(--bg-glass);
+  border-radius: var(--radius-full);
+  height: 30px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-primary);
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  width: 0%;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-primary);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Back Button */
+.back-btn {
+  position: absolute;
+  top: var(--space-lg);
+  left: var(--space-lg);
+  background: var(--bg-glass);
+  border: 1px solid var(--color-primary);
+  color: var(--text-secondary);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  z-index: 10;
+}
+
+.back-btn:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--color-cyan);
+  transform: translateX(-3px);
+}
+
+.back-btn::before {
+  content: '←';
+  font-size: 1.2em;
+}
+
+/* Make screens relative for absolute positioning */
+.screen {
+  position: relative;
+}
