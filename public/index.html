@@ -86,23 +86,26 @@
     <div class="panel">
       <h1>PANEL DEL PROFESOR</h1>
 
-      <div class="menu-buttons">
-        <button class="menu-btn" onclick="showTeacherSection('studentsSection')">
-          📘 Crear estudiantes
-        </button>
+      <div class="section show" id="menuPrincipal">
+        <div class="menu-buttons">
+          <button class="menu-btn" onclick="showTeacherSection('studentsSection')">
+            📘 Crear estudiantes
+          </button>
 
-        <button class="menu-btn" onclick="showTeacherSection('activitiesSection')">
-          📝 Crear actividades
-        </button>
+          <button class="menu-btn" onclick="showTeacherSection('activitiesSection')">
+            📝 Crear actividades
+          </button>
 
-        <button class="menu-btn" onclick="showTeacherSection('gradesSection')">
-          📊 Ver notas
-        </button>
+          <button class="menu-btn" onclick="showTeacherSection('gradesSection')">
+            📊 Ver notas
+          </button>
+        </div>
       </div>
 
       <!-- ESTUDIANTES -->
 
       <div class="section" id="studentsSection">
+        <button class="back-btn" onclick="showTeacherSection('menuPrincipal')">← Volver al menú</button>
         <h2>Crear estudiantes</h2>
 
         <select id="studentGrade">
@@ -170,6 +173,7 @@
       <!-- ACTIVIDADES -->
 
       <div class="section" id="activitiesSection">
+        <button class="back-btn" onclick="showTeacherSection('menuPrincipal')">← Volver al menú</button>
         <h2>Crear actividad</h2>
 
         <select id="activityTargetGrade">
@@ -220,6 +224,7 @@
       <!-- NOTAS -->
 
       <div class="section" id="gradesSection">
+        <button class="back-btn" onclick="showTeacherSection('menuPrincipal')">← Volver al menú</button>
         <h2>Notas</h2>
 
         <button class="btn" onclick="downloadGrades()" style="margin-bottom: var(--space-xl);">📊 DESCARGAR CALIFICACIONES</button>
