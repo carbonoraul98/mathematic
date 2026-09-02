@@ -67,7 +67,7 @@ router.post('/upload', upload.single('excel'), async (req, res) => {
                 const insertStudent = await db.prepare(
                     'INSERT OR IGNORE INTO students (group_id, list_number, full_name, username, password) VALUES (?, ?, ?, ?, ?)'
                 );
-                const result = await insertStudent.run(group.id, listNumber, fullName, listNumber.toString(), fullName);
+                const result = await insertStudent.run(group.id, listNumber, fullName, listNumber.toString(), '1234');
 
                 if (result.changes > 0) {
                     totalCreated++;
