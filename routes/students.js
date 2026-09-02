@@ -109,6 +109,35 @@ router.post('/upload', upload.single('excel'), async (req, res) => {
     }
 });
 
+// Crear estudiante individual
+router.post('/', async (req, res) => {
+    try {
+        const { grado, nombre, usuario, password } = req.body;
+        
+        if (!nombre || !usuario || !grado) {
+            return res.status(400).json({ error: 'Faltan datos requeridos' });
+        }
+        
+        // Insertar grupo si no existe
+        const insertGroup = await db.prepare('INSERT OR IGNORE INTO groups (name, teacher_name) VALUES (?, ?)');
+        await insertGroup.run(grado, '');
+        
+        const getGroup = await db.prepare('SELECT id FROM groups WHERE name = ?');
+        const group = await getGroup.get(grado);
+        
+        // Insertar estudiante
+        const insertStudent = await db.prepare(
+            'INSERT INTO students (group_id, list_number, full_name, username, password) VALUES (?, ?, ?, ?, ?)'
+        );
+        const result = await insertStudent.run(group.id, parseInt(usuario) || 0, nombre, usuario, password || '1234');
+        
+        res.json({ success: true, student_id: result.lastInsertRowid });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Listar estudiantes
 router.get('/', async (req, res) => {
     try {

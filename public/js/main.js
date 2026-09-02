@@ -270,22 +270,45 @@ async function teacherLogin() {
   }
 }
 
-function crearEstudiante() {
+async function crearEstudiante() {
   let grado = document.getElementById("studentGrade").value;
   let nombre = document.getElementById("studentName").value;
   let usuario = document.getElementById("studentUser").value;
   let password = document.getElementById("studentPassword").value;
-  let apellido = nombre.split(" ")[0].toLowerCase();
-  let estudiante = { grado, nombre, usuario, password, apellido, puntos: 0 };
-  estudiantes.push(estudiante);
-  estudiantes.sort((a, b) => a.apellido.localeCompare(b.apellido));
-  mostrarEstudiantes();
-  showAlert("✅ Estudiante creado");
   
-  // Limpiar campos
-  document.getElementById("studentName").value = "";
-  document.getElementById("studentUser").value = "";
-  document.getElementById("studentPassword").value = "";
+  if (!nombre || !usuario) {
+    showAlert("❌ Completa nombre y usuario");
+    return;
+  }
+  
+  try {
+    const res = await fetch('/api/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grado: grado,
+        nombre: nombre,
+        usuario: usuario,
+        password: password || '1234'
+      })
+    });
+    
+    const result = await res.json();
+    if (result.success) {
+      showAlert("✅ Estudiante guardado en la base de datos");
+      // Limpiar campos
+      document.getElementById("studentName").value = "";
+      document.getElementById("studentUser").value = "";
+      document.getElementById("studentPassword").value = "";
+      // Recargar lista desde la base de datos
+      loadStudents();
+    } else {
+      showAlert("❌ Error al guardar: " + result.error);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showAlert("❌ Error de conexión");
+  }
 }
 
 function mostrarEstudiantes() {
