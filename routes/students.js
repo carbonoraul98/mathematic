@@ -6,6 +6,11 @@ const router = express.Router();
 
 const upload = multer({ dest: 'uploads/' });
 
+// Función para limpiar el nombre del grupo (4°A -> 4A)
+function cleanGroupName(name) {
+    return name.replace('°', '').trim();
+}
+
 // Subir Excel y crear estudiantes
 router.post('/upload', upload.single('excel'), async (req, res) => {
     try {
@@ -18,16 +23,16 @@ router.post('/upload', upload.single('excel'), async (req, res) => {
 
             if (data.length < 3) continue;
 
-            let currentGroupName = (data[0][1] || sheetName).toString().trim();
-            let currentTeacherName = (data[1][1] || '').toString().trim();
-            let rowIndex = 3; // Empezar después de encabezados
+            let currentGroupName = '';
+            let currentTeacherName = '';
+            let rowIndex = 0;
 
             while (rowIndex < data.length) {
                 const row = data[rowIndex];
                 
-                // Detectar nuevo grupo: fila con texto en col B pero sin número en col A
-                if (row[1] && !row[0] && typeof row[1] === 'string' && row[1].length > 3) {
-                    currentGroupName = row[1].trim();
+                // Detectar fila de grupo (tiene formato como 4°A, 5°B, etc.)
+                if (row[1] && typeof row[1] === 'string' && /[45]°[ABC]/.test(row[1].trim())) {
+                    currentGroupName = cleanGroupName(row[1].trim());
                     rowIndex++;
                     // Siguiente fila debería ser el docente
                     if (rowIndex < data.length && data[rowIndex][1]) {
@@ -35,10 +40,30 @@ router.post('/upload', upload.single('excel'), async (req, res) => {
                         rowIndex++;
                     }
                     // Saltar fila de encabezados si existe
-                    if (rowIndex < data.length && data[rowIndex][0] === 'N°') {
+                    if (rowIndex < data.length && (data[rowIndex][0] === 'N°' || data[rowIndex][0] === 'n°')) {
                         rowIndex++;
                     }
                     continue;
+                }
+
+                // Detectar nuevo grupo por formato alternativo
+                if (row[1] && !row[0] && typeof row[1] === 'string' && row[1].length > 3) {
+                    // Verificar si es un nombre de grupo
+                    const possibleGroup = row[1].trim();
+                    if (/[45][°]?[ABC]/.test(possibleGroup)) {
+                        currentGroupName = cleanGroupName(possibleGroup);
+                        rowIndex++;
+                        // Siguiente fila debería ser el docente
+                        if (rowIndex < data.length && data[rowIndex][1]) {
+                            currentTeacherName = data[rowIndex][1].toString().trim();
+                            rowIndex++;
+                        }
+                        // Saltar fila de encabezados
+                        if (rowIndex < data.length && (data[rowIndex][0] === 'N°' || data[rowIndex][0] === 'n°')) {
+                            rowIndex++;
+                        }
+                        continue;
+                    }
                 }
 
                 // Detectar fila de encabezados
@@ -51,7 +76,7 @@ router.post('/upload', upload.single('excel'), async (req, res) => {
                 const listNumber = parseInt(row[0]);
                 const fullName = row[1] ? row[1].toString().trim() : null;
 
-                if (!listNumber || !fullName) {
+                if (!listNumber || !fullName || !currentGroupName) {
                     rowIndex++;
                     continue;
                 }
@@ -63,7 +88,7 @@ router.post('/upload', upload.single('excel'), async (req, res) => {
                 const getGroup = await db.prepare('SELECT id FROM groups WHERE name = ?');
                 const group = await getGroup.get(currentGroupName);
 
-                // Insertar estudiante
+                // Insertar estudiante con grupo asignado
                 const insertStudent = await db.prepare(
                     'INSERT OR IGNORE INTO students (group_id, list_number, full_name, username, password) VALUES (?, ?, ?, ?, ?)'
                 );
@@ -91,6 +116,7 @@ router.get('/', async (req, res) => {
             SELECT s.*, g.name as group_name 
             FROM students s 
             JOIN groups g ON s.group_id = g.id
+            ORDER BY g.name, s.list_number
         `);
         const students = await stmt.all();
         res.json(students);
@@ -105,7 +131,7 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const stmt = await db.prepare(
-            'SELECT * FROM students WHERE username = ? AND password = ?'
+            'SELECT s.*, g.name as group_name FROM students s JOIN groups g ON s.group_id = g.id WHERE s.username = ? AND s.password = ?'
         );
         const student = await stmt.get(username, password);
 
