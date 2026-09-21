@@ -11,39 +11,40 @@
 
 ## 2. Paleta de Colores
 
-### 2.1 Primarios (Neón Core)
+### 2.1 Primarios (Índigo Cósmico)
 | Token | Hex | Uso |
 |---|---|---|
-| `--color-primary` | `#7b2cff` | Gradientes principales, sombras glow |
-| `--color-secondary` | `#3b82f6` | Gradientes, glow secundario, acentos fríos |
-| `--color-accent` | `#8b5cf6` | Glow intenso, highlights, bordes luminosos |
+| `--color-primary` | `#6c5dd3` | Gradientes principales, sombras glow |
+| `--color-secondary` | `#4e7fff` | Gradientes, glow secundario, acentos fríos |
+| `--color-accent` | `#9d7bff` | Glow intenso, highlights, bordes luminosos |
 
 ### 2.2 Complementarios (Expansión de Paleta)
 Estos colores **mantienen la estética neón espacial** y se usan para estados, jerarquía y contraste:
 
 | Token | Hex | Uso |
 |---|---|---|
-| `--color-cyan` | `#00d4ff` | Info, hints, estados neutros positivos, acento frío alternativo |
+| `--color-cyan` | `#22d3ee` | Info, hints, estados neutros positivos, acento frío alternativo |
 | `--color-magenta` | `#ff00aa` | Urgencia suave, destacados especiales, energía |
 | `--color-gold` | `#ffd700` | Warnings, puntos clave, logros, estrellas doradas |
-| `--color-mint` | `#00ff88` | Éxito, respuestas correctas (más vibrante que el verde anterior) |
-| `--color-coral` | `#ff4757` | Errores, alertas, acciones destructivas (más armónico que el rojo puro) |
+| `--color-orange` | `#f59e0b` | Badges cálidos (exámenes), acentos de energía media |
+| `--color-mint` | `#10d97a` | Éxito, respuestas correctas |
+| `--color-coral` | `#ff5c7a` | Errores, alertas, acciones destructivas |
 
 > **Regla de Combinación**: Los primarios (`--color-primary`, `--color-secondary`, `--color-accent`) nunca deben competir con los complementarios en el mismo componente. Usar complementarios **solo** para estados o acentos aislados.
 
 ### 2.3 Gradientes Predefinidos
 ```css
---gradient-primary: linear-gradient(45deg, #7b2cff, #3b82f6);
---gradient-accent: linear-gradient(135deg, #8b5cf6, #00d4ff);
---gradient-warm: linear-gradient(45deg, #ff00aa, #ffd700);
+--gradient-primary: linear-gradient(135deg, #6c5dd3, #4e7fff);
+--gradient-accent: linear-gradient(135deg, #9d7bff, #22d3ee);
+--gradient-warm: linear-gradient(45deg, #f59e0b, #ffd700);
 --gradient-glass: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
 ```
 
 ### 2.4 Fondos
 | Token | Valor | Uso |
 |---|---|---|
-| `--bg-space` | `radial-gradient(circle at center, #240046 0%, #10002b 40%, #000000 100%)` | Fondo base del universo |
-| `--bg-fog` | `radial-gradient(circle, rgba(139, 92, 246, 0.2), transparent 70%)` | Overlay animado |
+| `--bg-space` | `radial-gradient(circle at 30% 20%, #262a63 0%, #14142e 45%, #05050f 100%)` | Fondo base del universo (índigo-navy) |
+| `--bg-fog` | `radial-gradient(circle, rgba(108, 93, 211, 0.25), transparent 70%)` | Overlay animado |
 | `--bg-glass` | `rgba(255, 255, 255, 0.05)` | Paneles, cards |
 | `--bg-glass-hover` | `rgba(255, 255, 255, 0.08)` | Botones secundarios hover |
 | `--bg-input` | `#111` | Inputs, selects, textareas |
@@ -61,10 +62,10 @@ Estos colores **mantienen la estética neón espacial** y se usan para estados, 
 ### 2.6 Estados (Actualizados)
 | Token | Hex | Uso |
 |---|---|---|
-| `--state-success` | `#00ff88` | Respuesta correcta, éxito |
-| `--state-error` | `#ff4757` | Respuesta incorrecta, error |
+| `--state-success` | `#10d97a` | Respuesta correcta, éxito |
+| `--state-error` | `#ff5c7a` | Respuesta incorrecta, error |
 | `--state-warning` | `#ffd700` | Advertencias, tiempo bajo |
-| `--state-info` | `#00d4ff` | Información, hints |
+| `--state-info` | `#22d3ee` | Información, hints |
 | `--state-selected` | `#ffffff` | Borde de elemento seleccionado |
 
 > **Regla**: Nunca hardcodear colores hex en nuevos componentes. Siempre usar los tokens del design system o extenderlos.
@@ -78,27 +79,30 @@ Todas las variables deben definirse en `:root` para mantener **consistencia forz
 ```css
 :root {
   /* Colores Primarios */
-  --color-primary: #7b2cff;
-  --color-secondary: #3b82f6;
-  --color-accent: #8b5cf6;
+  --color-primary: #6c5dd3;
+  --color-secondary: #4e7fff;
+  --color-accent: #9d7bff;
   
   /* Colores Complementarios */
-  --color-cyan: #00d4ff;
+  --color-cyan: #22d3ee;
   --color-magenta: #ff00aa;
   --color-gold: #ffd700;
-  --color-mint: #00ff88;
-  --color-coral: #ff4757;
+  --color-orange: #f59e0b;
+  --color-mint: #10d97a;
+  --color-coral: #ff5c7a;
   
   /* Gradientes */
-  --gradient-primary: linear-gradient(45deg, #7b2cff, #3b82f6);
-  --gradient-accent: linear-gradient(135deg, #8b5cf6, #00d4ff);
-  --gradient-warm: linear-gradient(45deg, #ff00aa, #ffd700);
+  --gradient-primary: linear-gradient(135deg, #6c5dd3, #4e7fff);
+  --gradient-accent: linear-gradient(135deg, #9d7bff, #22d3ee);
+  --gradient-warm: linear-gradient(45deg, #f59e0b, #ffd700);
   --gradient-glass: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
   
   /* Fondos */
+  --bg-space: radial-gradient(circle at 30% 20%, #262a63 0%, #14142e 45%, #05050f 100%);
+  --bg-fog: radial-gradient(circle, rgba(108, 93, 211, 0.25), transparent 70%);
   --bg-glass: rgba(255, 255, 255, 0.05);
   --bg-glass-hover: rgba(255, 255, 255, 0.08);
-  --bg-input: #111;
+  --bg-input: #14142b;
   --bg-dark: #0a0a0f;
   
   /* Texto */
@@ -107,17 +111,17 @@ Todas las variables deben definirse en `:root` para mantener **consistencia forz
   --text-muted: rgba(255, 255, 255, 0.5);
   
   /* Estados */
-  --state-success: #00ff88;
-  --state-error: #ff4757;
+  --state-success: #10d97a;
+  --state-error: #ff5c7a;
   --state-warning: #ffd700;
-  --state-info: #00d4ff;
+  --state-info: #22d3ee;
   
   /* Glows y Sombras */
-  --glow-primary: 0 0 20px #8b5cf6, 0 0 40px #3b82f6;
-  --glow-intense: 0 0 30px #7b2cff, 0 0 60px #3b82f6;
-  --glow-cyan: 0 0 20px #00d4ff, 0 0 40px rgba(0, 212, 255, 0.5);
+  --glow-primary: 0 0 20px var(--color-accent), 0 0 40px var(--color-secondary);
+  --glow-intense: 0 0 30px var(--color-primary), 0 0 60px var(--color-secondary);
+  --glow-cyan: 0 0 20px var(--color-cyan), 0 0 40px rgba(34, 211, 238, 0.5);
   --glow-gold: 0 0 20px #ffd700, 0 0 40px rgba(255, 215, 0, 0.5);
-  --shadow-panel: 0 0 40px rgba(123, 44, 255, 0.3);
+  --shadow-panel: 0 0 40px rgba(108, 93, 211, 0.35);
   
   /* Border Radius (Escala Simétrica) */
   --radius-sm: 12px;

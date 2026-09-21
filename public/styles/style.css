@@ -8,21 +8,22 @@
    ----------------------------------------------------------- */
 :root {
   /* Colores Primarios */
-  --color-primary: #7b2cff;
-  --color-secondary: #3b82f6;
-  --color-accent: #8b5cf6;
+  --color-primary: #6c5dd3;
+  --color-secondary: #4e7fff;
+  --color-accent: #9d7bff;
 
   /* Colores Complementarios */
-  --color-cyan: #00d4ff;
+  --color-cyan: #22d3ee;
   --color-magenta: #ff00aa;
   --color-gold: #ffd700;
-  --color-mint: #00ff88;
-  --color-coral: #ff4757;
+  --color-orange: #f59e0b;
+  --color-mint: #10d97a;
+  --color-coral: #ff5c7a;
 
   /* Gradientes */
-  --gradient-primary: linear-gradient(45deg, #7b2cff, #3b82f6);
-  --gradient-accent: linear-gradient(135deg, #8b5cf6, #00d4ff);
-  --gradient-warm: linear-gradient(45deg, #ff00aa, #ffd700);
+  --gradient-primary: linear-gradient(135deg, #6c5dd3, #4e7fff);
+  --gradient-accent: linear-gradient(135deg, #9d7bff, #22d3ee);
+  --gradient-warm: linear-gradient(45deg, #f59e0b, #ffd700);
   --gradient-glass: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.08),
@@ -30,9 +31,20 @@
   );
 
   /* Fondos */
+  --bg-space: radial-gradient(
+    circle at 30% 20%,
+    #262a63 0%,
+    #14142e 45%,
+    #05050f 100%
+  );
+  --bg-fog: radial-gradient(
+    circle,
+    rgba(108, 93, 211, 0.25),
+    transparent 70%
+  );
   --bg-glass: rgba(255, 255, 255, 0.05);
   --bg-glass-hover: rgba(255, 255, 255, 0.08);
-  --bg-input: #111;
+  --bg-input: #14142b;
   --bg-dark: #0a0a0f;
   --bg-void: #000000;
 
@@ -42,17 +54,17 @@
   --text-muted: rgba(255, 255, 255, 0.5);
 
   /* Estados */
-  --state-success: #00ff88;
-  --state-error: #ff4757;
+  --state-success: #10d97a;
+  --state-error: #ff5c7a;
   --state-warning: #ffd700;
-  --state-info: #00d4ff;
+  --state-info: #22d3ee;
 
   /* Glows y Sombras */
-  --glow-primary: 0 0 20px #8b5cf6, 0 0 40px #3b82f6;
-  --glow-intense: 0 0 30px #7b2cff, 0 0 60px #3b82f6;
-  --glow-cyan: 0 0 20px #00d4ff, 0 0 40px rgba(0, 212, 255, 0.5);
+  --glow-primary: 0 0 20px var(--color-accent), 0 0 40px var(--color-secondary);
+  --glow-intense: 0 0 30px var(--color-primary), 0 0 60px var(--color-secondary);
+  --glow-cyan: 0 0 20px var(--color-cyan), 0 0 40px rgba(34, 211, 238, 0.5);
   --glow-gold: 0 0 20px #ffd700, 0 0 40px rgba(255, 215, 0, 0.5);
-  --shadow-panel: 0 0 40px rgba(123, 44, 255, 0.3);
+  --shadow-panel: 0 0 40px rgba(108, 93, 211, 0.35);
 
   /* Border Radius */
   --radius-sm: 12px;
@@ -61,6 +73,7 @@
   --radius-xl: 20px;
   --radius-panel: 25px;
   --radius-full: 50%;
+  --radius-pill: 999px;
 
   /* Espaciado (base 4px) */
   --space-xs: 4px;
@@ -124,12 +137,7 @@ body {
 .space {
   position: fixed;
   inset: 0;
-  background: radial-gradient(
-    circle at center,
-    #240046 0%,
-    #10002b 40%,
-    #000000 100%
-  );
+  background: var(--bg-space);
   z-index: 0;
 }
 
@@ -137,11 +145,7 @@ body {
 .fog {
   position: fixed;
   inset: 0;
-  background: radial-gradient(
-    circle,
-    rgba(139, 92, 246, 0.2),
-    transparent 70%
-  );
+  background: var(--bg-fog);
   animation: fogMove 8s infinite alternate;
   z-index: 1;
   pointer-events: none;
@@ -158,6 +162,8 @@ body {
   z-index: 10;
   min-height: 100vh;
   min-height: 100dvh;
+  padding: var(--space-xl) var(--space-lg);
+  overflow-y: auto;
 }
 
 .screen.active {
@@ -175,11 +181,7 @@ body {
   z-index: 200;
   min-height: 100vh;
   min-height: 100dvh;
-  background: radial-gradient(
-    circle at center,
-    rgba(36, 0, 70, 0.95),
-    rgba(0, 0, 0, 1)
-  );
+  background: var(--bg-space);
 }
 
 /* Legacy menu & intro containers */
@@ -218,11 +220,30 @@ h1,
   text-shadow: var(--glow-primary);
 }
 
-.main-title {
-  font-size: var(--text-4xl);
+.brand-title {
   text-align: center;
-  text-shadow: var(--glow-primary);
   margin-top: var(--space-xl);
+  line-height: 1.15;
+}
+
+.brand-title__primary {
+  display: block;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+}
+
+.brand-title__secondary {
+  display: block;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 2px;
+  background: var(--gradient-accent);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .subtitle {
@@ -420,6 +441,133 @@ h1,
   background: var(--state-error);
 }
 
+.btn--pill {
+  border-radius: var(--radius-pill);
+}
+
+.btn--flat {
+  background: var(--color-secondary);
+  border-radius: var(--radius-xl);
+}
+
+/* Login footer links */
+.login-links {
+  text-align: center;
+  margin-top: var(--space-md);
+}
+
+.login-links__forgot {
+  color: var(--color-cyan);
+  font-size: var(--text-xs);
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.login-links__forgot:hover {
+  text-decoration: underline;
+}
+
+.signup-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-top: var(--space-xl);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Role selection cards (post-login) */
+.role-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl);
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.role-card + .role-card {
+  margin-top: var(--space-md);
+}
+
+.role-card:hover {
+  background: var(--bg-glass-hover);
+  transform: translateY(-2px);
+}
+
+.role-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--gradient-primary);
+  color: var(--text-primary);
+}
+
+.role-card__icon--image {
+  width: 64px;
+  height: 64px;
+  background: none;
+}
+
+.role-card__icon--image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Card destacada con ilustración grande arriba */
+.role-card--featured {
+  flex-direction: column;
+  text-align: center;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+.role-card--featured .role-card__icon--image {
+  width: 140px;
+  height: 140px;
+  margin-bottom: var(--space-sm);
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.35));
+}
+
+.role-card--featured .role-card__text {
+  align-items: center;
+}
+
+.role-card__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.role-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.role-card__text strong {
+  font-size: var(--text-md);
+}
+
+.role-card__text small {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
 /* Button groups */
 .options,
 .menu-buttons {
@@ -453,7 +601,6 @@ h1,
   backdrop-filter: blur(15px);
   box-shadow: var(--shadow-panel);
   text-align: center;
-  margin: auto;
 }
 
 .panel--sm {
@@ -469,6 +616,13 @@ h1,
 .panel--glass {
   background: var(--gradient-glass);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.panel--minimal {
+  max-width: 380px;
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
 }
 
 /* Legacy: panel con scroll para index1 */
@@ -504,7 +658,7 @@ select:focus,
 textarea:focus,
 .input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-accent), var(--glow-primary);
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 input::placeholder,
@@ -537,6 +691,69 @@ input[type="number"] {
 textarea {
   height: 120px;
   resize: none;
+}
+
+/* Labeled field (label + input) */
+/* Input with a leading icon (Usuario / Contraseña) */
+.input-icon-field {
+  position: relative;
+  margin-top: var(--space-md);
+}
+
+.input-icon-field input {
+  margin-top: 0;
+  padding-left: var(--space-4xl);
+  border-radius: var(--radius-xl);
+}
+
+.input-icon {
+  position: absolute;
+  left: var(--space-md);
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.input-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Password field with visibility toggle */
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: var(--space-4xl);
+}
+
+.password-toggle {
+  position: absolute;
+  right: var(--space-md);
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.password-toggle:hover {
+  color: var(--text-primary);
 }
 
 /* -----------------------------------------------------------
@@ -588,6 +805,13 @@ textarea {
 
 .logo--lg {
   width: 320px;
+}
+
+.logo--minimal {
+  width: 160px;
+  box-shadow: none;
+  border-radius: 0;
+  animation: none;
 }
 
 /* -----------------------------------------------------------
@@ -651,13 +875,13 @@ textarea {
 }
 
 .score-badge {
-  background: var(--primary);
+  background: var(--gradient-primary);
   color: var(--text-primary);
   padding: var(--space-sm) var(--space-lg);
   border-radius: var(--radius-full);
   font-weight: 700;
   font-size: var(--text-md);
-  box-shadow: 0 0 10px rgba(111, 0, 255, 0.5);
+  box-shadow: 0 0 10px rgba(108, 93, 211, 0.5);
 }
 
 /* -----------------------------------------------------------
@@ -706,7 +930,7 @@ textarea {
   transform: translate(-50%, -50%);
   border-radius: var(--radius-full);
   background: white;
-  box-shadow: 0 0 40px white, 0 0 80px #8b5cf6, 0 0 160px #3b82f6;
+  box-shadow: 0 0 40px white, 0 0 80px var(--color-accent), 0 0 160px var(--color-secondary);
   animation: portalBurst 4s forwards;
 }
 
@@ -739,11 +963,11 @@ textarea {
   background: linear-gradient(
     to bottom,
     #ffffff,
-    #8b5cf6,
-    #3b82f6,
+    var(--color-accent),
+    var(--color-secondary),
     transparent
   );
-  box-shadow: 0 0 20px #8b5cf6, 0 0 40px #3b82f6;
+  box-shadow: 0 0 20px var(--color-accent), 0 0 40px var(--color-secondary);
   animation: rise 4s ease-out forwards;
 }
 
@@ -870,7 +1094,7 @@ textarea {
     box-shadow: var(--glow-primary);
   }
   50% {
-    box-shadow: 0 0 40px #8b5cf6, 0 0 80px #3b82f6;
+    box-shadow: 0 0 40px var(--color-accent), 0 0 80px var(--color-secondary);
   }
 }
 
@@ -878,8 +1102,16 @@ textarea {
    13. Utilidades Responsive
    ----------------------------------------------------------- */
 @media (max-width: 768px) {
-  .main-title {
-    font-size: var(--text-3xl);
+  .brand-title__primary {
+    font-size: var(--text-xl);
+  }
+
+  .brand-title__secondary {
+    font-size: var(--text-lg);
+  }
+
+  .subtitle {
+    font-size: var(--text-sm);
   }
 
   .panel {
@@ -887,8 +1119,20 @@ textarea {
     max-width: 95%;
   }
 
+  .panel--minimal {
+    max-width: 95%;
+  }
+
   .logo {
     width: 180px;
+  }
+
+  .logo--minimal {
+    width: 120px;
+  }
+
+  .signup-row {
+    font-size: var(--text-xs);
   }
 
   .start-btn {
@@ -1064,7 +1308,8 @@ textarea {
   font-size: 1.2em;
 }
 
-/* Make screens relative for absolute positioning */
-.screen {
+/* Contexto de posicionamiento para pantallas con .back-btn absoluto */
+#teacherPanel,
+#studentPanel {
   position: relative;
 }

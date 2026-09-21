@@ -244,29 +244,80 @@ function showScreen(id) {
   document.getElementById(id).classList.add("active");
 }
 
-async function teacherLogin() {
-  let user = document.getElementById("teacherUser").value;
-  let pass = document.getElementById("teacherPass").value;
+const EYE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.7 20.7 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a20.7 20.7 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+
+function logout() {
+  authenticatedRole = null;
+  estudianteActual = null;
+  showScreen('home');
+}
+
+function togglePasswordVisibility() {
+  const passInput = document.getElementById('loginPass');
+  const toggleBtn = document.getElementById('passwordToggleBtn');
+  const isVisible = passInput.type === 'password';
+  passInput.type = isVisible ? 'text' : 'password';
+  toggleBtn.innerHTML = isVisible ? EYE_OFF_ICON : EYE_ICON;
+  toggleBtn.setAttribute('aria-label', isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+}
+
+function showComingSoon() {
+  showAlert('🚧 Esta función estará disponible pronto');
+}
+
+async function loginAs(endpoint, user, pass) {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: user, password: pass })
+  });
+  return res.json();
+}
+
+let authenticatedRole = null;
+
+async function unifiedLogin() {
+  let user = document.getElementById("loginUser").value;
+  let pass = document.getElementById("loginPass").value;
+  let resultDiv = document.getElementById("loginResult");
+  resultDiv.innerHTML = "";
 
   try {
-    const res = await fetch('/api/teachers/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: user, password: pass })
-    });
-
-    const result = await res.json();
-    if (result.success) {
-      showScreen("teacherPanel");
-      loadStudents();
-    } else {
-      document.getElementById("teacherResult").innerHTML =
-        "<br>❌ Usuario o contraseña incorrecta";
+    const teacherResult = await loginAs('/api/teachers/login', user, pass);
+    if (teacherResult.success) {
+      authenticatedRole = 'profesor';
+      showScreen("roleSelect");
+      return;
     }
+
+    const studentResult = await loginAs('/api/students/login', user, pass);
+    if (studentResult.success) {
+      authenticatedRole = 'estudiante';
+      estudianteActual = studentResult.student;
+      showScreen("roleSelect");
+      return;
+    }
+
+    resultDiv.innerHTML = "<br>❌ Usuario o contraseña incorrecta";
   } catch (error) {
-    console.error('Error en login de profesor:', error);
-    document.getElementById("teacherResult").innerHTML =
-      "<br>❌ Error de conexión";
+    console.error('Error en login:', error);
+    resultDiv.innerHTML = "<br>❌ Error de conexión";
+  }
+}
+
+function enterAsRole(role) {
+  if (role !== authenticatedRole) {
+    showAlert('❌ Esta cuenta no tiene acceso como ' + (role === 'profesor' ? 'Profesor' : 'Estudiante'));
+    return;
+  }
+
+  if (role === 'profesor') {
+    showScreen("teacherPanel");
+    loadStudents();
+  } else {
+    showScreen("studentPanel");
+    mostrarPendientes();
   }
 }
 
@@ -329,31 +380,6 @@ function mostrarEstudiantes() {
       let usuario = e.username || e.usuario;
       lista.innerHTML += `<div class="card"><h3>👤 ${nombre}</h3><p>🆔 ${usuario}</p></div>`;
     });
-  }
-}
-
-async function studentLogin() {
-  let user = document.getElementById("studentLoginUser").value;
-  let pass = document.getElementById("studentLoginPass").value;
-  
-  try {
-    const res = await fetch('/api/students/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: user, password: pass })
-    });
-    
-    const result = await res.json();
-    if (result.success) {
-      estudianteActual = result.student;
-      showScreen("studentPanel");
-      mostrarPendientes();
-    } else {
-      showAlert("❌ Error de información");
-    }
-  } catch (error) {
-    console.error('Error en login:', error);
-    showAlert("❌ Error de conexión");
   }
 }
 

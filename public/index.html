@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Mathematic Pixel</title>
+  <title>Advancive Mathematics</title>
 
   <link rel="stylesheet" href="styles/style.css" />
 </head>
@@ -14,69 +14,79 @@
   <div class="space"></div>
   <div class="fog"></div>
 
-  <!-- PORTADA -->
+  <!-- PORTADA + LOGIN -->
 
   <div class="screen active" id="home">
-    <img src="https://mendozadocente.weebly.com/uploads/5/8/6/1/58617155/4144174_orig.png" class="logo" />
+    <img src="images/astronaut-hero.png" class="logo logo--minimal" alt="Astronauta Advancive Mathematics" />
 
-    <h1 class="main-title">MATHEMATIC'S ADVENTURE</h1>
+    <div class="brand-title">
+      <span class="brand-title__primary">ADVANCIVE</span>
+      <span class="brand-title__secondary">MATHEMATICS</span>
+    </div>
 
-    <div class="subtitle">Plataforma Inteligente de Matemáticas</div>
+    <div class="subtitle">Aprende · Practica · Avanza</div>
 
-    <button class="btn" onclick="showScreen('portal')">INICIAR</button>
-  </div>
+    <div class="panel panel--sm panel--minimal">
+      <div class="input-icon-field">
+        <span class="input-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </span>
+        <input type="text" id="loginUser" placeholder="Usuario o correo" />
+      </div>
 
-  <!-- PORTALES -->
+      <div class="input-icon-field password-field">
+        <span class="input-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </span>
+        <input type="password" id="loginPass" placeholder="Contraseña" />
+        <button type="button" class="password-toggle" id="passwordToggleBtn" onclick="togglePasswordVisibility()" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
 
-  <div class="screen" id="portal">
-    <h1 class="main-title">SELECCIONA PORTAL</h1>
+      <div id="loginResult"></div>
 
-    <div class="options">
-      <button class="btn" onclick="showScreen('teacherLogin')">
-        PORTAL PROFESOR
-      </button>
+      <button class="btn btn--flat" style="width: 100%; margin-top: var(--space-xl);" onclick="unifiedLogin()">INICIAR SESIÓN</button>
 
-      <button class="btn" onclick="showScreen('studentLogin')">
-        PORTAL ESTUDIANTE
-      </button>
+      <div class="login-links">
+        <button type="button" class="login-links__forgot" onclick="showComingSoon()">¿Olvidaste tu contraseña?</button>
+      </div>
+    </div>
+
+    <div class="signup-row">
+      <span>¿No tienes cuenta?</span>
+      <button type="button" class="btn btn--outline btn--sm" onclick="showComingSoon()">Crear cuenta</button>
     </div>
   </div>
 
-  <!-- LOGIN PROFESOR -->
+  <!-- SELECCIÓN DE ROL -->
 
-  <div class="screen" id="teacherLogin">
-    <button class="back-btn" onclick="showScreen('portal')">Volver</button>
-    <div class="panel">
-      <h1>LOGIN PROFESOR</h1>
-
-      <input type="text" id="teacherUser" placeholder="Usuario" />
-
-      <input type="password" id="teacherPass" placeholder="Contraseña" />
-
-      <div id="teacherResult"></div>
-
-      <div class="button-group">
-        <button class="btn" onclick="teacherLogin()">INGRESAR</button>
-        <button class="btn btn--secondary" onclick="showScreen('portal')">VOLVER</button>
-      </div>
+  <div class="screen" id="roleSelect">
+    <div class="brand-title">
+      <span class="brand-title__primary">¿CÓMO QUERÉS</span>
+      <span class="brand-title__secondary">INGRESAR?</span>
     </div>
-  </div>
 
-  <!-- LOGIN ESTUDIANTE -->
+    <div class="panel panel--sm panel--minimal">
+      <button type="button" class="role-card role-card--featured" onclick="enterAsRole('profesor')">
+        <span class="role-card__icon role-card__icon--image">
+          <img src="images/teacher-illustration.png" alt="Profesor" />
+        </span>
+        <span class="role-card__text">
+          <strong>Profesor</strong>
+          <small>Gestioná aulas, actividades y notas</small>
+        </span>
+      </button>
 
-  <div class="screen" id="studentLogin">
-    <button class="back-btn" onclick="showScreen('portal')">Volver</button>
-    <div class="panel">
-      <h1>PORTAL ESTUDIANTE</h1>
-
-      <input type="text" id="studentLoginUser" placeholder="Usuario" />
-
-      <input type="password" id="studentLoginPass" placeholder="Contraseña" />
-
-      <div class="button-group">
-        <button class="btn" onclick="studentLogin()">ENTRAR</button>
-        <button class="btn btn--secondary" onclick="showScreen('portal')">VOLVER</button>
-      </div>
+      <button type="button" class="role-card role-card--featured" onclick="enterAsRole('estudiante')">
+        <span class="role-card__icon role-card__icon--image">
+          <img src="images/student-illustration.png" alt="Estudiante" />
+        </span>
+        <span class="role-card__text">
+          <strong>Estudiante</strong>
+          <small>Mirá tus actividades y resultados</small>
+        </span>
+      </button>
     </div>
   </div>
 
@@ -222,7 +232,7 @@
         <div id="gradesList"></div>
       </div>
 
-      <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="showScreen('portal')">
+      <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="logout()">
         CERRAR SESIÓN
       </button>
     </div>
@@ -231,13 +241,13 @@
   <!-- PANEL ESTUDIANTE -->
 
   <div class="screen" id="studentPanel">
-    <button class="back-btn" onclick="showScreen('portal')">Salir</button>
+    <button class="back-btn" onclick="logout()">Salir</button>
     <div class="panel">
       <h1>PANEL ESTUDIANTE</h1>
 
       <div id="studentActivities"></div>
 
-      <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="showScreen('portal')">
+      <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="logout()">
         CERRAR SESIÓN
       </button>
     </div>
