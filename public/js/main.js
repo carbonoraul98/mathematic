@@ -315,6 +315,7 @@ function enterAsRole(role) {
   if (role === 'profesor') {
     showScreen("teacherPanel");
     loadStudents();
+    loadDashboardStats();
   } else {
     showScreen("studentPanel");
     mostrarPendientes();
@@ -393,8 +394,22 @@ function agregarPregunta() {
 function mostrarPreguntas() {
   let lista = document.getElementById("questionsList");
   lista.innerHTML = "";
+  if (preguntasTemp.length > 0) {
+    lista.style.marginTop = "var(--space-md)";
+    lista.style.marginBottom = "var(--space-md)";
+  }
   preguntasTemp.forEach((p, index) => {
-    lista.innerHTML += `<div class="card"><h3>❓ ${p.pregunta}</h3><p>Tipo: ${p.tipo}</p></div>`;
+    lista.innerHTML += `
+      <div class="classroom-item" style="cursor: default;">
+        <div class="classroom-item-info">
+          <div class="classroom-icon">❓</div>
+          <div class="classroom-details">
+            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: var(--text-md);">${p.pregunta}</h4>
+            <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm);">Tipo: ${p.tipo === 'opcion' ? 'Opción Múltiple' : 'Abierta'}</p>
+          </div>
+        </div>
+      </div>
+    `;
   });
 }
 
@@ -427,6 +442,14 @@ async function crearActividad() {
       mostrarPreguntas();
       document.getElementById("activityTheme").value = "";
       showAlert(`✅ Actividad "${tema}" guardada en la base de datos`);
+      
+      // Redirect to activities list
+      loadActivities();
+      loadDashboardStats();
+      const activitiesLink = Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.textContent.includes('Actividades'));
+      if (activitiesLink) {
+        showTeacherSection('viewActivitiesSection', activitiesLink);
+      }
     } else {
       showAlert('❌ Error al guardar la actividad');
     }
@@ -485,16 +508,28 @@ function realizarActividad(index) {
   });
 }
 
-function showTeacherSection(id) {
+function showTeacherSection(id, btnElement) {
   document.querySelectorAll("#teacherPanel .section").forEach((sec) => {
     sec.classList.remove("show");
+    sec.style.display = "none";
   });
-  document.getElementById(id).classList.add("show");
+  const target = document.getElementById(id);
+  if (target) {
+    target.classList.add("show");
+    target.style.display = "block";
+  }
+  
+  if (btnElement) {
+    document.querySelectorAll(".sidebar-link").forEach(btn => btn.classList.remove("active"));
+    btnElement.classList.add("active");
+  }
   
   if (id === "gradesSection") {
     mostrarNotas();
   } else if (id === "viewActivitiesSection") {
     loadActivities();
+  } else if (id === "dashboardHome") {
+    loadDashboardStats();
   }
 }
 
@@ -616,13 +651,20 @@ async function loadActivities() {
         
         let html = '';
         activities.forEach(act => {
-            const icono = act.type === 'Examen' ? '📝' : '📚';
+            const icono = act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : '🧩');
             html += `
-                <div class="card" style="text-align: left; margin-bottom: var(--space-md);">
-                    <h3>${icono} ${act.title}</h3>
-                    <p>📝 Tipo: ${act.type}</p>
-                    <p>📚 ${act.theme || 'Sin grado'}</p>
-                    <p>📅 ${new Date(act.created_at).toLocaleDateString()}</p>
+                <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: var(--space-md);">
+                    <div class="classroom-item-info">
+                        <div class="classroom-icon">${icono}</div>
+                        <div class="classroom-details">
+                            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: var(--text-md);">${act.title}</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm);">📝 Tipo: ${act.type} • 📚 ${act.theme || 'Sin grado'} • 📅 ${new Date(act.created_at).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: var(--space-sm);">
+                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}')">✏️ Editar</button>
+                        <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                    </div>
                 </div>
             `;
         });
@@ -638,5 +680,173 @@ async function loadActivities() {
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('teacherPanel')) {
         loadStudents();
+        loadDashboardStats();
     }
 });
+
+async function loadDashboardStats() {
+    try {
+        const [groupsRes, studentsRes, activitiesRes] = await Promise.all([
+            fetch('/api/groups'),
+            fetch('/api/students'),
+            fetch('/api/activities')
+        ]);
+        
+        const groups = await groupsRes.json();
+        const students = await studentsRes.json();
+        const activities = await activitiesRes.json();
+        
+        const exams = activities.filter(a => a.type === 'Examen');
+        
+        document.getElementById('statGroupsCount').textContent = groups.length;
+        document.getElementById('statStudentsCount').textContent = students.length;
+        document.getElementById('statActivitiesCount').textContent = activities.length;
+        document.getElementById('statExamsCount').textContent = exams.length;
+        
+        const list = document.getElementById('classroomsList');
+        if (list) {
+            list.innerHTML = '';
+            
+            if (groups.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted);">Aún no tienes aulas creadas.</p>';
+            } else {
+                groups.forEach(g => {
+                    list.innerHTML += `
+                    <div class="classroom-item">
+                        <div class="classroom-item-info">
+                            <div class="classroom-icon">🪐</div>
+                            <div class="classroom-details">
+                                <h4>${g.name}</h4>
+                                <p>Código: ${g.code || 'N/A'} • ${g.student_count || 0} estudiantes</p>
+                            </div>
+                        </div>
+                        <div class="classroom-arrow">›</div>
+                    </div>
+                    `;
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+    }
+}
+
+function promptCreateClassroom() {
+    const modal = document.getElementById('createClassroomModal');
+    const input = document.getElementById('newClassroomName');
+    input.value = '';
+    modal.classList.add('active');
+    input.focus();
+}
+
+function closeCreateClassroomModal() {
+    document.getElementById('createClassroomModal').classList.remove('active');
+}
+
+async function submitCreateClassroom() {
+    const nombre = document.getElementById('newClassroomName').value.trim();
+    if (!nombre) {
+        showAlert('❌ Por favor ingresa un nombre para el aula.');
+        return;
+    }
+    
+    closeCreateClassroomModal();
+    
+    try {
+        const res = await fetch('/api/groups', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: nombre })
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+            showAlert(`✅ Aula ${result.group.name} creada. Código: ${result.group.code}`);
+            loadDashboardStats();
+        } else {
+            showAlert('❌ Error al crear el aula: ' + result.error);
+        }
+    } catch (error) {
+        console.error(error);
+        showAlert('❌ Error de conexión');
+    }
+}
+
+function selectActivityType(type, element) {
+    // Actualizar campo oculto
+    document.getElementById('activityType').value = type;
+    
+    // Remover clase active de todas las cards
+    const cards = document.querySelectorAll('.activity-type-cards .type-card');
+    cards.forEach(card => card.classList.remove('active'));
+    
+    // Agregar clase active a la card clickeada
+    element.classList.add('active');
+}
+
+async function deleteActivity(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta actividad? Esta acción no se puede deshacer.')) return;
+    
+    try {
+        const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('✅ Actividad eliminada');
+            loadActivities();
+            loadDashboardStats();
+        } else {
+            showAlert('❌ Error: ' + result.error);
+        }
+    } catch (error) {
+        console.error(error);
+        showAlert('❌ Error de conexión');
+    }
+}
+
+function openEditActivityModal(id, title, type, theme) {
+    document.getElementById('editActivityId').value = id;
+    document.getElementById('editActivityTitle').value = title;
+    document.getElementById('editActivityType').value = type;
+    document.getElementById('editActivityTheme').value = theme;
+    
+    const modal = document.getElementById('editActivityModal');
+    modal.classList.add('active');
+    document.getElementById('editActivityTitle').focus();
+}
+
+function closeEditActivityModal() {
+    document.getElementById('editActivityModal').classList.remove('active');
+}
+
+async function submitEditActivity() {
+    const id = document.getElementById('editActivityId').value;
+    const title = document.getElementById('editActivityTitle').value.trim();
+    const type = document.getElementById('editActivityType').value;
+    const theme = document.getElementById('editActivityTheme').value;
+    
+    if (!title) {
+        showAlert('❌ Por favor ingresa el título.');
+        return;
+    }
+    
+    closeEditActivityModal();
+    
+    try {
+        const res = await fetch(`/api/activities/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, type, theme })
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+            showAlert('✅ Actividad actualizada con éxito');
+            loadActivities();
+        } else {
+            showAlert('❌ Error: ' + result.error);
+        }
+    } catch (error) {
+        console.error(error);
+        showAlert('❌ Error de conexión');
+    }
+}

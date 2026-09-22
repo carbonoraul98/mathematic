@@ -92,52 +92,92 @@
 
   <!-- PANEL PROFESOR -->
 
-  <div class="screen" id="teacherPanel">
-    <div class="panel">
-      <h1>PANEL DEL PROFESOR</h1>
+  <div class="screen dashboard-layout" id="teacherPanel">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="images/astronaut-hero.png" alt="Logo" style="width: 32px; height: 32px;" />
+        Advancive<br>Mathematics
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link active" onclick="showTeacherSection('dashboardHome', this)">🏠 Inicio</button>
+        <button class="sidebar-link" onclick="showTeacherSection('studentsSection', this)">👥 Estudiantes</button>
+        <button class="sidebar-link" onclick="showTeacherSection('viewActivitiesSection', this)">📋 Actividades</button>
+        <button class="sidebar-link" onclick="showTeacherSection('gradesSection', this)">📊 Reportes / Notas</button>
+        <button class="sidebar-link" style="margin-top: auto;" onclick="logout()">🚪 Cerrar Sesión</button>
+      </nav>
+    </aside>
 
-        <div class="section show" id="menuPrincipal">
-        <div class="menu-buttons">
-          <button class="menu-btn" onclick="showTeacherSection('studentsSection')">
-            📘 Crear estudiantes
-          </button>
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-main">
+      <div class="dashboard-header">
+        <div>
+          <h1>Hola, Profe</h1>
+          <p>Aquí puedes gestionar tus aulas y actividades.</p>
+        </div>
+        <img src="images/teacher-illustration.png" alt="Profile" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--color-primary); background: var(--bg-glass);" />
+      </div>
 
-          <button class="menu-btn" onclick="showTeacherSection('activitiesSection')">
-            📝 Crear actividades
-          </button>
+      <!-- HOME (DASHBOARD) -->
+      <div class="section show" id="dashboardHome">
+        <div class="stats-grid">
+          <div class="stat-box stat-box--purple" onclick="document.getElementById('classroomsList').scrollIntoView({behavior: 'smooth'})" style="cursor: pointer;">
+            <div class="stat-box-icon">🏫</div>
+            <div class="stat-box-info">
+              <h3 id="statGroupsCount">0</h3>
+              <p>Aulas creadas</p>
+            </div>
+          </div>
+          <div class="stat-box stat-box--blue" onclick="showTeacherSection('studentsSection', document.querySelectorAll('.sidebar-link')[1])" style="cursor: pointer;">
+            <div class="stat-box-icon">👥</div>
+            <div class="stat-box-info">
+              <h3 id="statStudentsCount">0</h3>
+              <p>Estudiantes</p>
+            </div>
+          </div>
+          <div class="stat-box stat-box--green" onclick="showTeacherSection('viewActivitiesSection', document.querySelectorAll('.sidebar-link')[3])" style="cursor: pointer;">
+            <div class="stat-box-icon">📝</div>
+            <div class="stat-box-info">
+              <h3 id="statActivitiesCount">0</h3>
+              <p>Actividades</p>
+            </div>
+          </div>
+          <div class="stat-box stat-box--orange" onclick="showTeacherSection('gradesSection', document.querySelectorAll('.sidebar-link')[4])" style="cursor: pointer;">
+            <div class="stat-box-icon">📋</div>
+            <div class="stat-box-info">
+              <h3 id="statExamsCount">0</h3>
+              <p>Exámenes / Notas</p>
+            </div>
+          </div>
+        </div>
 
-          <button class="menu-btn" onclick="showTeacherSection('viewActivitiesSection')">
-            📋 Ver actividades
-          </button>
+        <div class="section-header">
+          <h2>Mis aulas</h2>
+          <button class="btn btn--sm" onclick="promptCreateClassroom()">+ Crear aula</button>
+        </div>
 
-          <button class="menu-btn" onclick="showTeacherSection('gradesSection')">
-            📊 Ver notas
-          </button>
+        <div class="classrooms-list" id="classroomsList">
+          <!-- Aulas cargadas dinámicamente aquí -->
         </div>
       </div>
 
       <!-- ESTUDIANTES -->
-
-      <div class="section" id="studentsSection">
-        <button class="back-btn" onclick="showTeacherSection('menuPrincipal')">← Volver al menú</button>
-        <h2>Crear estudiantes</h2>
+      <div class="section" id="studentsSection" style="display: none;">
+        <h2>Gestión de Estudiantes</h2>
 
         <select id="studentGrade">
           <option>4A</option>
           <option>4B</option>
-
           <option>5A</option>
           <option>5B</option>
         </select>
 
         <input type="text" id="studentName" placeholder="Nombre completo" />
-
         <input type="text" id="studentUser" placeholder="Usuario" />
-
         <input type="password" id="studentPassword" placeholder="Contraseña" />
 
-        <button class="btn" onclick="crearEstudiante()">
-          CREAR ESTUDIANTE
+        <button class="btn" style="width: 100%; margin-top: var(--space-md);" onclick="crearEstudiante()">
+          ➕ CREAR ESTUDIANTE
         </button>
 
         <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl);">
@@ -166,35 +206,51 @@
       </div>
 
       <!-- ACTIVIDADES -->
-
-      <div class="section" id="activitiesSection">
-        <button class="back-btn" onclick="showTeacherSection('menuPrincipal')">← Volver al menú</button>
-        <h2>Crear actividad</h2>
+      <div class="section" id="activitiesSection" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+          <h2 style="margin: 0;">Crear Actividad</h2>
+          <button class="btn btn--secondary btn--sm" onclick="showTeacherSection('viewActivitiesSection', Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.textContent.includes('Actividades')))">⬅️ Volver</button>
+        </div>
 
         <select id="activityTargetGrade">
           <option value="4">Grado 4</option>
           <option value="5">Grado 5</option>
         </select>
 
-        <select id="activityType" style="margin-top: var(--space-md);">
-          <option>Examen</option>
-          <option>Actividad</option>
-          <option>Quiz</option>
-          <option>Refuerzo</option>
-          <option>Recreativo</option>
-        </select>
+        <label style="display: block; margin-top: var(--space-xl); margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Tipo de actividad:</label>
+        <div class="activity-type-cards">
+          <div class="type-card active" onclick="selectActivityType('Examen', this)">
+            <div class="type-icon">📝</div>
+            <span>Examen</span>
+          </div>
+          <div class="type-card" onclick="selectActivityType('Quiz', this)">
+            <div class="type-icon">⏱️</div>
+            <span>Quiz</span>
+          </div>
+          <div class="type-card" onclick="selectActivityType('Actividad', this)">
+            <div class="type-icon">🧩</div>
+            <span>Actividad</span>
+          </div>
+          <div class="type-card" onclick="selectActivityType('Taller', this)">
+            <div class="type-icon">🛠️</div>
+            <span>Taller</span>
+          </div>
+        </div>
+        <input type="hidden" id="activityType" value="Examen" />
 
         <input type="text" id="activityTheme" placeholder="Tema" />
 
-        <button class="btn" onclick="agregarPregunta()">
-          AGREGAR PREGUNTA
-        </button>
-
         <div id="questionsList"></div>
 
-        <button class="btn" onclick="crearActividad()">
-          GUARDAR ACTIVIDAD
-        </button>
+        <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+          <button class="btn btn--outline" style="flex: 1; justify-content: center;" onclick="agregarPregunta()">
+            ➕ AGREGAR PREGUNTA
+          </button>
+
+          <button class="btn" style="flex: 1; justify-content: center;" onclick="crearActividad()">
+            💾 GUARDAR ACTIVIDAD
+          </button>
+        </div>
 
         <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl);">
           <h3>📄 Cargar Examen (JSON)</h3>
@@ -214,27 +270,36 @@
       </div>
 
       <!-- VER ACTIVIDADES -->
-
-      <div class="section" id="viewActivitiesSection">
-        <button class="back-btn" onclick="showTeacherSection('menuPrincipal')">← Volver al menú</button>
-        <h2>📋 Actividades Cargadas</h2>
+      <div class="section" id="viewActivitiesSection" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+          <h2 style="margin: 0;">📋 Gestión de Actividades</h2>
+          <button class="btn btn--sm" onclick="showTeacherSection('activitiesSection', null)">➕ Nueva Actividad</button>
+        </div>
         <div id="activitiesList"></div>
       </div>
 
       <!-- NOTAS -->
-
-      <div class="section" id="gradesSection">
-        <button class="back-btn" onclick="showTeacherSection('menuPrincipal')">← Volver al menú</button>
-        <h2>Notas</h2>
-
+      <div class="section" id="gradesSection" style="display: none;">
+        <h2>Reportes y Notas</h2>
         <button class="btn" onclick="downloadGrades()" style="margin-bottom: var(--space-xl);">📊 DESCARGAR CALIFICACIONES</button>
-
         <div id="gradesList"></div>
       </div>
 
-      <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="logout()">
-        CERRAR SESIÓN
-      </button>
+    </main>
+  </div>
+
+  <!-- MODAL CREAR AULA -->
+  <div class="modal-overlay" id="createClassroomModal">
+    <div class="modal-content" style="max-width: 450px; padding: var(--space-3xl);">
+      <h2 style="margin-bottom: var(--space-md); text-align: left;">Crear nueva aula</h2>
+      <p style="color: var(--text-secondary); text-align: left; margin-bottom: var(--space-xl);">Ingresa el nombre del aula (ej. 6°B) para generar un código único.</p>
+      
+      <input type="text" id="newClassroomName" placeholder="Nombre del aula" class="input" style="margin-bottom: var(--space-2xl);" />
+      
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+        <button class="btn btn--secondary btn--sm" onclick="closeCreateClassroomModal()">Cancelar</button>
+        <button class="btn btn--sm" onclick="submitCreateClassroom()">Crear aula</button>
+      </div>
     </div>
   </div>
 

@@ -41,4 +41,51 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Editar una actividad
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, type, theme } = req.body;
+        
+        if (!title) {
+            return res.status(400).json({ error: 'El título es requerido' });
+        }
+        
+        const updateActivity = await db.prepare(
+            'UPDATE activities SET title = ?, type = ?, theme = ? WHERE id = ?'
+        );
+        const result = await updateActivity.run(title, type, theme, id);
+        
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Actividad no encontrada' });
+        }
+        
+        res.json({ success: true, message: 'Actividad actualizada' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Eliminar una actividad
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const deleteActivity = await db.prepare(
+            'DELETE FROM activities WHERE id = ?'
+        );
+        const result = await deleteActivity.run(id);
+        
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Actividad no encontrada' });
+        }
+        
+        res.json({ success: true, message: 'Actividad eliminada' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

@@ -79,6 +79,7 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql:
         CREATE TABLE IF NOT EXISTS groups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
+            code TEXT,
             teacher_name TEXT,
             month TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP

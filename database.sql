@@ -19,6 +19,7 @@ ON CONFLICT (username) DO NOTHING;
 CREATE TABLE IF NOT EXISTS groups (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
+    code TEXT,
     teacher_name TEXT,
     month TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

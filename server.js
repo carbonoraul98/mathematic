@@ -13,6 +13,7 @@ app.use('/api/teachers', require('./routes/teachers'));
 app.use('/api/activities', require('./routes/activities'));
 app.use('/api/exams', require('./routes/exams'));
 app.use('/api/grades', require('./routes/grades'));
+app.use('/api/groups', require('./routes/groups'));
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
