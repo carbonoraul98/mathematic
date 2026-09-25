@@ -135,103 +135,7 @@ async function loadStudents() {
     }
 }
 
-// Subir Excel con loader
-async function uploadExcel() {
-    const fileInput = document.getElementById('excelFile');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const uploadBtnText = document.getElementById('uploadBtnText');
-    const uploadSpinner = document.getElementById('uploadSpinner');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
 
-    if (!fileInput.files.length) {
-        showAlert('❌ Seleccioná un archivo Excel');
-        return;
-    }
-
-    // Mostrar loader
-    uploadBtn.disabled = true;
-    uploadBtnText.textContent = 'CARGANDO...';
-    uploadSpinner.style.display = 'inline-block';
-    progressContainer.style.display = 'block';
-
-    // Simular progreso (0% a 90%)
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
-        progressBar.style.width = progress + '%';
-        progressText.textContent = Math.round(progress) + '%';
-    }, 300);
-
-    const formData = new FormData();
-    formData.append('excel', fileInput.files[0]);
-
-    try {
-        const res = await fetch('/api/students/upload', {
-            method: 'POST',
-            body: formData
-        });
-
-        clearInterval(progressInterval);
-        progressBar.style.width = '100%';
-        progressText.textContent = '100%';
-
-        const result = await res.json();
-        
-        setTimeout(() => {
-            // Resetear UI
-            uploadBtn.disabled = false;
-            uploadBtnText.textContent = 'CARGAR EXCEL';
-            uploadSpinner.style.display = 'none';
-            progressContainer.style.display = 'none';
-            progressBar.style.width = '0%';
-            
-            // Resetear input
-            fileInput.value = '';
-            document.getElementById('fileUploadText').textContent = 'Seleccionar archivo Excel';
-            document.querySelector('.file-upload-label').classList.remove('has-file');
-
-            if (result.success) {
-                showAlert(`✅ ${result.count} estudiantes cargados`);
-                loadStudents();
-            } else {
-                showAlert('❌ Error al cargar el Excel');
-            }
-        }, 500);
-    } catch (error) {
-        clearInterval(progressInterval);
-        
-        uploadBtn.disabled = false;
-        uploadBtnText.textContent = 'CARGAR EXCEL';
-        uploadSpinner.style.display = 'none';
-        progressContainer.style.display = 'none';
-        
-        console.error('Error subiendo Excel:', error);
-        showAlert('❌ Error al subir el archivo');
-    }
-}
-
-// Manejar selección de archivo
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('excelFile');
-    if (fileInput) {
-        fileInput.addEventListener('change', function() {
-            const label = document.querySelector('.file-upload-label');
-            const text = document.getElementById('fileUploadText');
-            
-            if (this.files && this.files.length > 0) {
-                const fileName = this.files[0].name;
-                text.textContent = fileName;
-                label.classList.add('has-file');
-            } else {
-                text.textContent = 'Seleccionar archivo Excel';
-                label.classList.remove('has-file');
-            }
-        });
-    }
-});
 
 // Descargar calificaciones
 function downloadGrades() {
@@ -432,21 +336,45 @@ async function startPracticeMode() {
   }
 }
 
-async function crearEstudiante() {
-  let grado = document.getElementById("studentGrade").value;
-  let nombre = document.getElementById("studentName").value;
-  let usuario = document.getElementById("studentUser").value;
-  let password = document.getElementById("studentPassword").value;
-  let btn = document.getElementById("btnCreateStudent");
+// Funciones del Modal de Estudiante
+function openCreateStudentModal() {
+  document.getElementById('createStudentModal').style.display = 'flex';
+  document.getElementById('modalStudentName').value = '';
+  document.getElementById('modalStudentUser').value = '';
+  document.getElementById('modalStudentPassword').value = '';
+}
+
+function closeCreateStudentModal() {
+  document.getElementById('createStudentModal').style.display = 'none';
+}
+
+// Generar usuario automáticamente al escribir el nombre
+document.getElementById('modalStudentName').addEventListener('input', function(e) {
+  let name = e.target.value;
+  let parts = name.trim().split(' ').filter(x => x);
+  let username = '';
+  if (parts.length >= 3) {
+    username = parts[2] + parts[0];
+  } else {
+    username = parts.join('');
+  }
+  document.getElementById('modalStudentUser').value = username.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
+});
+
+async function crearEstudianteModal() {
+  let grado = document.getElementById("modalStudentGrade").value;
+  let nombre = document.getElementById("modalStudentName").value;
+  let usuario = document.getElementById("modalStudentUser").value;
+  let password = document.getElementById("modalStudentPassword").value;
+  let btn = document.getElementById("modalBtnCreateStudent");
   
   if (!nombre || !usuario) {
     showAlert("❌ Completa nombre y usuario");
     return;
   }
   
-  // Interactive UI state
   let originalText = btn.innerHTML;
-  btn.innerHTML = "⏳ CREANDO...";
+  btn.innerHTML = "⏳...";
   btn.disabled = true;
   
   try {
@@ -457,41 +385,34 @@ async function crearEstudiante() {
         grado: grado,
         nombre: nombre,
         usuario: usuario,
-        password: password || '1234'
+        password: password || '123'
       })
     });
     
     const result = await res.json();
     if (result.success) {
-      // Confetti and success state
       if (typeof confetti !== 'undefined') {
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       }
-      btn.innerHTML = "✅ ¡ESTUDIANTE CREADO!";
-      btn.style.background = "#10B981"; // Green
+      btn.innerHTML = "✅";
+      btn.style.background = "#10B981";
       
-      // Limpiar campos
-      document.getElementById("studentName").value = "";
-      document.getElementById("studentUser").value = "";
-      document.getElementById("studentPassword").value = "";
-      
-      // Recargar lista desde la base de datos
       loadStudents();
       
-      // Reset button after 2 seconds
       setTimeout(() => {
         btn.innerHTML = originalText;
         btn.style.background = "";
         btn.disabled = false;
-      }, 2000);
+        closeCreateStudentModal();
+      }, 1500);
     } else {
       showAlert("❌ Error al guardar: " + result.error);
       btn.innerHTML = originalText;
       btn.disabled = false;
     }
   } catch (error) {
-    console.error('Error:', error);
-    showAlert("❌ Error de conexión");
+    console.error(error);
+    showAlert("❌ Error de red al crear estudiante");
     btn.innerHTML = originalText;
     btn.disabled = false;
   }
@@ -976,7 +897,7 @@ async function loadDashboardStats() {
             } else {
                 groups.forEach(g => {
                     list.innerHTML += `
-                    <div class="classroom-item">
+                    <div class="classroom-item" onclick="openClassroomDetail('${g.name}')" style="cursor: pointer;">
                         <div class="classroom-item-info">
                             <div class="classroom-icon">🪐</div>
                             <div class="classroom-details">
@@ -1112,5 +1033,94 @@ async function submitEditActivity() {
     } catch (error) {
         console.error(error);
         showAlert('❌ Error de conexión');
+    }
+}
+
+function openClassroomDetail(groupName) {
+    document.getElementById('classroomDetailTitle').textContent = '🪐 Aula ' + groupName;
+    const content = document.getElementById('classroomDetailContent');
+    
+    // Hide all sections and show this one
+    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('show'));
+    document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+    document.getElementById('classroomDetailSection').style.display = 'block';
+    document.getElementById('classroomDetailSection').classList.add('show');
+    
+    // Remove active class from sidebar
+    document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+    
+    if (!estudiantes || estudiantes.length === 0) {
+        content.innerHTML = '<p>No hay estudiantes cargados. Vuelve e inténtalo de nuevo.</p>';
+        return;
+    }
+    
+    const studentsInGroup = estudiantes.filter(e => e.group_name === groupName || e.grado === groupName);
+    
+    if (studentsInGroup.length === 0) {
+        content.innerHTML = '<p>Esta aula no tiene estudiantes todavía.</p>';
+        return;
+    }
+    
+    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-md);">';
+    
+    studentsInGroup.forEach(s => {
+        let name = s.full_name || s.nombre;
+        let user = s.username || s.usuario;
+        let xp = s.total_score || 0;
+        let levelName = s.levelInfo ? s.levelInfo.name : 'Principiante';
+        let levelIcon = s.levelInfo ? s.levelInfo.icon : '🌱';
+        
+        html += `
+        <div class="card" style="display: flex; flex-direction: column; gap: var(--space-sm);">
+            <h3 style="margin: 0; color: var(--color-primary);"><span style="font-size: 1.2rem;">👤</span> ${name}</h3>
+            <div style="font-size: var(--text-sm); color: var(--text-muted);">
+                <p style="margin: 0;"><b>Usuario:</b> ${user}</p>
+                <p style="margin: 0; margin-top: 4px;"><b>Progreso:</b> ${levelIcon} ${levelName} (${xp} XP)</p>
+            </div>
+            <button class="btn btn--secondary btn--sm" style="margin-top: auto;" onclick="showStudentProgress(${s.id}, '${name.replace(/'/g, "\\'")}')">📄 Ver Actividades y Exámenes</button>
+        </div>
+        `;
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+async function showStudentProgress(studentId, studentName) {
+    document.getElementById('studentProgressModal').style.display = 'flex';
+    document.getElementById('progressModalTitle').innerHTML = `📈 Progreso: ${studentName}`;
+    const content = document.getElementById('progressModalContent');
+    content.innerHTML = '<div class="spinner" style="display:block; margin: 20px auto;"></div>';
+    
+    try {
+        const res = await fetch(`/api/students/${studentId}/attempts`);
+        const data = await res.json();
+        
+        if (data.success) {
+            if (data.attempts.length === 0) {
+                content.innerHTML = '<p style="text-align:center; color: var(--text-muted); margin-top: 20px;">Este estudiante aún no ha completado actividades.</p>';
+            } else {
+                let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                data.attempts.forEach(a => {
+                    const date = new Date(a.completed_at).toLocaleString();
+                    const icon = a.type === 'Examen' ? '📝' : '🎮';
+                    html += `
+                        <div style="background: var(--bg-card); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--color-primary); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0;">${icon} ${a.title}</h4>
+                                <span style="font-size: 12px; color: var(--text-muted);">${date}</span>
+                            </div>
+                            <div style="font-weight: bold; color: var(--color-primary);">+${a.score} XP</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+            }
+        } else {
+            content.innerHTML = '<p>Error cargando historial.</p>';
+        }
+    } catch (err) {
+        content.innerHTML = '<p>Error de conexión.</p>';
     }
 }

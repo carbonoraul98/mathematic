@@ -167,45 +167,24 @@
         </div>
       </div>
 
+      <!-- DETALLE DE AULA -->
+      <div class="section" id="classroomDetailSection" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+          <h2 id="classroomDetailTitle" style="margin: 0;">🪐 Detalles del Aula</h2>
+          <button class="btn btn--secondary btn--sm" onclick="showTeacherSection('dashboardHome', document.querySelectorAll('.sidebar-link')[0])">⬅️ Volver al Inicio</button>
+        </div>
+        <div id="classroomDetailContent">
+          <!-- Detalle de estudiantes se cargará aquí -->
+        </div>
+      </div>
+
       <!-- ESTUDIANTES -->
       <div class="section" id="studentsSection" style="display: none;">
-        <h2>Gestión de Estudiantes</h2>
-
-        <select id="studentGrade">
-          <option>4A</option>
-          <option>4B</option>
-          <option>5A</option>
-          <option>5B</option>
-          <option>5C</option>
-        </select>
-
-        <input type="text" id="studentName" placeholder="Nombre completo" />
-        <input type="text" id="studentUser" placeholder="Usuario" />
-        <input type="password" id="studentPassword" placeholder="Contraseña" />
-
-        <button id="btnCreateStudent" class="btn" style="width: 100%; margin-top: var(--space-md); border-radius: 25px; transition: all 0.3s ease;" onclick="crearEstudiante()">
-          ➕ CREAR ESTUDIANTE
-        </button>
-
-        <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl);">
-          <h3>📥 Cargar desde Excel</h3>
-          
-          <div class="file-upload-wrapper">
-            <input type="file" id="excelFile" accept=".xlsx" class="file-upload-input" />
-            <label for="excelFile" class="file-upload-label">
-              <span class="file-upload-icon">📁</span>
-              <span class="file-upload-text" id="fileUploadText">Seleccionar archivo Excel</span>
-            </label>
-          </div>
-          
-          <button class="btn" onclick="uploadExcel()" id="uploadBtn">
-            <span id="uploadBtnText">CARGAR EXCEL</span>
-            <div class="spinner" id="uploadSpinner" style="display: none;"></div>
-          </button>
-          
-          <div class="progress-container" id="progressContainer" style="display: none;">
-            <div class="progress-bar" id="progressBar"></div>
-            <div class="progress-text" id="progressText">0%</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+          <h2 style="margin: 0;">👥 Estudiantes</h2>
+          <div>
+            <button class="btn btn--secondary btn--sm" onclick="showTeacherSection('dashboardHome', document.querySelectorAll('.sidebar-link')[0])">⬅️ Volver</button>
+            <button class="btn btn--sm" onclick="openCreateStudentModal()" style="border-radius: 25px; margin-left: var(--space-sm);">➕ CREAR ESTUDIANTE</button>
           </div>
         </div>
 
@@ -289,7 +268,10 @@
       <div class="section" id="practicesSection" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
           <h2 style="margin: 0;">🎮 Módulos de Práctica</h2>
-          <button class="btn btn--sm" onclick="showCreatePractice()">➕ Nueva Práctica</button>
+          <div>
+            <button class="btn btn--secondary btn--sm" onclick="showTeacherSection('dashboardHome', document.querySelectorAll('.sidebar-link')[0])">⬅️ Volver</button>
+            <button class="btn btn--sm" onclick="showCreatePractice()" style="margin-left: var(--space-sm);">➕ Nueva Práctica</button>
+          </div>
         </div>
         
         <div id="createPracticeContainer" style="display: none; background: var(--bg-glass); border: 1px solid var(--color-primary); padding: var(--space-lg); border-radius: var(--radius-lg); margin-bottom: var(--space-xl);">
@@ -376,6 +358,45 @@
   <script src="js/components/question-modal.js"></script>
   <script src="js/components/activity-player.js?v=5"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- MODAL: Crear Estudiante -->
+  <div class="modal-overlay" id="createStudentModal">
+    <div class="modal">
+      <h3 style="margin-top:0;">✨ Nuevo Estudiante</h3>
+      <p style="font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-lg);">Registra un nuevo estudiante en el sistema.</p>
+      
+      <select id="modalStudentGrade" style="margin-bottom: var(--space-md);">
+        <option>4A</option>
+        <option>4B</option>
+        <option>5A</option>
+        <option>5B</option>
+        <option>5C</option>
+      </select>
+
+      <input type="text" id="modalStudentName" placeholder="Nombre completo" style="margin-bottom: var(--space-md);" />
+      <input type="text" id="modalStudentUser" placeholder="Usuario (automático)" style="margin-bottom: var(--space-md);" />
+      <input type="password" id="modalStudentPassword" placeholder="Contraseña (por defecto 123)" style="margin-bottom: var(--space-lg);" />
+
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+        <button class="btn btn--outline btn--sm" onclick="closeCreateStudentModal()" style="border-radius: 25px;">Cancelar</button>
+        <button id="modalBtnCreateStudent" class="btn btn--sm" onclick="crearEstudianteModal()" style="border-radius: 25px;">Crear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Progreso del Estudiante -->
+  <div class="modal-overlay" id="studentProgressModal">
+    <div class="modal" style="max-width: 600px; width: 90%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <h3 style="margin: 0;" id="progressModalTitle">📈 Progreso del Estudiante</h3>
+        <button class="btn btn--sm" style="background: transparent; color: var(--text-color); border: 1px solid var(--color-border); padding: 5px 10px;" onclick="document.getElementById('studentProgressModal').style.display = 'none'">❌</button>
+      </div>
+      
+      <div id="progressModalContent" style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+        <!-- Progreso cargado aquí -->
+      </div>
+    </div>
+  </div>
+
   <script src="js/main.js?v=11"></script>
 </body>
 </html>

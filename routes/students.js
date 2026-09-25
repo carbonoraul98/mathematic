@@ -6,89 +6,6 @@ const router = express.Router();
 
 const upload = multer({ dest: 'uploads/' });
 
-// Función para limpiar el nombre del grupo (4°A -> 4A)
-function cleanGroupName(name) {
-    return name.replace('°', '').trim();
-}
-
-// Función para calcular el nivel basado en el total_score (XP)
-function calculateLevel(total_score) {
-    // Cada pregunta da 10 XP. Una práctica de 3 preguntas = 30 XP.
-    // Ajustamos a 30 para que una práctica perfecta suba de nivel.
-    const xpPerLevel = 30;
-    const score = total_score || 0;
-    const currentLevel = Math.floor(score / xpPerLevel) + 1;
-    const currentXP = score % xpPerLevel;
-    const progressPercent = Math.round((currentXP / xpPerLevel) * 100);
-    
-    return {
-        level: currentLevel,
-        currentXP,
-        xpPerLevel,
-        progressPercent
-    };
-}
-
-// Subir Excel y crear estudiantes
-router.post('/upload', upload.single('excel'), async (req, res) => {
-    try {
-        const workbook = xlsx.readFile(req.file.path);
-        let totalCreated = 0;
-
-        for (const sheetName of workbook.SheetNames) {
-            const worksheet = workbook.Sheets[sheetName];
-            const data = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: null });
-
-            if (data.length < 3) continue;
-
-            let currentGroupName = '';
-            let currentTeacherName = '';
-            let rowIndex = 0;
-
-            while (rowIndex < data.length) {
-                const row = data[rowIndex];
-                
-                // Detectar fila de grupo (tiene formato como 4°A, 5°B, etc.)
-                if (row[1] && typeof row[1] === 'string' && /[45]°[ABC]/.test(row[1].trim())) {
-                    currentGroupName = cleanGroupName(row[1].trim());
-                    rowIndex++;
-                    // Siguiente fila debería ser el docente
-                    if (rowIndex < data.length && data[rowIndex][1]) {
-                        currentTeacherName = data[rowIndex][1].toString().trim();
-                        rowIndex++;
-                    }
-                    // Saltar fila de encabezados si existe
-                    if (rowIndex < data.length && (data[rowIndex][0] === 'N°' || data[rowIndex][0] === 'n°')) {
-                        rowIndex++;
-                    }
-                    continue;
-                }
-
-                // Detectar nuevo grupo por formato alternativo
-                if (row[1] && !row[0] && typeof row[1] === 'string' && row[1].length > 3) {
-                    // Verificar si es un nombre de grupo
-                    const possibleGroup = row[1].trim();
-                    if (/[45][°]?[ABC]/.test(possibleGroup)) {
-                        currentGroupName = cleanGroupName(possibleGroup);
-                        rowIndex++;
-                        // Siguiente fila debería ser el docente
-                        if (rowIndex < data.length && data[rowIndex][1]) {
-                            currentTeacherName = data[rowIndex][1].toString().trim();
-                            rowIndex++;
-                        }
-                        // Saltar fila de encabezados
-                        if (rowIndex < data.length && (data[rowIndex][0] === 'N°' || data[rowIndex][0] === 'n°')) {
-                            rowIndex++;
-                        }
-                        continue;
-                    }
-                }
-
-                // Detectar fila de encabezados
-                if (row[0] === 'N°' || row[0] === 'n°' || row[0] === 'NÂ°') {
-                    rowIndex++;
-                    continue;
-                }
 
                 // Procesar estudiante
                 const listNumber = parseInt(row[0]);
@@ -267,6 +184,25 @@ router.post('/:id/reset', async (req, res) => {
         await deleteAttempts.run(id);
         
         res.json({ success: true, message: 'Progreso reiniciado a 0' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Obtener intentos de un estudiante
+router.get('/:id/attempts', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const stmt = await db.prepare(`
+            SELECT a.*, act.title, act.type, act.theme 
+            FROM attempts a 
+            JOIN activities act ON a.activity_id = act.id 
+            WHERE a.student_id = ? 
+            ORDER BY a.completed_at DESC
+        `);
+        const attempts = await stmt.all(id);
+        res.json({ success: true, attempts });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
