@@ -124,6 +124,45 @@ async function seedPractices() {
       }
       console.log('✅ Practice Modules seeded successfully.');
     }
+    
+    // Seed students
+    const stmtStudents = await db.prepare("SELECT COUNT(*) as count FROM students");
+    const resStudents = await stmtStudents.get();
+    
+    if (resStudents && resStudents.count === 0) {
+      console.log('🌱 Seeding Students from Excel list...');
+      const studentsData = require('./students_seed.json');
+      
+      let listNumbers = {};
+
+      for (const s of studentsData) {
+        let groupId;
+        const isPg = process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://');
+        
+        // Find or insert group
+        let grp = isPg ? await (await db.prepare("SELECT id FROM groups WHERE name = $1")).get(s.groupName) : await (await db.prepare("SELECT id FROM groups WHERE name = ?")).get(s.groupName);
+        
+        if (!grp) {
+            isPg ? await (await db.prepare("INSERT INTO groups (name) VALUES ($1)")).run(s.groupName) : await (await db.prepare("INSERT INTO groups (name) VALUES (?)")).run(s.groupName);
+            grp = isPg ? await (await db.prepare("SELECT id FROM groups WHERE name = $1")).get(s.groupName) : await (await db.prepare("SELECT id FROM groups WHERE name = ?")).get(s.groupName);
+        }
+        groupId = grp.id;
+        
+        // Insert student
+        if (!listNumbers[groupId]) listNumbers[groupId] = 1;
+        const listNum = listNumbers[groupId]++;
+        
+        const insertStudentPg = "INSERT INTO students (full_name, username, password, group_id, list_number) VALUES ($1, $2, $3, $4, $5)";
+        const insertStudentSq = "INSERT INTO students (full_name, username, password, group_id, list_number) VALUES (?, ?, ?, ?, ?)";
+        const defaultPassword = '123';
+        if (isPg) {
+            await (await db.prepare(insertStudentPg)).run(s.name, s.username, defaultPassword, groupId, listNum);
+        } else {
+            await (await db.prepare(insertStudentSq)).run(s.name, s.username, defaultPassword, groupId, listNum);
+        }
+      }
+      console.log('✅ Students seeded successfully.');
+    }
   } catch (err) {
     console.error('Error seeding practices:', err);
   }
