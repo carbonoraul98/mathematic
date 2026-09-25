@@ -15,6 +15,12 @@ app.use('/api/exams', require('./routes/exams'));
 app.use('/api/grades', require('./routes/grades'));
 app.use('/api/groups', require('./routes/groups'));
 
+// Seed Practice Modules automatically if not present
+const seedPractices = require('./seedPractices');
+setTimeout(() => {
+    seedPractices();
+}, 2000); // Wait 2s for DB initialization
+
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
