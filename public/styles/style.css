@@ -162,7 +162,7 @@ body {
   z-index: 10;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: var(--space-xl) var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
   overflow-y: auto;
 }
 
@@ -1076,7 +1076,7 @@ textarea {
 }
 
 .logo--minimal {
-  width: 160px;
+  width: 120px;
   box-shadow: none;
   border-radius: 0;
   animation: none;
@@ -1396,7 +1396,7 @@ textarea {
   }
 
   .logo--minimal {
-    width: 120px;
+    width: 90px;
   }
 
   .signup-row {
