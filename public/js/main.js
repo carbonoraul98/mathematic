@@ -226,6 +226,9 @@ function enterAsRole(role) {
     loadDashboardStats();
   } else {
     showScreen("studentPanel");
+    if (document.getElementById('studentPanelName')) {
+        document.getElementById('studentPanelName').innerText = estudianteActual.full_name || estudianteActual.username || 'Estudiante';
+    }
     updateStudentLevelUI(estudianteActual);
     mostrarPendientes();
   }
@@ -421,6 +424,12 @@ async function crearEstudianteModal() {
 function mostrarEstudiantes() {
   let lista = document.getElementById("studentsList");
   lista.innerHTML = "";
+  
+  if (!estudiantes || estudiantes.length === 0) {
+      lista.innerHTML = '<p style="color: var(--text-muted);">Aún no tienes estudiantes cargados.</p>';
+      return;
+  }
+  
   let grupos = {};
   estudiantes.forEach((e) => {
     let grupoKey = e.group_name || e.grado;
@@ -429,14 +438,25 @@ function mostrarEstudiantes() {
     }
     grupos[grupoKey].push(e);
   });
+  
+  let html = '<div class="classrooms-list">';
   for (let grupo in grupos) {
-    lista.innerHTML += `<div class="card"><h2>📚 ${grupo}</h2></div>`;
-    grupos[grupo].forEach((e) => {
-      let nombre = e.full_name || e.nombre;
-      let usuario = e.username || e.usuario;
-      lista.innerHTML += `<div class="card"><h3>👤 ${nombre}</h3><p>🆔 ${usuario}</p></div>`;
-    });
+    let studentCount = grupos[grupo].length;
+    html += `
+      <div class="classroom-item" onclick="openClassroomDetail('${grupo}')" style="cursor: pointer;">
+          <div class="classroom-item-info">
+              <div class="classroom-icon">🪐</div>
+              <div class="classroom-details">
+                  <h4>Aula ${grupo}</h4>
+                  <p>${studentCount} estudiantes</p>
+              </div>
+          </div>
+          <div class="classroom-arrow">›</div>
+      </div>
+    `;
   }
+  html += '</div>';
+  lista.innerHTML = html;
 }
 
 function agregarPregunta() {
@@ -552,7 +572,7 @@ async function mostrarPendientes() {
     // Filtrar actividades del grado del estudiante y que no sean Práctica (van aparte)
     const actividadesFiltradas = todasActividades.filter(a => {
       const gradoActividad = a.theme ? a.theme.replace('Grado ', '') : '';
-      const coincideGrado = gradoActividad === gradoAlumnoBase || !gradoActividad;
+      const coincideGrado = gradoActividad === gradoAlumnoBase || !gradoActividad || a.theme === 'General';
       const noEsPractica = a.type !== 'Práctica';
       return coincideGrado && noEsPractica;
     });

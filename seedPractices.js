@@ -2,6 +2,13 @@ const db = require('./models/database');
 
 const practicesData = [
   {
+    title: 'Actividad de Prueba', theme: 'General', type: 'Examen',
+    questions: [
+      { q: "¿Prueba 1: 1 + 1?", a: "2", b: "3", c: "4", correct: "2" },
+      { q: "¿Prueba 2: de qué color es el caballo blanco de San Martín?", a: "Blanco", b: "Negro", c: "Rojo", correct: "Blanco" }
+    ]
+  },
+  {
     title: 'Suma', theme: 'Grado 4',
     questions: [
       { q: "¿Cuánto es 15 + 27?", a: "42", b: "32", c: "45", correct: "42" },
