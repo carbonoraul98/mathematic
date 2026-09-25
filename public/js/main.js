@@ -1086,6 +1086,7 @@ function openClassroomDetail(groupName) {
     studentsInGroup.forEach(s => {
         let name = s.full_name || s.nombre;
         let user = s.username || s.usuario;
+        let pass = s.password || 'N/A';
         let xp = s.total_score || 0;
         let levelName = s.levelInfo ? s.levelInfo.name : 'Principiante';
         let levelIcon = s.levelInfo ? s.levelInfo.icon : '🌱';
@@ -1094,7 +1095,7 @@ function openClassroomDetail(groupName) {
         <div class="card" style="display: flex; flex-direction: column; gap: var(--space-sm);">
             <h3 style="margin: 0; color: var(--color-primary);"><span style="font-size: 1.2rem;">👤</span> ${name}</h3>
             <div style="font-size: var(--text-sm); color: var(--text-muted);">
-                <p style="margin: 0;"><b>Usuario:</b> ${user}</p>
+                <p style="margin: 0;"><b>Usuario:</b> ${user} &nbsp;|&nbsp; <b>Contraseña:</b> ${pass}</p>
                 <p style="margin: 0; margin-top: 4px;"><b>Progreso:</b> ${levelIcon} ${levelName} (${xp} XP)</p>
             </div>
             <button class="btn btn--secondary btn--sm" style="margin-top: auto;" onclick="showStudentProgress(${s.id}, '${name.replace(/'/g, "\\'")}')">📄 Ver Actividades y Exámenes</button>

@@ -6,6 +6,22 @@ const router = express.Router();
 
 const upload = multer({ dest: 'uploads/' });
 
+// Función para calcular el nivel basado en el total_score (XP)
+function calculateLevel(total_score) {
+    const xpPerLevel = 30;
+    const score = total_score || 0;
+    const currentLevel = Math.floor(score / xpPerLevel) + 1;
+    const currentXP = score % xpPerLevel;
+    const progressPercent = Math.round((currentXP / xpPerLevel) * 100);
+    
+    return {
+        level: currentLevel,
+        currentXP,
+        xpPerLevel,
+        progressPercent
+    };
+}
+
 // Crear estudiante individual
 router.post('/', async (req, res) => {
     try {
