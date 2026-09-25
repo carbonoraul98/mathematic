@@ -239,4 +239,22 @@ router.post('/:id/add-xp', async (req, res) => {
     }
 });
 
+// Resetear progreso (volver a 0)
+router.post('/:id/reset', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateStmt = await db.prepare('UPDATE students SET total_score = 0 WHERE id = ?');
+        await updateStmt.run(id);
+        
+        // Opcional: borrar historial de intentos (attempts)
+        const deleteAttempts = await db.prepare('DELETE FROM attempts WHERE student_id = ?');
+        await deleteAttempts.run(id);
+        
+        res.json({ success: true, message: 'Progreso reiniciado a 0' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

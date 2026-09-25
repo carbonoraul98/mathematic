@@ -338,7 +338,10 @@
   <!-- PANEL ESTUDIANTE -->
 
   <div class="screen" id="studentPanel">
-    <button class="back-btn" onclick="logout()">Salir</button>
+    <div style="display: flex; justify-content: space-between; width: 100%; padding: 20px;">
+        <button class="back-btn" onclick="logout()" style="position: relative; left: 0; top: 0;">Salir</button>
+        <button class="btn btn--outline btn--sm" onclick="resetStudentProgress()" style="border-color: var(--color-danger); color: var(--color-danger);">Reiniciar Progreso</button>
+    </div>
     <div class="panel">
       <h1>PANEL ESTUDIANTE</h1>
       
@@ -370,7 +373,8 @@
 
   <script src="js/components/custom-alert.js"></script>
   <script src="js/components/question-modal.js"></script>
-  <script src="js/components/activity-player.js?v=2"></script>
+  <script src="js/components/activity-player.js?v=3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="js/main.js?v=9"></script>
 </body>
 </html>

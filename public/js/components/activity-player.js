@@ -89,9 +89,18 @@ class ActivityPlayer extends HTMLElement {
           background: #1A264D; border-color: #2D3E70;
         }
         
-        .ap-option.selected {
+        .ap-option.correct {
           border-color: #10B981; /* Green */
-          background: rgba(16, 185, 129, 0.1);
+          background: rgba(16, 185, 129, 0.2);
+        }
+        
+        .ap-option.incorrect {
+          border-color: #EF4444; /* Red */
+          background: rgba(239, 68, 68, 0.2);
+        }
+        
+        .ap-option.locked {
+          pointer-events: none;
         }
         
         .ap-option-letter {
@@ -106,12 +115,17 @@ class ActivityPlayer extends HTMLElement {
         }
         
         .ap-option-icon {
-          display: none; color: #10B981;
-          background: #fff; border-radius: 50%; width: 20px; height: 20px;
-          align-items: center; justify-content: center; font-size: 12px;
+          display: none; font-weight: bold;
+          border-radius: 50%; width: 24px; height: 24px;
+          align-items: center; justify-content: center; font-size: 14px;
         }
         
-        .ap-option.selected .ap-option-icon { display: flex; }
+        .ap-option.correct .ap-option-icon { 
+          display: flex; color: #fff; background: #10B981; content: "✓";
+        }
+        .ap-option.incorrect .ap-option-icon { 
+          display: flex; color: #fff; background: #EF4444; content: "✗";
+        }
         
         .ap-input-text {
           width: 100%; padding: 16px; border-radius: 12px;
@@ -207,6 +221,7 @@ class ActivityPlayer extends HTMLElement {
     this.shuffledQuestions = questions;
     this.currentIndex = 0;
     this.answers = new Array(questions.length).fill(null);
+    this.results = new Array(questions.length).fill(null);
     
     this.startTimer();
     this.renderCurrentQuestion();
@@ -263,17 +278,47 @@ class ActivityPlayer extends HTMLElement {
       options.forEach(opt => {
         const div = document.createElement('div');
         div.className = 'ap-option';
-        if (this.answers[this.currentIndex] === opt.letter) {
-          div.classList.add('selected');
+        
+        const hasAnswered = this.answers[this.currentIndex] !== null;
+        if (hasAnswered) {
+          div.classList.add('locked');
+          if (this.answers[this.currentIndex] === opt.letter) {
+             if (this.results[this.currentIndex] === true) {
+                 div.classList.add('correct');
+                 div.innerHTML = `
+                   <div class="ap-option-letter">${opt.letter}</div>
+                   <div class="ap-option-text">${opt.text}</div>
+                   <div class="ap-option-icon">✓</div>
+                 `;
+             } else {
+                 div.classList.add('incorrect');
+                 div.innerHTML = `
+                   <div class="ap-option-letter">${opt.letter}</div>
+                   <div class="ap-option-text">${opt.text}</div>
+                   <div class="ap-option-icon">✗</div>
+                 `;
+             }
+          } else {
+             // Optional: highlight correct answer if they got it wrong?
+             const isThisCorrect = (opt.text.trim().toLowerCase() === q.correcta.trim().toLowerCase());
+             if (isThisCorrect) {
+                 div.style.borderColor = '#10B981';
+             }
+             div.innerHTML = `
+               <div class="ap-option-letter">${opt.letter}</div>
+               <div class="ap-option-text">${opt.text}</div>
+               <div class="ap-option-icon" style="display:none;"></div>
+             `;
+          }
+        } else {
+            div.innerHTML = `
+              <div class="ap-option-letter">${opt.letter}</div>
+              <div class="ap-option-text">${opt.text}</div>
+              <div class="ap-option-icon" style="display:none;"></div>
+            `;
+            div.addEventListener('click', () => this.selectOption(opt.letter, opt.text));
         }
         
-        div.innerHTML = `
-          <div class="ap-option-letter">${opt.letter}</div>
-          <div class="ap-option-text">${opt.text}</div>
-          <div class="ap-option-icon">✓</div>
-        `;
-        
-        div.addEventListener('click', () => this.selectOption(opt.letter));
         container.appendChild(div);
       });
     } else {
@@ -290,9 +335,31 @@ class ActivityPlayer extends HTMLElement {
     }
   }
   
-  selectOption(letter) {
+  selectOption(letter, text) {
+    if (this.answers[this.currentIndex]) return; // Already answered
+    
     this.answers[this.currentIndex] = letter;
-    this.renderCurrentQuestion(); // Re-render to show selected state
+    const q = this.shuffledQuestions[this.currentIndex];
+    const isCorrect = (text.trim().toLowerCase() === q.correcta.trim().toLowerCase());
+    
+    this.results[this.currentIndex] = isCorrect;
+    
+    this.renderCurrentQuestion(); 
+    
+    if (isCorrect) {
+       this.fireConfetti();
+    }
+  }
+
+  fireConfetti() {
+    if (typeof confetti !== 'undefined') {
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#10B981', '#3B82F6', '#8B5CF6']
+        });
+    }
   }
 
   prevQuestion() {
@@ -316,23 +383,13 @@ class ActivityPlayer extends HTMLElement {
     let puntos = 0;
     
     this.shuffledQuestions.forEach((q, idx) => {
-      let respuesta = this.answers[idx] ? this.answers[idx].trim().toLowerCase() : "";
-      
-      // Si es de opción, la respuesta guardada es 'A', 'B' o 'C'
-      // Pero 'correcta' podría ser el texto "2" o la letra "A"?
-      // En la base de datos se guarda el texto. Así que debemos comparar el texto de la opción.
-      let textoSeleccionado = "";
       if (q.tipo === "opcion") {
-         let userLetter = this.answers[idx]; // 'A', 'B', 'C'
-         if (userLetter === 'A') textoSeleccionado = q.a;
-         if (userLetter === 'B') textoSeleccionado = q.b;
-         if (userLetter === 'C') textoSeleccionado = q.c;
-         
-         if (textoSeleccionado && textoSeleccionado.trim().toLowerCase() === q.correcta.trim().toLowerCase()) {
+         if (this.results[idx] === true) {
            puntos += 10;
          }
       } else {
-        // Abierta
+        // Abierta (se evalúa al final porque escriben)
+        let respuesta = this.answers[idx] ? this.answers[idx].trim().toLowerCase() : "";
         if (respuesta === q.correcta.trim().toLowerCase()) {
           puntos += 10;
         }
