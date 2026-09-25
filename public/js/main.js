@@ -282,8 +282,8 @@ async function loginAs(endpoint, user, pass) {
 let authenticatedRole = null;
 
 async function unifiedLogin() {
-  let user = document.getElementById("loginUser").value;
-  let pass = document.getElementById("loginPass").value;
+  let user = document.getElementById("loginUser").value.trim();
+  let pass = document.getElementById("loginPass").value.trim();
   let resultDiv = document.getElementById("loginResult");
   resultDiv.innerHTML = "";
 
