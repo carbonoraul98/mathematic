@@ -49,13 +49,13 @@ class ActivityPlayer extends HTMLElement {
         }
         
         .ap-progress-bar-container {
-          height: 8px; background: #1A264D;
-          border-radius: 4px; overflow: hidden;
+          height: 10px; background: #1A264D;
+          border-radius: 25px; overflow: hidden;
         }
         
         .ap-progress-fill {
           height: 100%; background: linear-gradient(90deg, #3B82F6, #8B5CF6);
-          width: 0%; transition: width 0.3s ease;
+          width: 0%; transition: width 0.3s ease; border-radius: 25px;
         }
         
         .ap-progress-text {
