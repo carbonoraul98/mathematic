@@ -121,6 +121,7 @@ for (let i = 0; i < 100; i++) {
 let estudiantes = [];
 let actividades = [];
 let preguntasTemp = [];
+let preguntasPracticaTemp = [];
 let estudianteActual = null;
 
 // Cargar estudiantes desde el servidor
@@ -250,6 +251,9 @@ const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 function logout() {
   authenticatedRole = null;
   estudianteActual = null;
+  if(document.getElementById("loginUser")) document.getElementById("loginUser").value = "";
+  if(document.getElementById("loginPass")) document.getElementById("loginPass").value = "";
+  if(document.getElementById("loginResult")) document.getElementById("loginResult").innerHTML = "";
   showScreen('home');
 }
 
@@ -318,7 +322,113 @@ function enterAsRole(role) {
     loadDashboardStats();
   } else {
     showScreen("studentPanel");
+    updateStudentLevelUI(estudianteActual);
     mostrarPendientes();
+  }
+}
+
+function updateStudentLevelUI(student) {
+  if (student && student.levelInfo) {
+    document.getElementById('studentLevelDisplay').innerText = student.levelInfo.level;
+    document.getElementById('studentXpDisplay').innerText = student.levelInfo.currentXP;
+    if (document.getElementById('studentXpGoal')) {
+        document.getElementById('studentXpGoal').innerText = student.levelInfo.xpPerLevel;
+    }
+    document.getElementById('studentXpBar').style.width = student.levelInfo.progressPercent + '%';
+    
+    // Renderizar Mapa de Niveles (Diseño V2 - Gamificado)
+    const mapContainer = document.getElementById('levelMapContainer');
+    if (mapContainer) {
+      mapContainer.innerHTML = '';
+      mapContainer.className = 'level-map-container-v2';
+      
+      const maxLevels = 10;
+      for (let i = 1; i <= maxLevels; i++) {
+        const node = document.createElement('div');
+        node.className = 'map-node-v2';
+        
+        // Simular títulos dinámicos para los nodos
+        const nodeTitles = ["Suma", "Resta", "Multiplicación", "División", "Fracciones", "Decimales", "Geometría", "Álgebra", "Potencias", "Ecuaciones"];
+        const nodeLabel = nodeTitles[i-1] || `Misión ${i}`;
+        
+        if (i < student.levelInfo.level) {
+          node.classList.add('completed');
+          node.innerHTML = `
+            <div class="node-circle-v2">${i}
+                <div class="node-icon-v2" style="color: #10b981;">✔️</div>
+            </div>
+            <div class="node-label-v2">${nodeLabel}</div>
+          `;
+        } else if (i === student.levelInfo.level) {
+          node.classList.add('active');
+          node.onclick = () => startPracticeMode();
+          node.title = "¡Jugar Práctica!";
+          node.innerHTML = `
+            <div class="node-circle-v2">${i}
+                <div class="node-icon-v2" style="color: #3b82f6;">▶️</div>
+            </div>
+            <div class="node-label-v2">${nodeLabel}</div>
+          `;
+        } else {
+          node.classList.add('locked');
+          node.innerHTML = `
+            <div class="node-circle-v2">${i}
+                <div class="node-icon-v2" style="color: #64748b;">🔒</div>
+            </div>
+            <div class="node-label-v2">${nodeLabel}</div>
+          `;
+        }
+        
+        mapContainer.appendChild(node);
+      }
+    }
+  }
+}
+
+async function startPracticeMode() {
+  try {
+    const res = await fetch('/api/activities');
+    const todasActividades = await res.json();
+    
+    // Buscar actividades de tipo Práctica
+    const practicas = todasActividades.filter(a => a.type === 'Práctica');
+    
+    if (practicas.length === 0) {
+      showAlert("🚧 Aún no hay módulos de práctica disponibles. ¡Pedile a tu profe que cree uno!");
+      return;
+    }
+    
+    // Elegir la práctica correspondiente al nivel actual
+    // Asegurarse de que están ordenadas (asumiendo que id más viejo es nivel más bajo)
+    practicas.sort((a, b) => a.id - b.id);
+    const nivelIndex = (estudianteActual.levelInfo ? estudianteActual.levelInfo.level : 1) - 1;
+    
+    // Si ya pasó el límite de prácticas creadas, darle la última o una aleatoria
+    const practicaSeleccionada = practicas[Math.min(nivelIndex, practicas.length - 1)];
+    
+    let seccion = estudianteActual.grado ? estudianteActual.grado.charAt(1) : "A";
+    
+    window.playActivity(practicaSeleccionada, seccion, async (puntosObtenidos) => {
+      // Llamar al backend para sumar XP
+      try {
+        const xpRes = await fetch(`/api/students/${estudianteActual.id}/add-xp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ xp: puntosObtenidos })
+        });
+        const xpData = await xpRes.json();
+        if (xpData.success) {
+          estudianteActual.levelInfo = xpData.levelInfo;
+          updateStudentLevelUI(estudianteActual);
+          showAlert(`🎮 ¡Bien hecho! Sumaste ${puntosObtenidos} XP. (Nivel ${xpData.levelInfo.level})`);
+        }
+      } catch (err) {
+        console.error('Error guardando XP:', err);
+      }
+    });
+  } catch (error) {
+    console.error('Error al iniciar práctica:', error);
+    showAlert("❌ Error al cargar las prácticas");
   }
 }
 
@@ -431,7 +541,8 @@ async function crearActividad() {
         title: tema,
         type: tipo,
         theme: `Grado ${gradoBase}`,
-        grade: gradoBase
+        grade: gradoBase,
+        questions: preguntasTemp
       })
     });
     
@@ -473,14 +584,16 @@ async function mostrarPendientes() {
     
     contenedor.innerHTML = "";
     
-    // Filtrar actividades del grado del estudiante
+    // Filtrar actividades del grado del estudiante y que no sean Práctica (van aparte)
     const actividadesFiltradas = todasActividades.filter(a => {
       const gradoActividad = a.theme ? a.theme.replace('Grado ', '') : '';
-      return gradoActividad === gradoAlumnoBase || !gradoActividad;
+      const coincideGrado = gradoActividad === gradoAlumnoBase || !gradoActividad;
+      const noEsPractica = a.type !== 'Práctica';
+      return coincideGrado && noEsPractica;
     });
     
     if (actividadesFiltradas.length === 0) {
-      contenedor.innerHTML = "<p>No hay actividades pendientes para tu grado.</p>";
+      contenedor.innerHTML = "<p>No hay evaluaciones o talleres pendientes para tu grado.</p>";
       return;
     }
     
@@ -528,6 +641,8 @@ function showTeacherSection(id, btnElement) {
     mostrarNotas();
   } else if (id === "viewActivitiesSection") {
     loadActivities();
+  } else if (id === "practicesSection") {
+    loadPractices();
   } else if (id === "dashboardHome") {
     loadDashboardStats();
   }
@@ -673,6 +788,111 @@ async function loadActivities() {
     } catch (error) {
         console.error('Error cargando actividades:', error);
         container.innerHTML = '<p>❌ Error al cargar actividades</p>';
+    }
+}
+
+function showCreatePractice() {
+    const container = document.getElementById('createPracticeContainer');
+    container.style.display = container.style.display === 'none' ? 'block' : 'none';
+}
+
+function agregarPreguntaPractica() {
+    window.showQuestionModal((nuevaPregunta) => {
+        preguntasPracticaTemp.push(nuevaPregunta);
+        
+        let lista = document.getElementById('practiceQuestionsList');
+        lista.innerHTML = '';
+        preguntasPracticaTemp.forEach((p) => {
+            lista.innerHTML += `
+                <div class="classroom-item" style="cursor: default; padding: var(--space-sm);">
+                    <div class="classroom-item-info">
+                        <div class="classroom-icon">❓</div>
+                        <div class="classroom-details">
+                            <h4 style="margin: 0; color: var(--text-primary); font-size: var(--text-md);">${p.pregunta}</h4>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+async function crearPractica() {
+    let gradoBase = document.getElementById("practiceTargetGrade").value;
+    let tema = document.getElementById("practiceTheme").value;
+    
+    if (!tema) {
+        showAlert('❌ Escribí un tema para la práctica');
+        return;
+    }
+    
+    try {
+        const res = await fetch('/api/activities', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: tema,
+                type: 'Práctica',
+                theme: `Grado ${gradoBase}`,
+                grade: gradoBase,
+                questions: preguntasPracticaTemp
+            })
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+            preguntasPracticaTemp = [];
+            document.getElementById('practiceQuestionsList').innerHTML = '';
+            document.getElementById("practiceTheme").value = "";
+            document.getElementById('createPracticeContainer').style.display = 'none';
+            showAlert(`✅ Módulo de práctica "${tema}" guardado`);
+            loadPractices();
+        } else {
+            showAlert('❌ Error al guardar la práctica');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('❌ Error de conexión');
+    }
+}
+
+async function loadPractices() {
+    const container = document.getElementById('practicesList');
+    container.innerHTML = '<p>Cargando prácticas...</p>';
+    
+    try {
+        const res = await fetch('/api/activities');
+        const activities = await res.json();
+        
+        const practicas = activities.filter(a => a.type === 'Práctica');
+        
+        if (practicas.length === 0) {
+            container.innerHTML = '<p>No hay módulos de práctica configurados.</p>';
+            return;
+        }
+        
+        let html = '';
+        practicas.forEach(act => {
+            html += `
+                <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: var(--space-md);">
+                    <div class="classroom-item-info">
+                        <div class="classroom-icon">🎮</div>
+                        <div class="classroom-details">
+                            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: var(--text-md);">${act.title}</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm);">📚 ${act.theme || 'Sin grado'}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: var(--space-sm);">
+                        <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error cargando prácticas:', error);
+        container.innerHTML = '<p>❌ Error al cargar prácticas</p>';
     }
 }
 

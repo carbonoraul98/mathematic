@@ -7,7 +7,7 @@
 
   <title>Advancive Mathematics</title>
 
-  <link rel="stylesheet" href="styles/style.css" />
+  <link rel="stylesheet" href="styles/style.css?v=5" />
 </head>
 
 <body>
@@ -103,8 +103,9 @@
         <button class="sidebar-link active" onclick="showTeacherSection('dashboardHome', this)">🏠 Inicio</button>
         <button class="sidebar-link" onclick="showTeacherSection('studentsSection', this)">👥 Estudiantes</button>
         <button class="sidebar-link" onclick="showTeacherSection('viewActivitiesSection', this)">📋 Actividades</button>
+        <button class="sidebar-link" onclick="showTeacherSection('practicesSection', this)">🎮 Prácticas</button>
         <button class="sidebar-link" onclick="showTeacherSection('gradesSection', this)">📊 Reportes / Notas</button>
-        <button class="sidebar-link" style="margin-top: auto;" onclick="logout()">🚪 Cerrar Sesión</button>
+        <button type="button" class="sidebar-link" style="margin-top: auto;" onclick="logout()">🚪 Cerrar Sesión</button>
       </nav>
     </aside>
 
@@ -278,6 +279,32 @@
         <div id="activitiesList"></div>
       </div>
 
+      <!-- PRÁCTICAS -->
+      <div class="section" id="practicesSection" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+          <h2 style="margin: 0;">🎮 Módulos de Práctica</h2>
+          <button class="btn btn--sm" onclick="showCreatePractice()">➕ Nueva Práctica</button>
+        </div>
+        
+        <div id="createPracticeContainer" style="display: none; background: var(--bg-glass); border: 1px solid var(--color-primary); padding: var(--space-lg); border-radius: var(--radius-lg); margin-bottom: var(--space-xl);">
+          <h3 style="margin-top: 0;">Configurar Nueva Práctica</h3>
+          <select id="practiceTargetGrade" style="margin-bottom: var(--space-md);">
+            <option value="4">Para Grado 4</option>
+            <option value="5">Para Grado 5</option>
+          </select>
+          <input type="text" id="practiceTheme" placeholder="Tema de la práctica (ej: Sumas y Restas)" style="margin-bottom: var(--space-md);" />
+          
+          <div id="practiceQuestionsList" style="margin-bottom: var(--space-md);"></div>
+          
+          <div style="display: flex; gap: var(--space-md);">
+            <button class="btn btn--outline" style="flex: 1;" onclick="agregarPreguntaPractica()">➕ AGREGAR PREGUNTA</button>
+            <button class="btn" style="flex: 1;" onclick="crearPractica()">💾 GUARDAR MÓDULO</button>
+          </div>
+        </div>
+
+        <div id="practicesList"></div>
+      </div>
+
       <!-- NOTAS -->
       <div class="section" id="gradesSection" style="display: none;">
         <h2>Reportes y Notas</h2>
@@ -309,7 +336,25 @@
     <button class="back-btn" onclick="logout()">Salir</button>
     <div class="panel">
       <h1>PANEL ESTUDIANTE</h1>
+      
+      <!-- SECCIÓN DE NIVEL Y EXPERIENCIA -->
+      <div class="level-card" style="background: var(--bg-glass); border: 1px solid var(--color-primary); padding: var(--space-lg); border-radius: var(--radius-lg); margin-bottom: var(--space-xl); text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+          <h2 style="margin: 0; color: var(--color-primary);">🚀 Nivel <span id="studentLevelDisplay">1</span></h2>
+          <span style="font-weight: bold; color: var(--text-secondary);"><span id="studentXpDisplay">0</span> / <span id="studentXpGoal">30</span> XP</span>
+        </div>
+        <div class="progress-container" style="background: var(--bg-input); border-radius: var(--radius-full); height: 12px; overflow: hidden; margin-bottom: var(--space-md);">
+          <div id="studentXpBar" style="background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+        </div>
+        
+        <h3 style="margin-top: var(--space-xl); text-align: center; color: var(--color-cyan);">MAPA DE ENTRENAMIENTO</h3>
+        <p style="text-align: center; color: var(--text-secondary); font-size: var(--text-sm);">Sube de nivel completando prácticas para desbloquear el siguiente nodo.</p>
+        <div class="level-map-container" id="levelMapContainer">
+          <!-- Nodos dinámicos del mapa -->
+        </div>
+      </div>
 
+      <h2>Tus Evaluaciones y Talleres</h2>
       <div id="studentActivities"></div>
 
       <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="logout()">
@@ -320,8 +365,7 @@
 
   <script src="js/components/custom-alert.js"></script>
   <script src="js/components/question-modal.js"></script>
-  <script src="js/components/activity-player.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/components/activity-player.js?v=2"></script>
+  <script src="js/main.js?v=8"></script>
 </body>
-
 </html>

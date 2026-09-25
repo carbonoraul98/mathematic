@@ -2,10 +2,10 @@ const express = require('express');
 const db = require('../models/database');
 const router = express.Router();
 
-// Crear actividad simple (sin preguntas, tipo Quiz/Actividad/Refuerzo)
+// Crear actividad (con preguntas opcionales)
 router.post('/', async (req, res) => {
     try {
-        const { title, type, theme, grade } = req.body;
+        const { title, type, theme, grade, questions } = req.body;
         
         if (!title) {
             return res.status(400).json({ error: 'El título es requerido' });
@@ -15,10 +15,29 @@ router.post('/', async (req, res) => {
             'INSERT INTO activities (title, type, theme) VALUES (?, ?, ?)'
         );
         const result = await insertActivity.run(title, type || 'Actividad', theme || `Grado ${grade || 'General'}`);
+        const activityId = result.lastInsertRowid;
+        
+        // Guardar las preguntas si vienen en el body
+        if (questions && Array.isArray(questions) && questions.length > 0) {
+            const insertQuestion = await db.prepare(
+                'INSERT INTO questions (activity_id, question_text, question_type, options, correct_answer) VALUES (?, ?, ?, ?, ?)'
+            );
+            
+            for (let q of questions) {
+                const options = JSON.stringify([q.a || "", q.b || "", q.c || ""]);
+                await insertQuestion.run(
+                    activityId,
+                    q.pregunta,
+                    q.tipo || 'opcion',
+                    options,
+                    q.correcta || ""
+                );
+            }
+        }
         
         res.json({ 
             success: true, 
-            activity_id: result.lastInsertRowid,
+            activity_id: activityId,
             title: title
         });
     } catch (error) {
@@ -34,7 +53,37 @@ router.get('/', async (req, res) => {
             'SELECT * FROM activities ORDER BY created_at DESC'
         );
         const activities = await stmt.all();
-        res.json(activities);
+        
+        // Fetch questions for all activities
+        const qStmt = await db.prepare('SELECT * FROM questions');
+        const allQuestions = await qStmt.all();
+        
+        // Map questions to activities
+        const activitiesWithQuestions = activities.map(act => {
+            const actQuestions = allQuestions.filter(q => q.activity_id === act.id);
+            // Formatear las preguntas al formato esperado por el frontend
+            const formattedQuestions = actQuestions.map(q => {
+                let options = [];
+                try { options = JSON.parse(q.options) || []; } catch(e) {}
+                
+                return {
+                    pregunta: q.question_text,
+                    tipo: q.question_type,
+                    a: options[0] || "",
+                    b: options[1] || "",
+                    c: options[2] || "",
+                    correcta: q.correct_answer
+                };
+            });
+            
+            return {
+                ...act,
+                preguntas: formattedQuestions,
+                tema: act.theme || act.title // frontend uses tema
+            };
+        });
+        
+        res.json(activitiesWithQuestions);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

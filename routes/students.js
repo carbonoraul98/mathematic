@@ -11,6 +11,24 @@ function cleanGroupName(name) {
     return name.replace('°', '').trim();
 }
 
+// Función para calcular el nivel basado en el total_score (XP)
+function calculateLevel(total_score) {
+    // Cada pregunta da 10 XP. Una práctica de 3 preguntas = 30 XP.
+    // Ajustamos a 30 para que una práctica perfecta suba de nivel.
+    const xpPerLevel = 30;
+    const score = total_score || 0;
+    const currentLevel = Math.floor(score / xpPerLevel) + 1;
+    const currentXP = score % xpPerLevel;
+    const progressPercent = Math.round((currentXP / xpPerLevel) * 100);
+    
+    return {
+        level: currentLevel,
+        currentXP,
+        xpPerLevel,
+        progressPercent
+    };
+}
+
 // Subir Excel y crear estudiantes
 router.post('/upload', upload.single('excel'), async (req, res) => {
     try {
@@ -148,7 +166,14 @@ router.get('/', async (req, res) => {
             ORDER BY g.name, s.list_number
         `);
         const students = await stmt.all();
-        res.json(students);
+        
+        // Agregar info de nivel a cada estudiante
+        const studentsWithLevels = students.map(s => ({
+            ...s,
+            levelInfo: calculateLevel(s.total_score)
+        }));
+        
+        res.json(studentsWithLevels);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
@@ -165,10 +190,49 @@ router.post('/login', async (req, res) => {
         const student = await stmt.get(username, password);
 
         if (student) {
+            // Calcular nivel y adjuntar
+            student.levelInfo = calculateLevel(student.total_score);
             res.json({ success: true, student });
         } else {
             res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos' });
         }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Añadir XP (puntos de práctica) a un estudiante
+router.post('/:id/add-xp', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { xp } = req.body;
+        
+        if (!xp || isNaN(xp)) {
+            return res.status(400).json({ error: 'XP válido es requerido' });
+        }
+
+        // Obtener score actual
+        const getStmt = await db.prepare('SELECT total_score FROM students WHERE id = ?');
+        const student = await getStmt.get(id);
+        
+        if (!student) {
+            return res.status(404).json({ error: 'Estudiante no encontrado' });
+        }
+
+        const newScore = (student.total_score || 0) + parseInt(xp);
+        
+        // Actualizar
+        const updateStmt = await db.prepare('UPDATE students SET total_score = ? WHERE id = ?');
+        await updateStmt.run(newScore, id);
+        
+        const newLevelInfo = calculateLevel(newScore);
+        
+        res.json({ 
+            success: true, 
+            total_score: newScore,
+            levelInfo: newLevelInfo
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
