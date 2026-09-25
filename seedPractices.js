@@ -74,11 +74,29 @@ const practicesData = [
     ]
   },
   {
-    title: 'Ecuaciones', theme: 'Grado 6',
+    title: 'Ecuaciones', theme: 'Grado 6', type: 'Práctica',
     questions: [
       { q: "Resuelve: 2x + 4 = 10", a: "2", b: "3", c: "4", correct: "3" },
       { q: "Resuelve: x/2 = 5", a: "2.5", b: "5", c: "10", correct: "10" },
       { q: "Resuelve: 3x - 1 = 8", a: "2", b: "3", c: "4", correct: "3" }
+    ]
+  },
+  {
+    title: 'Evaluación General de Aritmética', theme: 'Matemáticas Básicas', type: 'Examen',
+    questions: [
+      { q: "¿Cuál es el resultado de 15 x 4?", a: "50", b: "60", c: "75", correct: "60" },
+      { q: "¿Cuánto es 144 ÷ 12?", a: "10", b: "12", c: "14", correct: "12" },
+      { q: "Si Juan tiene 45 manzanas y reparte a 5 amigos por igual, ¿cuántas le tocan a cada uno?", a: "8", b: "9", c: "10", correct: "9" },
+      { q: "¿Cuánto es 3/4 + 1/4?", a: "1", b: "2/4", c: "1.5", correct: "1" },
+      { q: "¿Cuál es el doble de 85?", a: "160", b: "170", c: "180", correct: "170" }
+    ]
+  },
+  {
+    title: 'Test Rápido: Geometría Básica', theme: 'Geometría', type: 'Examen',
+    questions: [
+      { q: "¿Cuántos lados tiene un hexágono?", a: "5", b: "6", c: "7", correct: "6" },
+      { q: "¿Cuál es el área de un cuadrado de lado 4cm?", a: "8cm²", b: "12cm²", c: "16cm²", correct: "16cm²" },
+      { q: "¿Cuánto suman los ángulos internos de un triángulo?", a: "90°", b: "180°", c: "360°", correct: "180°" }
     ]
   }
 ];
@@ -99,13 +117,15 @@ async function seedPractices() {
         let actId;
         // The SQLite wrapper we have might not support RETURNING cleanly across postgres/sqlite wrapper
         // So let's do normal insert and then get the last ID.
+        const activityType = p.type || 'Práctica';
+        
         if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://')) {
-            const insertActPg = await db.prepare("INSERT INTO activities (title, type, theme) VALUES ($1, 'Práctica', $2) RETURNING id");
-            const resPg = await insertActPg.run(p.title, p.theme);
+            const insertActPg = await db.prepare("INSERT INTO activities (title, type, theme) VALUES ($1, $2, $3) RETURNING id");
+            const resPg = await insertActPg.run(p.title, activityType, p.theme);
             actId = resPg.lastInsertRowid; // The wrapper maps result.rows[0]?.id to lastInsertRowid
         } else {
-            const insertActSq = await db.prepare("INSERT INTO activities (title, type, theme) VALUES (?, 'Práctica', ?)");
-            const resSq = await insertActSq.run(p.title, p.theme);
+            const insertActSq = await db.prepare("INSERT INTO activities (title, type, theme) VALUES (?, ?, ?)");
+            const resSq = await insertActSq.run(p.title, activityType, p.theme);
             actId = resSq.lastInsertRowid;
         }
 
