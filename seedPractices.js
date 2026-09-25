@@ -124,8 +124,55 @@ async function seedPractices() {
       }
       console.log('✅ Practice Modules seeded successfully.');
     }
+
+    // Check if students exist, if not seed some generic ones for testing 4A, 4B, 5A, 5B, 5C
+    const stmtStudents = await db.prepare("SELECT COUNT(*) as count FROM students");
+    const resStudents = await stmtStudents.get();
+    
+    if (resStudents && resStudents.count === 0) {
+      console.log('🌱 Seeding initial students...');
+      const classes = ['4A', '4B', '5A', '5B', '5C'];
+      for (const grade of classes) {
+        // Insert group
+        let groupId;
+        if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://')) {
+          const ig = await db.prepare("INSERT INTO groups (name, teacher_name) VALUES ($1, '') ON CONFLICT DO NOTHING RETURNING id");
+          let r = await ig.run(grade);
+          if (!r.lastInsertRowid) {
+             const getg = await db.prepare("SELECT id FROM groups WHERE name = $1");
+             r = await getg.get(grade);
+             groupId = r.id;
+          } else {
+             groupId = r.lastInsertRowid;
+          }
+        } else {
+          const ig = await db.prepare("INSERT OR IGNORE INTO groups (name, teacher_name) VALUES (?, '')");
+          await ig.run(grade);
+          const getg = await db.prepare("SELECT id FROM groups WHERE name = ?");
+          const r = await getg.get(grade);
+          groupId = r.id;
+        }
+
+        // Insert some students for this group
+        const sampleStudents = [`Juan Perez ${grade}`, `Maria Gomez ${grade}`, `Carlos Lopez ${grade}`];
+        for (let i = 0; i < sampleStudents.length; i++) {
+          const sName = sampleStudents[i];
+          const username = sName.replace(/\s+/g, '').toLowerCase(); // e.g. juanperez4a
+          
+          if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://')) {
+            const is = await db.prepare("INSERT INTO students (group_id, list_number, full_name, username, password) VALUES ($1, $2, $3, $4, '1234') ON CONFLICT DO NOTHING");
+            await is.run(groupId, i+1, sName, username);
+          } else {
+            const is = await db.prepare("INSERT OR IGNORE INTO students (group_id, list_number, full_name, username, password) VALUES (?, ?, ?, ?, '1234')");
+            await is.run(groupId, i+1, sName, username);
+          }
+        }
+      }
+      console.log('✅ Students seeded successfully.');
+    }
+
   } catch (err) {
-    console.error('Error seeding practices:', err);
+    console.error('Error seeding data:', err);
   }
 }
 
