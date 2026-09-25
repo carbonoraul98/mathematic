@@ -257,16 +257,13 @@ function logout() {
   showScreen('home');
 }
 
-function togglePasswordVisibility(inputId = 'loginPass') {
-  const passInput = document.getElementById(inputId);
-  if (!passInput) return;
-  const toggleBtn = passInput.nextElementSibling;
+function togglePasswordVisibility() {
+  const passInput = document.getElementById('loginPass');
+  const toggleBtn = document.getElementById('passwordToggleBtn');
   const isVisible = passInput.type === 'password';
   passInput.type = isVisible ? 'text' : 'password';
-  if (toggleBtn) {
-    toggleBtn.innerHTML = isVisible ? EYE_OFF_ICON : EYE_ICON;
-    toggleBtn.setAttribute('aria-label', isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña');
-  }
+  toggleBtn.innerHTML = isVisible ? EYE_OFF_ICON : EYE_ICON;
+  toggleBtn.setAttribute('aria-label', isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña');
 }
 
 function showComingSoon() {
@@ -283,12 +280,11 @@ async function loginAs(endpoint, user, pass) {
 }
 
 let authenticatedRole = null;
-let loginStudentsData = [];
 
-async function loginTeacher() {
-  let user = document.getElementById("teacherUser").value.trim();
-  let pass = document.getElementById("teacherPass").value.trim();
-  let resultDiv = document.getElementById("teacherLoginResult");
+async function unifiedLogin() {
+  let user = document.getElementById("loginUser").value.trim();
+  let pass = document.getElementById("loginPass").value.trim();
+  let resultDiv = document.getElementById("loginResult");
   resultDiv.innerHTML = "";
 
   try {
@@ -298,60 +294,7 @@ async function loginTeacher() {
       enterAsRole('profesor');
       return;
     }
-    resultDiv.innerHTML = "<br>❌ Usuario o contraseña incorrecta";
-  } catch (error) {
-    console.error('Error en login:', error);
-    resultDiv.innerHTML = "<br>❌ Error de conexión";
-  }
-}
 
-async function openStudentLogin() {
-  showScreen('loginStudent');
-  // Fetch students once
-  try {
-    const res = await fetch('/api/students');
-    loginStudentsData = await res.json();
-  } catch (error) {
-    console.error("Error fetching students:", error);
-  }
-}
-
-function filterStudentsByCourse() {
-  const course = document.getElementById("studentCourseSelect").value;
-  const nameSelect = document.getElementById("studentNameSelect");
-  
-  if (!course) {
-    nameSelect.innerHTML = '<option value="">-- Primero selecciona un curso --</option>';
-    nameSelect.disabled = true;
-    return;
-  }
-
-  const filtered = loginStudentsData.filter(s => s.group_name === course);
-  if (filtered.length === 0) {
-    nameSelect.innerHTML = '<option value="">No hay estudiantes en este curso</option>';
-    nameSelect.disabled = true;
-    return;
-  }
-
-  nameSelect.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
-  filtered.forEach(s => {
-    nameSelect.innerHTML += `<option value="${s.username}">${s.full_name}</option>`;
-  });
-  nameSelect.disabled = false;
-}
-
-async function loginStudent() {
-  let user = document.getElementById("studentNameSelect").value;
-  let pass = document.getElementById("studentPass").value.trim();
-  let resultDiv = document.getElementById("studentLoginResult");
-  resultDiv.innerHTML = "";
-
-  if (!user) {
-    resultDiv.innerHTML = "<br>❌ Por favor selecciona tu nombre";
-    return;
-  }
-
-  try {
     const studentResult = await loginAs('/api/students/login', user, pass);
     if (studentResult.success) {
       authenticatedRole = 'estudiante';
@@ -359,7 +302,8 @@ async function loginStudent() {
       enterAsRole('estudiante');
       return;
     }
-    resultDiv.innerHTML = "<br>❌ Contraseña incorrecta";
+
+    resultDiv.innerHTML = "<br>❌ Usuario o contraseña incorrecta";
   } catch (error) {
     console.error('Error en login:', error);
     resultDiv.innerHTML = "<br>❌ Error de conexión";
