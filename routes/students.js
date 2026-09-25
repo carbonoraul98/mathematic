@@ -143,11 +143,27 @@ router.post('/', async (req, res) => {
         const getGroup = await db.prepare('SELECT id FROM groups WHERE name = ?');
         const group = await getGroup.get(grado);
         
+        // Determinar un list_number único para evitar UNIQUE constraint failed
+        let list_number = parseInt(usuario);
+        if (isNaN(list_number)) {
+            const getMax = await db.prepare('SELECT MAX(list_number) as max_list FROM students WHERE group_id = ?');
+            const maxResult = await getMax.get(group.id);
+            list_number = (maxResult && maxResult.max_list !== null) ? maxResult.max_list + 1 : 1;
+        } else {
+            // Check si ya existe, si existe, buscar el siguiente disponible
+            const checkExist = await db.prepare('SELECT id FROM students WHERE group_id = ? AND list_number = ?');
+            let exists = await checkExist.get(group.id, list_number);
+            while (exists) {
+                list_number++;
+                exists = await checkExist.get(group.id, list_number);
+            }
+        }
+        
         // Insertar estudiante
         const insertStudent = await db.prepare(
             'INSERT INTO students (group_id, list_number, full_name, username, password) VALUES (?, ?, ?, ?, ?)'
         );
-        const result = await insertStudent.run(group.id, parseInt(usuario) || 0, nombre, usuario, password || '1234');
+        const result = await insertStudent.run(group.id, list_number, nombre, usuario, password || '1234');
         
         res.json({ success: true, student_id: result.lastInsertRowid });
     } catch (error) {
