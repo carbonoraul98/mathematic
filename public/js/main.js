@@ -571,23 +571,23 @@ async function crearActividad() {
 }
 
 async function resetStudentProgress() {
-  if (!confirm("¿Estás seguro de que deseas reiniciar todo tu progreso? Volverás al Nivel 1.")) return;
-  
-  try {
-    const res = await fetch(`/api/students/${estudianteActual.id}/reset`, { method: 'POST' });
-    if (res.ok) {
-       estudianteActual.total_score = 0;
-       estudianteActual.levelInfo = { level: 1, currentXP: 0, xpPerLevel: 30, progressPercent: 0 };
-       updateStudentLevelUI(estudianteActual);
-       mostrarPendientes();
-       alert("Tu progreso ha sido reiniciado con éxito.");
-    } else {
-       alert("Hubo un error al reiniciar el progreso.");
+  showConfirm("¿Estás seguro de que deseas reiniciar todo tu progreso? Volverás al Nivel 1.", async () => {
+    try {
+      const res = await fetch(`/api/students/${estudianteActual.id}/reset`, { method: 'POST' });
+      if (res.ok) {
+         estudianteActual.total_score = 0;
+         estudianteActual.levelInfo = { level: 1, currentXP: 0, xpPerLevel: 30, progressPercent: 0 };
+         updateStudentLevelUI(estudianteActual);
+         mostrarPendientes();
+         showAlert("Tu progreso ha sido reiniciado con éxito.");
+      } else {
+         showAlert("Hubo un error al reiniciar el progreso.");
+      }
+    } catch (err) {
+      console.error(err);
+      showAlert("Error de conexión al reiniciar progreso.");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Error de conexión al reiniciar progreso.");
-  }
+  });
 }
 
 async function mostrarPendientes() {
