@@ -291,7 +291,7 @@ async function unifiedLogin() {
     const teacherResult = await loginAs('/api/teachers/login', user, pass);
     if (teacherResult.success) {
       authenticatedRole = 'profesor';
-      showScreen("roleSelect");
+      enterAsRole('profesor');
       return;
     }
 
@@ -299,7 +299,7 @@ async function unifiedLogin() {
     if (studentResult.success) {
       authenticatedRole = 'estudiante';
       estudianteActual = studentResult.student;
-      showScreen("roleSelect");
+      enterAsRole('estudiante');
       return;
     }
 
@@ -437,11 +437,17 @@ async function crearEstudiante() {
   let nombre = document.getElementById("studentName").value;
   let usuario = document.getElementById("studentUser").value;
   let password = document.getElementById("studentPassword").value;
+  let btn = document.getElementById("btnCreateStudent");
   
   if (!nombre || !usuario) {
     showAlert("❌ Completa nombre y usuario");
     return;
   }
+  
+  // Interactive UI state
+  let originalText = btn.innerHTML;
+  btn.innerHTML = "⏳ CREANDO...";
+  btn.disabled = true;
   
   try {
     const res = await fetch('/api/students', {
@@ -457,19 +463,37 @@ async function crearEstudiante() {
     
     const result = await res.json();
     if (result.success) {
-      showAlert("✅ Estudiante guardado en la base de datos");
+      // Confetti and success state
+      if (typeof confetti !== 'undefined') {
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      }
+      btn.innerHTML = "✅ ¡ESTUDIANTE CREADO!";
+      btn.style.background = "#10B981"; // Green
+      
       // Limpiar campos
       document.getElementById("studentName").value = "";
       document.getElementById("studentUser").value = "";
       document.getElementById("studentPassword").value = "";
+      
       // Recargar lista desde la base de datos
       loadStudents();
+      
+      // Reset button after 2 seconds
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.background = "";
+        btn.disabled = false;
+      }, 2000);
     } else {
       showAlert("❌ Error al guardar: " + result.error);
+      btn.innerHTML = originalText;
+      btn.disabled = false;
     }
   } catch (error) {
     console.error('Error:', error);
     showAlert("❌ Error de conexión");
+    btn.innerHTML = originalText;
+    btn.disabled = false;
   }
 }
 

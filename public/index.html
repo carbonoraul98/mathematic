@@ -176,13 +176,14 @@
           <option>4B</option>
           <option>5A</option>
           <option>5B</option>
+          <option>5C</option>
         </select>
 
         <input type="text" id="studentName" placeholder="Nombre completo" />
         <input type="text" id="studentUser" placeholder="Usuario" />
         <input type="password" id="studentPassword" placeholder="Contraseña" />
 
-        <button class="btn" style="width: 100%; margin-top: var(--space-md);" onclick="crearEstudiante()">
+        <button id="btnCreateStudent" class="btn" style="width: 100%; margin-top: var(--space-md); border-radius: 25px; transition: all 0.3s ease;" onclick="crearEstudiante()">
           ➕ CREAR ESTUDIANTE
         </button>
 
@@ -375,6 +376,6 @@
   <script src="js/components/question-modal.js"></script>
   <script src="js/components/activity-player.js?v=5"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="js/main.js?v=10"></script>
+  <script src="js/main.js?v=11"></script>
 </body>
 </html>
