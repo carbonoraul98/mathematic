@@ -6,44 +6,6 @@ const router = express.Router();
 
 const upload = multer({ dest: 'uploads/' });
 
-
-                // Procesar estudiante
-                const listNumber = parseInt(row[0]);
-                const fullName = row[1] ? row[1].toString().trim() : null;
-
-                if (!listNumber || !fullName || !currentGroupName) {
-                    rowIndex++;
-                    continue;
-                }
-
-                // Insertar grupo si no existe
-                const insertGroup = await db.prepare('INSERT OR IGNORE INTO groups (name, teacher_name) VALUES (?, ?)');
-                await insertGroup.run(currentGroupName, currentTeacherName);
-
-                const getGroup = await db.prepare('SELECT id FROM groups WHERE name = ?');
-                const group = await getGroup.get(currentGroupName);
-
-                // Insertar estudiante con grupo asignado
-                const insertStudent = await db.prepare(
-                    'INSERT OR IGNORE INTO students (group_id, list_number, full_name, username, password) VALUES (?, ?, ?, ?, ?)'
-                );
-                const result = await insertStudent.run(group.id, listNumber, fullName, listNumber.toString(), '1234');
-
-                if (result.changes > 0) {
-                    totalCreated++;
-                }
-
-                rowIndex++;
-            }
-        }
-
-        res.json({ success: true, count: totalCreated });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
 // Crear estudiante individual
 router.post('/', async (req, res) => {
     try {
