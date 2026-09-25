@@ -406,7 +406,7 @@ async function startPracticeMode() {
     // Si ya pasó el límite de prácticas creadas, darle la última o una aleatoria
     const practicaSeleccionada = practicas[Math.min(nivelIndex, practicas.length - 1)];
     
-    let seccion = estudianteActual.grado ? estudianteActual.grado.charAt(1) : "A";
+    let seccion = estudianteActual.group_name ? estudianteActual.group_name.charAt(1) : "A";
     
     window.playActivity(practicaSeleccionada, seccion, async (puntosObtenidos) => {
       // Llamar al backend para sumar XP
@@ -620,7 +620,7 @@ async function mostrarPendientes() {
   
   if (!estudianteActual) return;
   
-  let gradoAlumnoBase = estudianteActual.grado.charAt(0); // Ej: de "1B" extrae "1"
+  let gradoAlumnoBase = estudianteActual.group_name ? estudianteActual.group_name.charAt(0) : "1"; // Ej: de "1B" extrae "1"
   
   try {
     const res = await fetch('/api/activities');
@@ -655,7 +655,7 @@ function realizarActividad(index) {
   
   if (!estudianteActual) return;
   
-  let seccion = estudianteActual.grado.charAt(1) || "A"; // Extrae "A", "B", "C" o "D"
+  let seccion = estudianteActual.group_name ? estudianteActual.group_name.charAt(1) : "A"; // Extrae "A", "B", "C" o "D"
   
   window.playActivity(actividad, seccion, (puntosObtenidos) => {
     if (estudianteActual.puntos === undefined) estudianteActual.puntos = 0;
