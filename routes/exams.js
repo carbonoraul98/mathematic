@@ -1,9 +1,6 @@
 const express = require('express');
-const multer = require('multer');
-const db = require('../models/database');
+const { Activity, Question } = require('../models/database');
 const router = express.Router();
-
-const upload = multer({ dest: 'uploads/' });
 
 // Cargar examen JSON unificado
 router.post('/', async (req, res) => {
@@ -15,29 +12,21 @@ router.post('/', async (req, res) => {
         }
         
         // Crear actividad/examen
-        const insertActivity = await db.prepare(
-            'INSERT INTO activities (title, type, theme) VALUES (?, ?, ?)'
-        );
-        const activityResult = await insertActivity.run(title, 'Examen', `Grado ${grade || 'General'}`);
-        const activityId = activityResult.lastInsertRowid;
-        
-        // Insertar preguntas
-        const insertQuestion = await db.prepare(
-            'INSERT INTO questions (activity_id, question_text, question_type, options, correct_answer, points, order_num) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        );
+        const activity = await Activity.create({
+            title,
+            type: 'Examen',
+            theme: `Grado ${grade || 'General'}`
+        });
         
         for (let i = 0; i < examQuestions.length; i++) {
             const q = examQuestions[i];
             
-            // Convertir opciones al formato esperado
             let options = [];
             let correctAnswer = '0';
             
             if (q.opciones && Array.isArray(q.opciones)) {
-                // Formato nuevo: array de objetos {letra, texto}
                 options = q.opciones.map(opt => opt.texto || opt.text || opt);
                 
-                // Encontrar índice de la respuesta correcta por letra
                 if (q.respuesta_correcta) {
                     const correctLetter = q.respuesta_correcta.toUpperCase();
                     const correctIndex = q.opciones.findIndex(opt => 
@@ -48,25 +37,24 @@ router.post('/', async (req, res) => {
                     }
                 }
             } else if (q.options && Array.isArray(q.options)) {
-                // Formato antiguo: array de strings
                 options = q.options;
                 correctAnswer = (q.correct !== undefined ? q.correct : q.correcta !== undefined ? q.correcta : 0).toString();
             }
             
-            await insertQuestion.run(
-                activityId,
-                q.pregunta || q.question || q.text || 'Sin pregunta',
-                'multiple_choice',
-                JSON.stringify(options),
-                correctAnswer,
-                q.points || q.puntos || 10,
-                i
-            );
+            await Question.create({
+                activity_id: activity.id,
+                question_text: q.pregunta || q.question || q.text || 'Sin pregunta',
+                question_type: 'multiple_choice',
+                options: JSON.stringify(options),
+                correct_answer: correctAnswer,
+                points: q.points || q.puntos || 10,
+                order_num: i
+            });
         }
         
         res.json({ 
             success: true, 
-            activity_id: activityId, 
+            activity_id: activity.id, 
             questions_count: examQuestions.length,
             title: title
         });
@@ -79,10 +67,7 @@ router.post('/', async (req, res) => {
 // Listar todas las actividades/exámenes
 router.get('/', async (req, res) => {
     try {
-        const stmt = await db.prepare(
-            'SELECT * FROM activities ORDER BY created_at DESC'
-        );
-        const activities = await stmt.all();
+        const activities = await Activity.find().sort({ created_at: -1 });
         res.json(activities);
     } catch (error) {
         console.error(error);
@@ -93,23 +78,23 @@ router.get('/', async (req, res) => {
 // Obtener preguntas de un examen
 router.get('/:activityId/questions', async (req, res) => {
     try {
-        const stmt = await db.prepare(
-            'SELECT * FROM questions WHERE activity_id = ? ORDER BY order_num'
-        );
-        const questions = await stmt.all(req.params.activityId);
+        const questions = await Question.find({ activity_id: Number(req.params.activityId) }).sort({ order_num: 1 });
         
-        // Parsear opciones JSON
-        questions.forEach(q => {
-            if (q.options) {
+        const formatted = questions.map(q => {
+            const qObj = q.toObject();
+            if (qObj.options) {
                 try {
-                    q.options = JSON.parse(q.options);
+                    qObj.options = JSON.parse(qObj.options);
                 } catch(e) {
-                    q.options = [];
+                    qObj.options = [];
                 }
+            } else {
+                qObj.options = [];
             }
+            return qObj;
         });
         
-        res.json(questions);
+        res.json(formatted);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

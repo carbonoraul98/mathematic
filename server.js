@@ -1,5 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const { connectionPromise } = require('./models/database');
+const seedPractices = require('./seedPractices');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -15,11 +19,12 @@ app.use('/api/exams', require('./routes/exams'));
 app.use('/api/grades', require('./routes/grades'));
 app.use('/api/groups', require('./routes/groups'));
 
-// Seed Practice Modules automatically if not present
-const seedPractices = require('./seedPractices');
-setTimeout(() => {
+// Seed inicial tras conectar a la base de datos
+connectionPromise.then(() => {
     seedPractices();
-}, 2000); // Wait 2s for DB initialization
+}).catch(err => {
+    console.error('Error inicializando datos en MongoDB:', err);
+});
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

@@ -1,8 +1,8 @@
 const express = require('express');
-const db = require('../models/database');
+const { Group, Student } = require('../models/database');
 const router = express.Router();
 
-// Generate a random 5-character alphanumeric code
+// Generar código aleatorio de 5 caracteres alfanuméricos
 function generateCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
@@ -15,15 +15,22 @@ function generateCode() {
 // Obtener todas las aulas (con cuenta de estudiantes)
 router.get('/', async (req, res) => {
     try {
-        const stmt = await db.prepare(`
-            SELECT g.*, COUNT(s.id) as student_count
-            FROM groups g
-            LEFT JOIN students s ON s.group_id = g.id
-            GROUP BY g.id
-            ORDER BY g.name
-        `);
-        const groups = await stmt.all();
-        res.json(groups);
+        const groups = await Group.find().sort({ name: 1 });
+        const studentCounts = await Student.aggregate([
+            { $group: { _id: "$group_id", count: { $sum: 1 } } }
+        ]);
+        
+        const countMap = {};
+        studentCounts.forEach(item => {
+            countMap[item._id] = item.count;
+        });
+
+        const groupsWithCount = groups.map(g => ({
+            ...g.toObject(),
+            student_count: countMap[g.id] || 0
+        }));
+
+        res.json(groupsWithCount);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
@@ -40,12 +47,11 @@ router.post('/', async (req, res) => {
         }
         
         const code = generateCode();
-        
-        const insertGroup = await db.prepare('INSERT INTO groups (name, code, teacher_name) VALUES (?, ?, ?)');
-        const result = await insertGroup.run(name, code, 'Jorge Pajon'); // TODO: Obtener del auth en un futuro
-        
-        const newGroupStmt = await db.prepare('SELECT * FROM groups WHERE id = ?');
-        const newGroup = await newGroupStmt.get(result.lastInsertRowid);
+        const newGroup = await Group.create({
+            name,
+            code,
+            teacher_name: 'Jorge Pajon'
+        });
         
         res.json({ success: true, group: newGroup });
     } catch (error) {

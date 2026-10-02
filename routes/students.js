@@ -1,10 +1,6 @@
 const express = require('express');
-const multer = require('multer');
-const xlsx = require('xlsx');
-const db = require('../models/database');
+const { Student, Group, Attempt, Activity } = require('../models/database');
 const router = express.Router();
-
-const upload = multer({ dest: 'uploads/' });
 
 // Función para calcular el nivel basado en el total_score (XP)
 function calculateLevel(total_score) {
@@ -32,35 +28,34 @@ router.post('/', async (req, res) => {
         }
         
         // Insertar grupo si no existe
-        const insertGroup = await db.prepare('INSERT OR IGNORE INTO groups (name, teacher_name) VALUES (?, ?)');
-        await insertGroup.run(grado, '');
+        let group = await Group.findOne({ name: grado });
+        if (!group) {
+            group = await Group.create({ name: grado, teacher_name: '' });
+        }
         
-        const getGroup = await db.prepare('SELECT id FROM groups WHERE name = ?');
-        const group = await getGroup.get(grado);
-        
-        // Determinar un list_number único para evitar UNIQUE constraint failed
+        // Determinar un list_number único
         let list_number = parseInt(usuario);
         if (isNaN(list_number)) {
-            const getMax = await db.prepare('SELECT MAX(list_number) as max_list FROM students WHERE group_id = ?');
-            const maxResult = await getMax.get(group.id);
-            list_number = (maxResult && maxResult.max_list !== null) ? maxResult.max_list + 1 : 1;
+            const lastStudent = await Student.findOne({ group_id: group.id }).sort({ list_number: -1 });
+            list_number = (lastStudent && lastStudent.list_number !== null) ? lastStudent.list_number + 1 : 1;
         } else {
-            // Check si ya existe, si existe, buscar el siguiente disponible
-            const checkExist = await db.prepare('SELECT id FROM students WHERE group_id = ? AND list_number = ?');
-            let exists = await checkExist.get(group.id, list_number);
+            let exists = await Student.findOne({ group_id: group.id, list_number });
             while (exists) {
                 list_number++;
-                exists = await checkExist.get(group.id, list_number);
+                exists = await Student.findOne({ group_id: group.id, list_number });
             }
         }
         
         // Insertar estudiante
-        const insertStudent = await db.prepare(
-            'INSERT INTO students (group_id, list_number, full_name, username, password) VALUES (?, ?, ?, ?, ?)'
-        );
-        const result = await insertStudent.run(group.id, list_number, nombre, usuario, password || '1234');
+        const newStudent = await Student.create({
+            group_id: group.id,
+            list_number,
+            full_name: nombre,
+            username: usuario,
+            password: password || '1234'
+        });
         
-        res.json({ success: true, student_id: result.lastInsertRowid });
+        res.json({ success: true, student_id: newStudent.id });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
@@ -70,19 +65,22 @@ router.post('/', async (req, res) => {
 // Listar estudiantes
 router.get('/', async (req, res) => {
     try {
-        const stmt = await db.prepare(`
-            SELECT s.*, g.name as group_name 
-            FROM students s 
-            JOIN groups g ON s.group_id = g.id
-            ORDER BY g.name, s.list_number
-        `);
-        const students = await stmt.all();
+        const students = await Student.find().sort({ group_id: 1, list_number: 1 });
+        const groups = await Group.find();
+        const groupMap = {};
+        groups.forEach(g => {
+            groupMap[g.id] = g.name;
+        });
         
-        // Agregar info de nivel a cada estudiante
-        const studentsWithLevels = students.map(s => ({
-            ...s,
-            levelInfo: calculateLevel(s.total_score)
-        }));
+        // Agregar info de nivel y group_name
+        const studentsWithLevels = students.map(s => {
+            const sObj = s.toObject();
+            return {
+                ...sObj,
+                group_name: groupMap[s.group_id] || '',
+                levelInfo: calculateLevel(s.total_score)
+            };
+        });
         
         res.json(studentsWithLevels);
     } catch (error) {
@@ -95,15 +93,14 @@ router.get('/', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const stmt = await db.prepare(
-            'SELECT s.*, g.name as group_name FROM students s JOIN groups g ON s.group_id = g.id WHERE s.username = ? AND s.password = ?'
-        );
-        const student = await stmt.get(username, password);
+        const student = await Student.findOne({ username, password });
 
         if (student) {
-            // Calcular nivel y adjuntar
-            student.levelInfo = calculateLevel(student.total_score);
-            res.json({ success: true, student });
+            const group = await Group.findOne({ id: student.group_id });
+            const studentObj = student.toObject();
+            studentObj.group_name = group ? group.name : '';
+            studentObj.levelInfo = calculateLevel(student.total_score);
+            res.json({ success: true, student: studentObj });
         } else {
             res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos' });
         }
@@ -123,19 +120,15 @@ router.post('/:id/add-xp', async (req, res) => {
             return res.status(400).json({ error: 'XP válido es requerido' });
         }
 
-        // Obtener score actual
-        const getStmt = await db.prepare('SELECT total_score FROM students WHERE id = ?');
-        const student = await getStmt.get(id);
+        const student = await Student.findOne({ id: Number(id) });
         
         if (!student) {
             return res.status(404).json({ error: 'Estudiante no encontrado' });
         }
 
         const newScore = (student.total_score || 0) + parseInt(xp);
-        
-        // Actualizar
-        const updateStmt = await db.prepare('UPDATE students SET total_score = ? WHERE id = ?');
-        await updateStmt.run(newScore, id);
+        student.total_score = newScore;
+        await student.save();
         
         const newLevelInfo = calculateLevel(newScore);
         
@@ -154,12 +147,8 @@ router.post('/:id/add-xp', async (req, res) => {
 router.post('/:id/reset', async (req, res) => {
     try {
         const { id } = req.params;
-        const updateStmt = await db.prepare('UPDATE students SET total_score = 0 WHERE id = ?');
-        await updateStmt.run(id);
-        
-        // Opcional: borrar historial de intentos (attempts)
-        const deleteAttempts = await db.prepare('DELETE FROM attempts WHERE student_id = ?');
-        await deleteAttempts.run(id);
+        await Student.updateOne({ id: Number(id) }, { total_score: 0 });
+        await Attempt.deleteMany({ student_id: Number(id) });
         
         res.json({ success: true, message: 'Progreso reiniciado a 0' });
     } catch (error) {
@@ -172,15 +161,26 @@ router.post('/:id/reset', async (req, res) => {
 router.get('/:id/attempts', async (req, res) => {
     try {
         const { id } = req.params;
-        const stmt = await db.prepare(`
-            SELECT a.*, act.title, act.type, act.theme 
-            FROM attempts a 
-            JOIN activities act ON a.activity_id = act.id 
-            WHERE a.student_id = ? 
-            ORDER BY a.completed_at DESC
-        `);
-        const attempts = await stmt.all(id);
-        res.json({ success: true, attempts });
+        const attempts = await Attempt.find({ student_id: Number(id) }).sort({ completed_at: -1 });
+        
+        const activityIds = [...new Set(attempts.map(a => a.activity_id))];
+        const activities = await Activity.find({ id: { $in: activityIds } });
+        const actMap = {};
+        activities.forEach(act => {
+            actMap[act.id] = act;
+        });
+
+        const formattedAttempts = attempts.map(a => {
+            const act = actMap[a.activity_id] || {};
+            return {
+                ...a.toObject(),
+                title: act.title || 'Actividad',
+                type: act.type || 'General',
+                theme: act.theme || ''
+            };
+        });
+
+        res.json({ success: true, attempts: formattedAttempts });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../models/database');
+const { Activity, Question } = require('../models/database');
 const router = express.Router();
 
 // Crear actividad (con preguntas opcionales)
@@ -11,33 +11,31 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'El título es requerido' });
         }
         
-        const insertActivity = await db.prepare(
-            'INSERT INTO activities (title, type, theme) VALUES (?, ?, ?)'
-        );
-        const result = await insertActivity.run(title, type || 'Actividad', theme || `Grado ${grade || 'General'}`);
-        const activityId = result.lastInsertRowid;
+        const activity = await Activity.create({
+            title,
+            type: type || 'Actividad',
+            theme: theme || `Grado ${grade || 'General'}`
+        });
         
         // Guardar las preguntas si vienen en el body
         if (questions && Array.isArray(questions) && questions.length > 0) {
-            const insertQuestion = await db.prepare(
-                'INSERT INTO questions (activity_id, question_text, question_type, options, correct_answer) VALUES (?, ?, ?, ?, ?)'
-            );
-            
+            let order = 0;
             for (let q of questions) {
                 const options = JSON.stringify([q.a || "", q.b || "", q.c || ""]);
-                await insertQuestion.run(
-                    activityId,
-                    q.pregunta,
-                    q.tipo || 'opcion',
+                await Question.create({
+                    activity_id: activity.id,
+                    question_text: q.pregunta || q.question || '',
+                    question_type: q.tipo || 'opcion',
                     options,
-                    q.correcta || ""
-                );
+                    correct_answer: q.correcta || "",
+                    order_num: order++
+                });
             }
         }
         
         res.json({ 
             success: true, 
-            activity_id: activityId,
+            activity_id: activity.id,
             title: title
         });
     } catch (error) {
@@ -49,19 +47,11 @@ router.post('/', async (req, res) => {
 // Listar todas las actividades
 router.get('/', async (req, res) => {
     try {
-        const stmt = await db.prepare(
-            'SELECT * FROM activities ORDER BY created_at DESC'
-        );
-        const activities = await stmt.all();
+        const activities = await Activity.find().sort({ created_at: -1 });
+        const allQuestions = await Question.find().sort({ order_num: 1 });
         
-        // Fetch questions for all activities
-        const qStmt = await db.prepare('SELECT * FROM questions');
-        const allQuestions = await qStmt.all();
-        
-        // Map questions to activities
         const activitiesWithQuestions = activities.map(act => {
             const actQuestions = allQuestions.filter(q => q.activity_id === act.id);
-            // Formatear las preguntas al formato esperado por el frontend
             const formattedQuestions = actQuestions.map(q => {
                 let options = [];
                 try { options = JSON.parse(q.options) || []; } catch(e) {}
@@ -77,9 +67,9 @@ router.get('/', async (req, res) => {
             });
             
             return {
-                ...act,
+                ...act.toObject(),
                 preguntas: formattedQuestions,
-                tema: act.theme || act.title // frontend uses tema
+                tema: act.theme || act.title
             };
         });
         
@@ -100,12 +90,12 @@ router.put('/:id', async (req, res) => {
             return res.status(400).json({ error: 'El título es requerido' });
         }
         
-        const updateActivity = await db.prepare(
-            'UPDATE activities SET title = ?, type = ?, theme = ? WHERE id = ?'
+        const result = await Activity.updateOne(
+            { id: Number(id) },
+            { $set: { title, type, theme } }
         );
-        const result = await updateActivity.run(title, type, theme, id);
         
-        if (result.changes === 0) {
+        if (result.matchedCount === 0) {
             return res.status(404).json({ error: 'Actividad no encontrada' });
         }
         
@@ -121,12 +111,10 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const deleteActivity = await db.prepare(
-            'DELETE FROM activities WHERE id = ?'
-        );
-        const result = await deleteActivity.run(id);
+        const result = await Activity.deleteOne({ id: Number(id) });
+        await Question.deleteMany({ activity_id: Number(id) });
         
-        if (result.changes === 0) {
+        if (result.deletedCount === 0) {
             return res.status(404).json({ error: 'Actividad no encontrada' });
         }
         

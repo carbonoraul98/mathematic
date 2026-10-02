@@ -1,4 +1,4 @@
-const db = require('./models/database');
+const { connectionPromise, Activity, Question, Group, Student } = require('./models/database');
 
 const practicesData = [
   {
@@ -110,83 +110,65 @@ const practicesData = [
 
 async function seedPractices() {
   try {
+    const { connectionPromise, Activity, Question, Group, Student } = require('./models/database');
+    await connectionPromise;
+
     // Check if practices exist
-    const stmt = await db.prepare("SELECT COUNT(*) as count FROM activities WHERE type = 'Práctica'");
-    const res = await stmt.get();
+    const count = await Activity.countDocuments({ type: 'Práctica' });
     
-    if (res && res.count === 0) {
+    if (count === 0) {
       console.log('🌱 Seeding Practice Modules...');
       
-      const insertAct = await db.prepare("INSERT INTO activities (title, type, theme) VALUES (?, 'Práctica', ?) RETURNING id");
-      const insertQ = await db.prepare("INSERT INTO questions (activity_id, question_text, question_type, options, correct_answer) VALUES (?, ?, 'opcion', ?, ?)");
-      
       for (const p of practicesData) {
-        let actId;
-        // The SQLite wrapper we have might not support RETURNING cleanly across postgres/sqlite wrapper
-        // So let's do normal insert and then get the last ID.
         const activityType = p.type || 'Práctica';
-        
-        if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://')) {
-            const insertActPg = await db.prepare("INSERT INTO activities (title, type, theme) VALUES ($1, $2, $3) RETURNING id");
-            const resPg = await insertActPg.run(p.title, activityType, p.theme);
-            actId = resPg.lastInsertRowid; // The wrapper maps result.rows[0]?.id to lastInsertRowid
-        } else {
-            const insertActSq = await db.prepare("INSERT INTO activities (title, type, theme) VALUES (?, ?, ?)");
-            const resSq = await insertActSq.run(p.title, activityType, p.theme);
-            actId = resSq.lastInsertRowid;
-        }
+        const act = await Activity.create({
+          title: p.title,
+          type: activityType,
+          theme: p.theme
+        });
 
-        if (actId) {
-            for (const q of p.questions) {
-                const options = JSON.stringify([q.a, q.b, q.c]);
-                if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://')) {
-                    const insertQPg = await db.prepare("INSERT INTO questions (activity_id, question_text, question_type, options, correct_answer) VALUES ($1, $2, 'opcion', $3, $4)");
-                    await insertQPg.run(actId, q.q, options, q.correct);
-                } else {
-                    const insertQSq = await db.prepare("INSERT INTO questions (activity_id, question_text, question_type, options, correct_answer) VALUES (?, ?, 'opcion', ?, ?)");
-                    await insertQSq.run(actId, q.q, options, q.correct);
-                }
-            }
+        let order = 0;
+        for (const q of p.questions) {
+          const options = JSON.stringify([q.a, q.b, q.c]);
+          await Question.create({
+            activity_id: act.id,
+            question_text: q.q,
+            question_type: 'opcion',
+            options,
+            correct_answer: q.correct,
+            order_num: order++
+          });
         }
       }
       console.log('✅ Practice Modules seeded successfully.');
     }
     
     // Seed students
-    const stmtStudents = await db.prepare("SELECT COUNT(*) as count FROM students");
-    const resStudents = await stmtStudents.get();
+    const studentCount = await Student.countDocuments();
     
-    if (resStudents && resStudents.count === 0) {
+    if (studentCount === 0) {
       console.log('🌱 Seeding Students from Excel list...');
       const studentsData = require('./students_seed.json');
       
       let listNumbers = {};
 
       for (const s of studentsData) {
-        let groupId;
-        const isPg = process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://');
-        
-        // Find or insert group
-        let grp = isPg ? await (await db.prepare("SELECT id FROM groups WHERE name = $1")).get(s.groupName) : await (await db.prepare("SELECT id FROM groups WHERE name = ?")).get(s.groupName);
-        
+        let grp = await Group.findOne({ name: s.groupName });
         if (!grp) {
-            isPg ? await (await db.prepare("INSERT INTO groups (name) VALUES ($1)")).run(s.groupName) : await (await db.prepare("INSERT INTO groups (name) VALUES (?)")).run(s.groupName);
-            grp = isPg ? await (await db.prepare("SELECT id FROM groups WHERE name = $1")).get(s.groupName) : await (await db.prepare("SELECT id FROM groups WHERE name = ?")).get(s.groupName);
+          grp = await Group.create({ name: s.groupName });
         }
-        groupId = grp.id;
+        const groupId = grp.id;
         
-        // Insert student
         if (!listNumbers[groupId]) listNumbers[groupId] = 1;
         const listNum = listNumbers[groupId]++;
         
-        const insertStudentPg = "INSERT INTO students (full_name, username, password, group_id, list_number) VALUES ($1, $2, $3, $4, $5)";
-        const insertStudentSq = "INSERT INTO students (full_name, username, password, group_id, list_number) VALUES (?, ?, ?, ?, ?)";
-        const defaultPassword = '123';
-        if (isPg) {
-            await (await db.prepare(insertStudentPg)).run(s.name, s.username, defaultPassword, groupId, listNum);
-        } else {
-            await (await db.prepare(insertStudentSq)).run(s.name, s.username, defaultPassword, groupId, listNum);
-        }
+        await Student.create({
+          full_name: s.name,
+          username: s.username,
+          password: '123',
+          group_id: groupId,
+          list_number: listNum
+        });
       }
       console.log('✅ Students seeded successfully.');
     }
@@ -196,3 +178,4 @@ async function seedPractices() {
 }
 
 module.exports = seedPractices;
+
