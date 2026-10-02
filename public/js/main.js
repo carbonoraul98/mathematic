@@ -429,17 +429,6 @@ async function loadStudentPerformance() {
   }
 }
 
-// Modal de opciones / settings de estudiante
-function openStudentSettingsModal() {
-  const modal = document.getElementById('studentSettingsModal');
-  if (modal) modal.classList.add('show');
-}
-
-function closeStudentSettingsModal() {
-  const modal = document.getElementById('studentSettingsModal');
-  if (modal) modal.classList.remove('show');
-}
-
 // Funciones del Modal de Estudiante
 function openCreateStudentModal() {
   document.getElementById('createStudentModal').style.display = 'flex';
@@ -1013,6 +1002,7 @@ async function loadPractices() {
                         </div>
                     </div>
                     <div style="display: flex; gap: var(--space-sm);">
+                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}')">✏️ Editar</button>
                         <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
                     </div>
                 </div>
@@ -1192,6 +1182,7 @@ async function submitEditActivity() {
         if (result.success) {
             showAlert('✅ Actividad actualizada con éxito');
             loadActivities();
+            loadPractices();
         } else {
             showAlert('❌ Error: ' + result.error);
         }

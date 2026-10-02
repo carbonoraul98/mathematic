@@ -318,6 +318,39 @@
     </div>
   </div>
 
+  <!-- MODAL EDITAR ACTIVIDAD -->
+  <div class="modal-overlay" id="editActivityModal">
+    <div class="modal-content" style="max-width: 480px; padding: var(--space-3xl); text-align: left;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <h2 style="margin: 0; font-size: 1.25rem;">✏️ Editar Actividad</h2>
+        <button class="btn btn--outline btn--sm" onclick="closeEditActivityModal()" style="border-radius: 50%; width: 32px; height: 32px; padding: 0;">✕</button>
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: var(--space-lg); font-size: var(--text-sm);">Actualiza los datos de la actividad o módulo.</p>
+
+      <input type="hidden" id="editActivityId" />
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Título:</label>
+      <input type="text" id="editActivityTitle" placeholder="Título de la actividad" class="input" style="margin-bottom: var(--space-md); width: 100%;" />
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Tipo:</label>
+      <select id="editActivityType" style="margin-bottom: var(--space-md); width: 100%;">
+        <option value="Examen">Examen</option>
+        <option value="Quiz">Quiz</option>
+        <option value="Actividad">Actividad</option>
+        <option value="Taller">Taller</option>
+        <option value="Práctica">Práctica</option>
+      </select>
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Tema / Grado:</label>
+      <input type="text" id="editActivityTheme" placeholder="Ej: Grado 4 o Suma y resta" class="input" style="margin-bottom: var(--space-2xl); width: 100%;" />
+
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+        <button class="btn btn--secondary btn--sm" onclick="closeEditActivityModal()">Cancelar</button>
+        <button class="btn btn--sm" onclick="submitEditActivity()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PANEL ESTUDIANTE -->
 
   <div class="screen" id="studentPanel" style="padding: 10px 16px 80px;">
@@ -326,10 +359,10 @@
     <div id="studentHomeView" class="student-container">
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 0 16px;">
           <div>
-            <h1 style="font-size: 1.45rem; margin: 0; text-align: left;">👋 Hola, <span id="studentPanelName" style="color: var(--color-primary);">Estudiante</span>!</h1>
+            <h1 style="font-size: 1.4rem; margin: 0; text-align: left;">👋 Hola, <span id="studentPanelName" style="color: var(--color-primary);">Estudiante</span>!</h1>
             <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.85rem; text-align: left;">Bienvenido a tu aventura matemática</p>
           </div>
-          <button class="student-nav-gear-btn" onclick="openStudentSettingsModal()" title="Opciones">⚙️</button>
+          <button class="btn btn--outline btn--sm" style="border-radius: 20px; font-size: 0.75rem; padding: 6px 14px;" onclick="logout()">Salir</button>
       </div>
 
       <!-- SECCIÓN DE NIVEL Y EXPERIENCIA -->
@@ -361,7 +394,7 @@
       <div class="student-top-nav-bar">
         <button class="student-nav-back-btn" onclick="switchStudentTab('home')" title="Volver al inicio">←</button>
         <h2 class="student-top-nav-title">Mi progreso</h2>
-        <button class="student-nav-gear-btn" onclick="openStudentSettingsModal()" title="Opciones">⚙️</button>
+        <div style="width: 42px;"></div>
       </div>
 
       <!-- TARJETA DE PERFIL HERO -->
@@ -401,6 +434,13 @@
           <!-- Renderizado dinámicamente con animación -->
         </div>
       </div>
+
+      <!-- ACCIONES DE PERFIL -->
+      <div style="margin-top: 24px; text-align: center;">
+        <button class="btn btn--outline btn--sm" style="border-color: rgba(255, 92, 122, 0.4); color: #ff5c7a; border-radius: 20px; font-size: 0.8rem; padding: 8px 18px;" onclick="resetStudentProgress()">
+          🔄 Reiniciar Progreso
+        </button>
+      </div>
     </div>
 
     <!-- BOTTOM TAB NAVIGATION -->
@@ -418,26 +458,6 @@
         <span>Perfil</span>
       </button>
     </nav>
-  </div>
-
-  <!-- MODAL: Ajustes de Estudiante -->
-  <div class="modal-overlay" id="studentSettingsModal">
-    <div class="modal-content" style="max-width: 360px; padding: 24px; text-align: center;">
-      <h3 style="margin-top: 0; margin-bottom: 8px;">⚙️ Opciones de Cuenta</h3>
-      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Gestiona tu sesión o reinicia tu entrenamiento.</p>
-      
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn btn--outline" style="border-color: var(--color-danger); color: var(--color-danger);" onclick="closeStudentSettingsModal(); resetStudentProgress();">
-          🔄 Reiniciar Progreso
-        </button>
-        <button class="btn btn--secondary" onclick="closeStudentSettingsModal(); logout();">
-          🚪 Cerrar Sesión
-        </button>
-        <button class="btn btn--sm" style="background: rgba(255,255,255,0.08); margin-top: 6px;" onclick="closeStudentSettingsModal()">
-          Cerrar
-        </button>
-      </div>
-    </div>
   </div>
 
   <script src="js/components/custom-alert.js?v=2"></script>
