@@ -68,7 +68,7 @@
 
   <div class="screen" id="roleSelect">
     <div class="brand-title">
-      <span class="brand-title__primary">¿CÓMO QUERÉS</span>
+      <span class="brand-title__primary">¿CÓMO QUIERES</span>
       <span class="brand-title__secondary">INGRESAR?</span>
     </div>
 
@@ -79,7 +79,7 @@
         </span>
         <span class="role-card__text">
           <strong>Profesor</strong>
-          <small>Gestioná aulas, actividades y notas</small>
+          <small>Gestiona aulas, actividades y notas</small>
         </span>
       </button>
 
@@ -89,7 +89,7 @@
         </span>
         <span class="role-card__text">
           <strong>Estudiante</strong>
-          <small>Mirá tus actividades y resultados</small>
+          <small>Revisa tus actividades y resultados</small>
         </span>
       </button>
     </div>
@@ -243,7 +243,7 @@
           
           <input type="text" id="examTitle" placeholder="Título del examen" style="margin-bottom: var(--space-md);" />
           
-          <textarea id="jsonExamInput" placeholder="Pegá aquí el JSON con las preguntas..." 
+          <textarea id="jsonExamInput" placeholder="Pega aquí el JSON con las preguntas..." 
             style="width: 100%; min-height: 200px; background: var(--bg-input); color: var(--text-primary); 
             border: 1px solid var(--color-primary); border-radius: var(--radius-md); padding: var(--space-md); 
             font-family: monospace; margin-bottom: var(--space-md); resize: vertical;"></textarea>
@@ -320,37 +320,123 @@
 
   <!-- PANEL ESTUDIANTE -->
 
-  <div class="screen" id="studentPanel">
-    <div style="display: flex; justify-content: space-between; width: 100%; padding: 20px;">
-        <button class="back-btn" onclick="logout()" style="position: relative; left: 0; top: 0;">Salir</button>
-        <button class="btn btn--outline btn--sm" onclick="resetStudentProgress()" style="border-color: var(--color-danger); color: var(--color-danger); border-radius: 25px; transition: all 0.2s ease;">Reiniciar Progreso</button>
-    </div>
-    <div class="panel">
-      <h1>👋 Hola, <span id="studentPanelName" style="color: var(--color-primary);">Estudiante</span>!</h1>
-      
+  <div class="screen" id="studentPanel" style="padding: 10px 16px 80px;">
+    
+    <!-- VISTA INICIO (HOME) -->
+    <div id="studentHomeView" class="student-container">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 0 16px;">
+          <div>
+            <h1 style="font-size: 1.45rem; margin: 0; text-align: left;">👋 Hola, <span id="studentPanelName" style="color: var(--color-primary);">Estudiante</span>!</h1>
+            <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.85rem; text-align: left;">Bienvenido a tu aventura matemática</p>
+          </div>
+          <button class="student-nav-gear-btn" onclick="openStudentSettingsModal()" title="Opciones">⚙️</button>
+      </div>
+
       <!-- SECCIÓN DE NIVEL Y EXPERIENCIA -->
-      <div class="level-card" style="background: var(--bg-glass); border: 1px solid var(--color-primary); padding: var(--space-lg); border-radius: var(--radius-lg); margin-bottom: var(--space-xl); text-align: left;">
+      <div class="level-card" onclick="switchStudentTab('profile')" style="background: var(--bg-glass); border: 1px solid rgba(99, 102, 241, 0.3); padding: var(--space-lg); border-radius: 20px; margin-bottom: var(--space-xl); text-align: left; cursor: pointer; transition: transform 0.2s ease;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
-          <h2 style="margin: 0; color: var(--color-primary);">🚀 Nivel <span id="studentLevelDisplay">1</span></h2>
-          <span style="font-weight: bold; color: var(--text-secondary);"><span id="studentXpDisplay">0</span> / <span id="studentXpGoal">30</span> XP</span>
+          <h2 style="margin: 0; color: var(--color-primary); font-size: 1.15rem;">🚀 Nivel <span id="studentLevelDisplay">1</span></h2>
+          <span style="font-weight: bold; color: var(--text-secondary); font-size: 0.85rem;"><span id="studentXpDisplay">0</span> / <span id="studentXpGoal">30</span> XP</span>
         </div>
         <div class="progress-container" style="background: var(--bg-input); border-radius: 25px; height: 12px; overflow: hidden; margin-bottom: var(--space-md);">
           <div id="studentXpBar" style="background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); height: 100%; width: 0%; transition: width 0.5s ease; border-radius: 25px;"></div>
         </div>
         
-        <h3 style="margin-top: var(--space-xl); text-align: center; color: var(--color-cyan);">MAPA DE ENTRENAMIENTO</h3>
-        <p style="text-align: center; color: var(--text-secondary); font-size: var(--text-sm);">Sube de nivel completando prácticas para desbloquear el siguiente nodo.</p>
+        <h3 style="margin-top: var(--space-xl); text-align: center; color: var(--color-cyan); font-size: 0.95rem;">MAPA DE ENTRENAMIENTO</h3>
+        <p style="text-align: center; color: var(--text-secondary); font-size: var(--text-xs); margin-bottom: 12px;">Sube de nivel completando prácticas para desbloquear el siguiente nodo.</p>
         <div class="level-map-container" id="levelMapContainer">
           <!-- Nodos dinámicos del mapa -->
         </div>
       </div>
 
-      <h2>Tus Evaluaciones y Talleres</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="font-size: 1.1rem; margin: 0; text-align: left;">📚 Tus Evaluaciones y Talleres</h2>
+      </div>
       <div id="studentActivities"></div>
+    </div>
 
-      <button class="btn btn--secondary" style="margin-top: var(--space-4xl);" onclick="logout()">
-        CERRAR SESIÓN
+    <!-- VISTA PERFIL: MI PROGRESO (DISEÑO MOCKUP) -->
+    <div id="studentProfileView" class="student-container" style="display: none;">
+      <!-- TOP NAV BAR -->
+      <div class="student-top-nav-bar">
+        <button class="student-nav-back-btn" onclick="switchStudentTab('home')" title="Volver al inicio">←</button>
+        <h2 class="student-top-nav-title">Mi progreso</h2>
+        <button class="student-nav-gear-btn" onclick="openStudentSettingsModal()" title="Opciones">⚙️</button>
+      </div>
+
+      <!-- TARJETA DE PERFIL HERO -->
+      <div class="student-profile-hero">
+        <div class="student-hero-avatar-wrapper">
+          <img src="images/student-illustration.png" alt="Avatar" class="student-hero-avatar" id="studentHeroAvatar" />
+        </div>
+        <div class="student-hero-info">
+          <h3 class="student-hero-name" id="studentProfileName">Cargando...</h3>
+          <span class="student-hero-grade" id="studentProfileGrade">Grado -</span>
+        </div>
+      </div>
+
+      <!-- METRICAS (NIVEL, PUNTOS, RACHA) -->
+      <div class="student-stats-grid">
+        <div class="student-stat-card">
+          <div class="student-stat-icon-wrap">⭐️</div>
+          <span class="student-stat-label">Nivel actual</span>
+          <span class="student-stat-value" id="profileLevelVal">1</span>
+        </div>
+        <div class="student-stat-card">
+          <div class="student-stat-icon-wrap">💧</div>
+          <span class="student-stat-label">Puntos</span>
+          <span class="student-stat-value" id="profilePointsVal">0</span>
+        </div>
+        <div class="student-stat-card">
+          <div class="student-stat-icon-wrap">🔥</div>
+          <span class="student-stat-label">Racha</span>
+          <span class="student-stat-value" id="profileStreakVal">1 día</span>
+        </div>
+      </div>
+
+      <!-- RENDIMIENTO POR TEMA -->
+      <div class="student-performance-section">
+        <h3 class="student-performance-title">Rendimiento por tema</h3>
+        <div class="student-performance-card" id="studentTopicsList">
+          <!-- Renderizado dinámicamente con animación -->
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM TAB NAVIGATION -->
+    <nav class="student-bottom-nav">
+      <button class="student-tab-btn active" id="tabBtnHome" onclick="switchStudentTab('home')">
+        <span class="tab-icon">🏠</span>
+        <span>Inicio</span>
       </button>
+      <button class="student-tab-btn" id="tabBtnGame" onclick="startPracticeMode()">
+        <span class="tab-icon">🎮</span>
+        <span>Videojuego</span>
+      </button>
+      <button class="student-tab-btn" id="tabBtnProfile" onclick="switchStudentTab('profile')">
+        <span class="tab-icon">👤</span>
+        <span>Perfil</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL: Ajustes de Estudiante -->
+  <div class="modal-overlay" id="studentSettingsModal">
+    <div class="modal-content" style="max-width: 360px; padding: 24px; text-align: center;">
+      <h3 style="margin-top: 0; margin-bottom: 8px;">⚙️ Opciones de Cuenta</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Gestiona tu sesión o reinicia tu entrenamiento.</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn btn--outline" style="border-color: var(--color-danger); color: var(--color-danger);" onclick="closeStudentSettingsModal(); resetStudentProgress();">
+          🔄 Reiniciar Progreso
+        </button>
+        <button class="btn btn--secondary" onclick="closeStudentSettingsModal(); logout();">
+          🚪 Cerrar Sesión
+        </button>
+        <button class="btn btn--sm" style="background: rgba(255,255,255,0.08); margin-top: 6px;" onclick="closeStudentSettingsModal()">
+          Cerrar
+        </button>
+      </div>
     </div>
   </div>
 

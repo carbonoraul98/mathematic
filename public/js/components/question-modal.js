@@ -81,9 +81,9 @@ class QuestionModal extends HTMLElement {
     
     if (!pregunta || !correcta) {
       if (window.showAlert) {
-        window.showAlert("❌ Por favor completa la pregunta y la respuesta correcta.");
+        window.showAlert("❌ Por favor, completa la pregunta y la respuesta correcta.");
       } else {
-        alert("❌ Por favor completa la pregunta y la respuesta correcta.");
+        alert("❌ Por favor, completa la pregunta y la respuesta correcta.");
       }
       return;
     }
@@ -97,9 +97,9 @@ class QuestionModal extends HTMLElement {
       
       if (!a || !b || !c) {
         if (window.showAlert) {
-          window.showAlert("❌ Por favor completa todas las opciones (A, B, C).");
+          window.showAlert("❌ Por favor, completa todas las opciones (A, B, C).");
         } else {
-          alert("❌ Por favor completa todas las opciones (A, B, C).");
+          alert("❌ Por favor, completa todas las opciones (A, B, C).");
         }
         return;
       }

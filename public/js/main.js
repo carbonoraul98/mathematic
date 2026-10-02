@@ -46,7 +46,7 @@ function startGame() {
     document.getElementById("timer").innerHTML = "Tiempo: " + time;
     if (time <= 0) {
       clearInterval(timerInterval);
-      showAlert("Tiempo agotado! Puntos: " + score, () => {
+      showAlert("¡Tiempo agotado! Puntos: " + score, () => {
         location.reload();
       });
     }
@@ -230,6 +230,7 @@ function enterAsRole(role) {
         document.getElementById('studentPanelName').innerText = estudianteActual.full_name || estudianteActual.username || 'Estudiante';
     }
     updateStudentLevelUI(estudianteActual);
+    switchStudentTab('home');
     mostrarPendientes();
   }
 }
@@ -301,7 +302,7 @@ async function startPracticeMode() {
     const practicas = todasActividades.filter(a => a.type === 'Práctica');
     
     if (practicas.length === 0) {
-      showAlert("🚧 Aún no hay módulos de práctica disponibles. ¡Pedile a tu profe que cree uno!");
+      showAlert("🚧 Aún no hay módulos de práctica disponibles. ¡Pídele a tu profesor que cree uno!");
       return;
     }
     
@@ -315,18 +316,25 @@ async function startPracticeMode() {
     
     let seccion = estudianteActual.group_name ? estudianteActual.group_name.charAt(1) : "A";
     
-    window.playActivity(practicaSeleccionada, seccion, async (puntosObtenidos) => {
-      // Llamar al backend para sumar XP
+      window.playActivity(practicaSeleccionada, seccion, async (puntosObtenidos) => {
+      // Llamar al backend para sumar XP y registrar el intento de práctica
       try {
         const xpRes = await fetch(`/api/students/${estudianteActual.id}/add-xp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ xp: puntosObtenidos })
+          body: JSON.stringify({ 
+            xp: puntosObtenidos,
+            activity_id: practicaSeleccionada.id
+          })
         });
         const xpData = await xpRes.json();
         if (xpData.success) {
           estudianteActual.levelInfo = xpData.levelInfo;
+          estudianteActual.total_score = xpData.total_score;
           updateStudentLevelUI(estudianteActual);
+          if (document.getElementById('studentProfileView') && document.getElementById('studentProfileView').style.display !== 'none') {
+            loadStudentPerformance();
+          }
           showAlert(`🎮 ¡Bien hecho! Sumaste ${puntosObtenidos} XP. (Nivel ${xpData.levelInfo.level})`);
         }
       } catch (err) {
@@ -337,6 +345,99 @@ async function startPracticeMode() {
     console.error('Error al iniciar práctica:', error);
     showAlert("❌ Error al cargar las prácticas");
   }
+}
+
+// Navegación de pestañas para el estudiante
+function switchStudentTab(tab) {
+  const homeView = document.getElementById('studentHomeView');
+  const profileView = document.getElementById('studentProfileView');
+  const btnHome = document.getElementById('tabBtnHome');
+  const btnProfile = document.getElementById('tabBtnProfile');
+
+  if (tab === 'profile') {
+    if (homeView) homeView.style.display = 'none';
+    if (profileView) profileView.style.display = 'block';
+    if (btnHome) btnHome.classList.remove('active');
+    if (btnProfile) btnProfile.classList.add('active');
+    loadStudentPerformance();
+  } else {
+    if (homeView) homeView.style.display = 'block';
+    if (profileView) profileView.style.display = 'none';
+    if (btnHome) btnHome.classList.add('active');
+    if (btnProfile) btnProfile.classList.remove('active');
+    if (estudianteActual) updateStudentLevelUI(estudianteActual);
+  }
+}
+
+// Cargar métricas interactivas de rendimiento
+async function loadStudentPerformance() {
+  if (!estudianteActual) return;
+
+  const nameEl = document.getElementById('studentProfileName');
+  const gradeEl = document.getElementById('studentProfileGrade');
+  if (nameEl) nameEl.innerText = estudianteActual.full_name || estudianteActual.username || 'Estudiante';
+  if (gradeEl) gradeEl.innerText = estudianteActual.group_name ? `${estudianteActual.group_name}` : 'Grado General';
+
+  try {
+    const res = await fetch(`/api/students/${estudianteActual.id}/performance`);
+    const data = await res.json();
+
+    if (data.success) {
+      if (document.getElementById('profileLevelVal')) {
+        document.getElementById('profileLevelVal').innerText = data.student.levelInfo.level;
+      }
+      if (document.getElementById('profilePointsVal')) {
+        document.getElementById('profilePointsVal').innerText = data.student.total_score;
+      }
+      if (document.getElementById('profileStreakVal')) {
+        document.getElementById('profileStreakVal').innerText = data.streakDays + (data.streakDays === 1 ? ' día' : ' días');
+      }
+
+      const listContainer = document.getElementById('studentTopicsList');
+      if (listContainer && data.topics) {
+        listContainer.innerHTML = '';
+        data.topics.forEach(t => {
+          const row = document.createElement('div');
+          row.className = 'student-topic-row';
+          row.innerHTML = `
+            <div class="student-topic-badge" style="background: ${t.bg}; color: ${t.color};">
+              ${t.icon}
+            </div>
+            <div class="student-topic-name" title="${t.name}">
+              ${t.name}
+            </div>
+            <div class="student-topic-track">
+              <div class="student-topic-fill" style="background: ${t.color}; width: 0%; box-shadow: 0 0 10px ${t.color};" data-percent="${t.percentage}"></div>
+            </div>
+            <div class="student-topic-percent">
+              ${t.percentage}%
+            </div>
+          `;
+          listContainer.appendChild(row);
+        });
+
+        // Animación suave de las barras
+        setTimeout(() => {
+          document.querySelectorAll('.student-topic-fill').forEach(el => {
+            el.style.width = el.getAttribute('data-percent') + '%';
+          });
+        }, 50);
+      }
+    }
+  } catch (err) {
+    console.error('Error cargando rendimiento del estudiante:', err);
+  }
+}
+
+// Modal de opciones / settings de estudiante
+function openStudentSettingsModal() {
+  const modal = document.getElementById('studentSettingsModal');
+  if (modal) modal.classList.add('show');
+}
+
+function closeStudentSettingsModal() {
+  const modal = document.getElementById('studentSettingsModal');
+  if (modal) modal.classList.remove('show');
 }
 
 // Funciones del Modal de Estudiante
@@ -372,7 +473,7 @@ async function crearEstudianteModal() {
   let btn = document.getElementById("modalBtnCreateStudent");
   
   if (!nombre || !usuario) {
-    showAlert("❌ Completa nombre y usuario");
+    showAlert("❌ Completa el nombre y el usuario");
     return;
   }
   
@@ -494,7 +595,7 @@ async function crearActividad() {
   let tema = document.getElementById("activityTheme").value;
   
   if (!tema) {
-    showAlert('❌ Escribí un tema para la actividad');
+    showAlert('❌ Escribe un tema para la actividad');
     return;
   }
   
@@ -557,52 +658,96 @@ async function resetStudentProgress() {
 
 async function mostrarPendientes() {
   let contenedor = document.getElementById("studentActivities");
-  contenedor.innerHTML = "<p>Cargando actividades...</p>";
+  if (!contenedor) return;
+  contenedor.innerHTML = "<p style='color: var(--text-muted);'>Cargando actividades...</p>";
   
   if (!estudianteActual) return;
   
-  let gradoAlumnoBase = estudianteActual.group_name ? estudianteActual.group_name.charAt(0) : "1"; // Ej: de "1B" extrae "1"
+  let gradoAlumnoBase = estudianteActual.group_name ? estudianteActual.group_name.charAt(0) : "4";
   
   try {
     const res = await fetch('/api/activities');
     const todasActividades = await res.json();
+    window.actividadesEstudiante = todasActividades;
     
     contenedor.innerHTML = "";
     
     // Filtrar actividades del grado del estudiante y que no sean Práctica (van aparte)
     const actividadesFiltradas = todasActividades.filter(a => {
       const gradoActividad = a.theme ? a.theme.replace('Grado ', '') : '';
-      const coincideGrado = gradoActividad === gradoAlumnoBase || !gradoActividad || a.theme === 'General';
+      const coincideGrado = gradoActividad === gradoAlumnoBase || !gradoActividad || a.theme === 'General' || !a.theme.includes('Grado');
       const noEsPractica = a.type !== 'Práctica';
       return coincideGrado && noEsPractica;
     });
     
     if (actividadesFiltradas.length === 0) {
-      contenedor.innerHTML = "<p>No hay evaluaciones o talleres pendientes para tu grado.</p>";
+      contenedor.innerHTML = "<p style='color: var(--text-muted); padding: 20px 0;'>No hay evaluaciones o talleres pendientes para tu grado.</p>";
       return;
     }
     
-    actividadesFiltradas.forEach((a, index) => {
-      contenedor.innerHTML += `<div class="card"><h2>📚 ${a.title}</h2><p>📝 ${a.type}</p><p>⏳ Pendiente</p><button class="btn" onclick="realizarActividad(${a.id})">REALIZAR</button></div>`;
+    actividadesFiltradas.forEach((a) => {
+      contenedor.innerHTML += `
+        <div class="card" style="background: linear-gradient(145deg, #182252, #10173b); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; text-align: left;">
+          <div>
+            <h3 style="margin: 0 0 6px; font-size: 1.05rem; color: #ffffff;">${a.title}</h3>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;">${a.type || 'Actividad'}</span>
+              <span style="color: #ffd700; font-size: 0.75rem; font-weight: 600;">⏳ Disponible</span>
+            </div>
+          </div>
+          <button class="btn btn--sm" style="border-radius: 20px; padding: 8px 18px; font-weight: 700;" onclick="realizarActividad(${a.id})">REALIZAR</button>
+        </div>
+      `;
     });
   } catch (error) {
     console.error('Error cargando actividades:', error);
-    contenedor.innerHTML = "<p>❌ Error al cargar actividades</p>";
+    contenedor.innerHTML = "<p style='color: var(--color-danger);'>❌ Error al cargar actividades</p>";
   }
 }
 
-function realizarActividad(index) {
-  let actividad = actividades[index];
-  
+async function realizarActividad(actId) {
   if (!estudianteActual) return;
   
-  let seccion = estudianteActual.group_name ? estudianteActual.group_name.charAt(1) : "A"; // Extrae "A", "B", "C" o "D"
+  let actividad = (window.actividadesEstudiante || []).find(a => a.id === actId);
+  if (!actividad) {
+    try {
+      const res = await fetch('/api/activities');
+      const all = await res.json();
+      window.actividadesEstudiante = all;
+      actividad = all.find(a => a.id === actId);
+    } catch(e) {}
+  }
   
-  window.playActivity(actividad, seccion, (puntosObtenidos) => {
-    if (estudianteActual.puntos === undefined) estudianteActual.puntos = 0;
-    estudianteActual.puntos += puntosObtenidos;
-    
-    showAlert("✅ Actividad terminada. Puntos sumados: " + puntosObtenidos);
+  if (!actividad) {
+    showAlert("❌ No se pudo cargar la actividad seleccionada.");
+    return;
+  }
+  
+  let seccion = estudianteActual.group_name ? estudianteActual.group_name.charAt(1) : "A";
+  
+  window.playActivity(actividad, seccion, async (puntosObtenidos) => {
+    try {
+      const xpRes = await fetch(`/api/students/${estudianteActual.id}/add-xp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          xp: puntosObtenidos,
+          activity_id: actividad.id
+        })
+      });
+      const xpData = await xpRes.json();
+      if (xpData.success) {
+        estudianteActual.total_score = xpData.total_score;
+        estudianteActual.levelInfo = xpData.levelInfo;
+        updateStudentLevelUI(estudianteActual);
+        if (document.getElementById('studentProfileView') && document.getElementById('studentProfileView').style.display !== 'none') {
+          loadStudentPerformance();
+        }
+        showAlert(`🎉 ¡Felicitaciones! Has completado "${actividad.title}" y sumaste ${puntosObtenidos} XP.`);
+      }
+    } catch (err) {
+      console.error('Error guardando XP:', err);
+    }
   });
 }
 
@@ -681,7 +826,7 @@ async function importJsonExam() {
     const spinner = document.getElementById('importSpinner');
     
     if (!jsonInput.value.trim()) {
-        showAlert('❌ Pegá el JSON del examen');
+        showAlert('❌ Pega el JSON del examen');
         return;
     }
     
@@ -807,7 +952,7 @@ async function crearPractica() {
     let tema = document.getElementById("practiceTheme").value;
     
     if (!tema) {
-        showAlert('❌ Escribí un tema para la práctica');
+        showAlert('❌ Escribe un tema para la práctica');
         return;
     }
     
@@ -951,7 +1096,7 @@ function closeCreateClassroomModal() {
 async function submitCreateClassroom() {
     const nombre = document.getElementById('newClassroomName').value.trim();
     if (!nombre) {
-        showAlert('❌ Por favor ingresa un nombre para el aula.');
+        showAlert('❌ Por favor, ingresa un nombre para el aula.');
         return;
     }
     
@@ -1030,7 +1175,7 @@ async function submitEditActivity() {
     const theme = document.getElementById('editActivityTheme').value;
     
     if (!title) {
-        showAlert('❌ Por favor ingresa el título.');
+        showAlert('❌ Por favor, ingresa el título.');
         return;
     }
     

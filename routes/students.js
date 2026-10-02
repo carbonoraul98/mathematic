@@ -130,6 +130,15 @@ router.post('/:id/add-xp', async (req, res) => {
         student.total_score = newScore;
         await student.save();
         
+        // Registrar intento para historial y rendimiento
+        if (req.body.activity_id) {
+            await Attempt.create({
+                student_id: Number(id),
+                activity_id: Number(req.body.activity_id),
+                score: parseInt(xp)
+            });
+        }
+        
         const newLevelInfo = calculateLevel(newScore);
         
         res.json({ 
@@ -187,4 +196,114 @@ router.get('/:id/attempts', async (req, res) => {
     }
 });
 
+// Obtener métricas de rendimiento y progreso para la vista de perfil del estudiante
+router.get('/:id/performance', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const student = await Student.findOne({ id: Number(id) });
+        if (!student) {
+            return res.status(404).json({ error: 'Estudiante no encontrado' });
+        }
+
+        const group = await Group.findOne({ id: student.group_id });
+        const attempts = await Attempt.find({ student_id: Number(id) }).sort({ completed_at: -1 });
+
+        // Calcular racha (días activos)
+        const daysSet = new Set(attempts.map(a => new Date(a.completed_at).toISOString().split('T')[0]));
+        const streakDays = Math.max(1, daysSet.size || (student.total_score > 0 ? 1 : 1));
+
+        // Categorías de temas
+        const categories = [
+            {
+                name: 'Suma y resta',
+                icon: '➕',
+                color: '#10b981', // Verde
+                bg: 'rgba(16, 185, 129, 0.15)',
+                keywords: ['suma', 'resta']
+            },
+            {
+                name: 'Multiplicación',
+                icon: '✖️',
+                color: '#06b6d4', // Cyan
+                bg: 'rgba(6, 182, 212, 0.15)',
+                keywords: ['multiplicación', 'multiplicacion']
+            },
+            {
+                name: 'División',
+                icon: '➗',
+                color: '#ec4899', // Rosa
+                bg: 'rgba(236, 72, 153, 0.15)',
+                keywords: ['división', 'division']
+            },
+            {
+                name: 'Fracciones',
+                icon: '🥧',
+                color: '#f59e0b', // Naranja
+                bg: 'rgba(245, 158, 11, 0.15)',
+                keywords: ['fracción', 'fraccion', 'fracciones', 'decimal']
+            }
+        ];
+
+        const allActivities = await Activity.find();
+        const actMap = {};
+        allActivities.forEach(a => { actMap[a.id] = a; });
+
+        const studentLevel = Math.floor((student.total_score || 0) / 30) + 1;
+
+        const topicPerformance = categories.map((cat, idx) => {
+            const matchedActs = allActivities.filter(a => {
+                const title = (a.title || '').toLowerCase();
+                const theme = (a.theme || '').toLowerCase();
+                return cat.keywords.some(k => title.includes(k) || theme.includes(k));
+            });
+            const matchedIds = matchedActs.map(a => a.id);
+            const catAttempts = attempts.filter(att => matchedIds.includes(att.activity_id));
+
+            let percentage = 0;
+            if (catAttempts.length > 0) {
+                const totalScore = catAttempts.reduce((acc, curr) => acc + curr.score, 0);
+                percentage = Math.min(100, Math.round((totalScore / (catAttempts.length * 20)) * 100));
+            } else {
+                // Cálculo proporcional basado en nivel de XP alcanzado
+                if (idx === 0) {
+                    percentage = student.total_score > 0 ? Math.min(95, 30 + Math.round((student.total_score / 30) * 35)) : 15;
+                } else if (idx === 1) {
+                    percentage = studentLevel >= 2 ? Math.min(85, 25 + (studentLevel - 1) * 20) : (student.total_score > 15 ? 20 : 5);
+                } else if (idx === 2) {
+                    percentage = studentLevel >= 3 ? Math.min(80, 20 + (studentLevel - 2) * 20) : (studentLevel >= 2 ? 15 : 0);
+                } else {
+                    percentage = studentLevel >= 4 ? Math.min(75, 20 + (studentLevel - 3) * 20) : (studentLevel >= 3 ? 10 : 0);
+                }
+            }
+
+            return {
+                name: cat.name,
+                icon: cat.icon,
+                color: cat.color,
+                bg: cat.bg,
+                percentage: Math.max(0, Math.min(100, percentage)),
+                attemptsCount: catAttempts.length
+            };
+        });
+
+        res.json({
+            success: true,
+            student: {
+                id: student.id,
+                full_name: student.full_name,
+                username: student.username,
+                group_name: group ? group.name : '',
+                total_score: student.total_score || 0,
+                levelInfo: calculateLevel(student.total_score)
+            },
+            streakDays,
+            topics: topicPerformance
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
+
