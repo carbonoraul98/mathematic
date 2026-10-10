@@ -12,12 +12,14 @@ class ActivityPlayer extends HTMLElement {
         
         .ap-container {
           background: #0B132B; /* Dark navy */
-          width: 90%; max-width: 500px;
+          width: 94%; max-width: 580px;
+          max-height: 92vh;
           border-radius: 20px;
           border: 1px solid #1C2A54;
           box-shadow: 0 10px 30px rgba(0,0,0,0.5);
           display: flex; flex-direction: column;
-          overflow: hidden;
+          overflow-y: auto;
+          overflow-x: hidden;
         }
         
         .ap-header {
@@ -180,6 +182,7 @@ class ActivityPlayer extends HTMLElement {
 
           <div class="ap-body">
             <h3 class="ap-question-text" id="apQuestionText">¿Pregunta?</h3>
+            <div class="ap-graphic-container" id="apGraphicContainer" style="display: none; margin: 0 auto 20px auto; width: 100%;"></div>
             <div class="ap-options" id="apOptionsContainer">
               <!-- Opciones se inyectan acá -->
             </div>
@@ -247,7 +250,28 @@ class ActivityPlayer extends HTMLElement {
 
   renderCurrentQuestion() {
     const q = this.shuffledQuestions[this.currentIndex];
-    this.querySelector('#apQuestionText').innerText = q.pregunta;
+    
+    // Parsear gráfico dinámico si contiene tag
+    let cleanText = q.pregunta;
+    let graphicHtml = '';
+    if (window.FractionGraphics && typeof window.FractionGraphics.parseQuestion === 'function') {
+      const parsed = window.FractionGraphics.parseQuestion(q.pregunta);
+      cleanText = parsed.cleanText;
+      graphicHtml = parsed.graphicHtml;
+    }
+
+    this.querySelector('#apQuestionText').innerText = cleanText;
+    
+    const graphicContainer = this.querySelector('#apGraphicContainer');
+    if (graphicContainer) {
+      if (graphicHtml) {
+        graphicContainer.innerHTML = graphicHtml;
+        graphicContainer.style.display = 'block';
+      } else {
+        graphicContainer.innerHTML = '';
+        graphicContainer.style.display = 'none';
+      }
+    }
     
     // Update progress
     const total = this.shuffledQuestions.length;

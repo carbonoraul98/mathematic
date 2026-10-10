@@ -5,17 +5,26 @@ const router = express.Router();
 // Cargar examen JSON unificado
 router.post('/', async (req, res) => {
     try {
-        const { title, grade, questions: examQuestions } = req.body;
+        const { title, grade, questions: examQuestions, group_id, target_groups } = req.body;
         
         if (!title || !examQuestions || !Array.isArray(examQuestions)) {
             return res.status(400).json({ error: 'Faltan datos requeridos (title, questions)' });
+        }
+
+        let targets = [];
+        if (Array.isArray(target_groups) && target_groups.length > 0) {
+            targets = target_groups.map(Number);
+        } else if (group_id) {
+            targets = [Number(group_id)];
         }
         
         // Crear actividad/examen
         const activity = await Activity.create({
             title,
             type: 'Examen',
-            theme: `Grado ${grade || 'General'}`
+            theme: `Grado ${grade || 'General'}`,
+            group_id: group_id ? Number(group_id) : (targets[0] || null),
+            target_groups: targets
         });
         
         for (let i = 0; i < examQuestions.length; i++) {

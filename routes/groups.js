@@ -1,5 +1,5 @@
 const express = require('express');
-const { Group, Student } = require('../models/database');
+const { Group, Student, Attempt } = require('../models/database');
 const router = express.Router();
 
 // Generar código aleatorio de 5 caracteres alfanuméricos
@@ -54,6 +54,28 @@ router.post('/', async (req, res) => {
         });
         
         res.json({ success: true, group: newGroup });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Resetear progreso de todos los estudiantes de un aula
+router.post('/:id/reset', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const group = isNaN(id) ? await Group.findOne({ name: id }) : await Group.findOne({ id: Number(id) });
+        if (!group) {
+            return res.status(404).json({ error: 'Aula no encontrada' });
+        }
+        
+        const students = await Student.find({ group_id: group.id });
+        const studentIds = students.map(s => s.id);
+        
+        await Student.updateMany({ group_id: group.id }, { total_score: 0 });
+        await Attempt.deleteMany({ student_id: { $in: studentIds } });
+        
+        res.json({ success: true, message: `Progreso de aula ${group.name} reiniciado a 0` });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

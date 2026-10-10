@@ -255,8 +255,8 @@ function updateStudentLevelUI(student) {
         const node = document.createElement('div');
         node.className = 'map-node-v2';
         
-        // Simular títulos dinámicos para los nodos
-        const nodeTitles = ["Suma", "Resta", "Multiplicación", "División", "Fracciones", "Decimales", "Geometría", "Álgebra", "Potencias", "Ecuaciones"];
+        // Títulos para los nodos de práctica
+        const nodeTitles = ["Suma", "Resta", "Multiplicación", "División", "Fracciones I", "Fracciones II", "Decimales", "Geometría", "Álgebra", "Potencias"];
         const nodeLabel = nodeTitles[i-1] || `Misión ${i}`;
         
         if (i < student.levelInfo.level) {
@@ -430,11 +430,15 @@ async function loadStudentPerformance() {
 }
 
 // Funciones del Modal de Estudiante
-function openCreateStudentModal() {
+function openCreateStudentModal(defaultGrade) {
   document.getElementById('createStudentModal').style.display = 'flex';
   document.getElementById('modalStudentName').value = '';
   document.getElementById('modalStudentUser').value = '';
   document.getElementById('modalStudentPassword').value = '';
+  if (defaultGrade) {
+    const gradeSelect = document.getElementById('modalStudentGrade');
+    if (gradeSelect) gradeSelect.value = defaultGrade;
+  }
 }
 
 function closeCreateStudentModal() {
@@ -580,12 +584,31 @@ function mostrarPreguntas() {
 
 async function crearActividad() {
   let gradoBase = document.getElementById("activityTargetGrade").value;
+  let targetGroupEl = document.getElementById("activityTargetGroup");
+  let primaryGroupId = targetGroupEl ? targetGroupEl.value : "";
   let tipo = document.getElementById("activityType").value;
-  let tema = document.getElementById("activityTheme").value;
+  let tema = document.getElementById("activityTheme").value.trim();
   
   if (!tema) {
     showAlert('❌ Escribe un tema para la actividad');
     return;
+  }
+
+  // Recolectar aulas destino
+  let targetGroups = [];
+  if (primaryGroupId) {
+    targetGroups.push(Number(primaryGroupId));
+  }
+
+  const chkReplicate = document.getElementById("chkReplicateActivity");
+  if (chkReplicate && chkReplicate.checked) {
+    const checkBoxes = document.querySelectorAll('.replicate-group-chk:checked');
+    checkBoxes.forEach(cb => {
+      const val = Number(cb.value);
+      if (!targetGroups.includes(val)) {
+        targetGroups.push(val);
+      }
+    });
   }
   
   try {
@@ -597,22 +620,33 @@ async function crearActividad() {
         type: tipo,
         theme: `Grado ${gradoBase}`,
         grade: gradoBase,
+        group_id: primaryGroupId ? Number(primaryGroupId) : null,
+        target_groups: targetGroups,
         questions: preguntasTemp
       })
     });
     
     const result = await res.json();
     if (result.success) {
-      // Limpiar
+      // Limpiar formulario
       preguntasTemp = [];
       mostrarPreguntas();
       document.getElementById("activityTheme").value = "";
-      showAlert(`✅ Actividad "${tema}" guardada en la base de datos`);
+      if (chkReplicate) chkReplicate.checked = false;
+      toggleReplicateCheckboxes();
       
+      showAlert(`✅ Actividad "${tema}" guardada exitosamente`);
+      
+      // Si veníamos de un aula, refrescar su pestaña
+      if (currentClassroomGroupName) {
+        const grp = (window.todasLasAulas || []).find(g => g.name === currentClassroomGroupName);
+        if (grp) loadClassroomActivities(currentClassroomGroupName, grp.id);
+      }
+
       // Redirect to activities list
       loadActivities();
       loadDashboardStats();
-      const activitiesLink = Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.textContent.includes('Actividades'));
+      const activitiesLink = document.getElementById('navLinkActivities') || Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.textContent.includes('Actividades'));
       if (activitiesLink) {
         showTeacherSection('viewActivitiesSection', activitiesLink);
       }
@@ -631,9 +665,11 @@ async function resetStudentProgress() {
       const res = await fetch(`/api/students/${estudianteActual.id}/reset`, { method: 'POST' });
       if (res.ok) {
          estudianteActual.total_score = 0;
+         estudianteActual.puntos = 0;
          estudianteActual.levelInfo = { level: 1, currentXP: 0, xpPerLevel: 30, progressPercent: 0 };
          updateStudentLevelUI(estudianteActual);
          mostrarPendientes();
+         await loadStudentPerformance();
          showAlert("Tu progreso ha sido reiniciado con éxito.");
       } else {
          showAlert("Hubo un error al reiniciar el progreso.");
@@ -661,16 +697,27 @@ async function mostrarPendientes() {
     
     contenedor.innerHTML = "";
     
-    // Filtrar actividades del grado del estudiante y que no sean Práctica (van aparte)
+    // Filtrar actividades del aula del estudiante y que no sean Práctica (van aparte)
     const actividadesFiltradas = todasActividades.filter(a => {
+      const noEsPractica = a.type !== 'Práctica';
+      if (!noEsPractica) return false;
+
+      // Si la actividad tiene aulas específicas asignadas
+      const hasSpecificClassroom = (a.target_groups && a.target_groups.length > 0) || a.group_id;
+      if (hasSpecificClassroom) {
+        const matchesGroup = a.group_id === estudianteActual.group_id || 
+                             (Array.isArray(a.target_groups) && a.target_groups.includes(estudianteActual.group_id));
+        return matchesGroup;
+      }
+
+      // Si es una actividad general sin aula puntual, validar por grado
       const gradoActividad = a.theme ? a.theme.replace('Grado ', '') : '';
       const coincideGrado = gradoActividad === gradoAlumnoBase || !gradoActividad || a.theme === 'General' || !a.theme.includes('Grado');
-      const noEsPractica = a.type !== 'Práctica';
-      return coincideGrado && noEsPractica;
+      return coincideGrado;
     });
     
     if (actividadesFiltradas.length === 0) {
-      contenedor.innerHTML = "<p style='color: var(--text-muted); padding: 20px 0;'>No hay evaluaciones o talleres pendientes para tu grado.</p>";
+      contenedor.innerHTML = "<p style='color: var(--text-muted); padding: 20px 0;'>No hay evaluaciones o talleres pendientes para tu aula.</p>";
       return;
     }
     
@@ -885,18 +932,32 @@ async function loadActivities() {
         
         let html = '';
         activities.forEach(act => {
-            const icono = act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : '🧩');
+            const icono = act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩'));
+            const qCount = act.preguntas ? act.preguntas.length : 0;
+            const aulaBadge = act.target_group_names && act.target_group_names.length > 0 
+                ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.target_group_names.join(', ')}</span>`
+                : (act.primary_group_name 
+                    ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.primary_group_name}</span>`
+                    : `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 8px; font-weight: 500;">🪐 Todas las aulas</span>`);
+
             html += `
-                <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: var(--space-md);">
-                    <div class="classroom-item-info">
+                <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: var(--space-md); flex-wrap: wrap; gap: 12px;">
+                    <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
                         <div class="classroom-icon">${icono}</div>
                         <div class="classroom-details">
                             <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: var(--text-md);">${act.title}</h4>
-                            <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm);">📝 Tipo: ${act.type} • 📚 ${act.theme || 'Sin grado'} • 📅 ${new Date(act.created_at).toLocaleDateString()}</p>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="background: rgba(99, 102, 241, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 8px; font-weight: 600;">${act.type || 'Actividad'}</span>
+                                ${aulaBadge}
+                                <span>• 📚 ${act.theme || 'Sin grado'}</span>
+                                <span>• ❓ ${qCount} pregunta${qCount === 1 ? '' : 's'}</span>
+                                <span>• 📅 ${new Date(act.created_at).toLocaleDateString()}</span>
+                            </p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: var(--space-sm);">
-                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}')">✏️ Editar</button>
+                    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+                        <button class="btn btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(99, 102, 241, 0.25); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
+                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'})">✏️ Editar</button>
                         <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
                     </div>
                 </div>
@@ -1036,6 +1097,9 @@ async function loadDashboardStats() {
         const students = await studentsRes.json();
         const activities = await activitiesRes.json();
         
+        window.todasLasAulas = groups;
+        populateGroupSelectors(groups);
+        
         const exams = activities.filter(a => a.type === 'Examen');
         
         document.getElementById('statGroupsCount').textContent = groups.length;
@@ -1143,11 +1207,16 @@ async function deleteActivity(id) {
     }
 }
 
-function openEditActivityModal(id, title, type, theme) {
+function openEditActivityModal(id, title, type, theme, groupId) {
     document.getElementById('editActivityId').value = id;
     document.getElementById('editActivityTitle').value = title;
     document.getElementById('editActivityType').value = type;
     document.getElementById('editActivityTheme').value = theme;
+    
+    const groupSelect = document.getElementById('editActivityTargetGroup');
+    if (groupSelect) {
+        groupSelect.value = (groupId !== undefined && groupId !== null) ? groupId : '';
+    }
     
     const modal = document.getElementById('editActivityModal');
     modal.classList.add('active');
@@ -1163,6 +1232,8 @@ async function submitEditActivity() {
     const title = document.getElementById('editActivityTitle').value.trim();
     const type = document.getElementById('editActivityType').value;
     const theme = document.getElementById('editActivityTheme').value;
+    const groupSelect = document.getElementById('editActivityTargetGroup');
+    const groupId = groupSelect ? groupSelect.value : null;
     
     if (!title) {
         showAlert('❌ Por favor, ingresa el título.');
@@ -1172,10 +1243,18 @@ async function submitEditActivity() {
     closeEditActivityModal();
     
     try {
+        const payload = { 
+            title, 
+            type, 
+            theme,
+            group_id: groupId ? Number(groupId) : null,
+            target_groups: groupId ? [Number(groupId)] : []
+        };
+        
         const res = await fetch(`/api/activities/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, type, theme })
+            body: JSON.stringify(payload)
         });
         const result = await res.json();
         
@@ -1183,6 +1262,10 @@ async function submitEditActivity() {
             showAlert('✅ Actividad actualizada con éxito');
             loadActivities();
             loadPractices();
+            if (currentClassroomGroupName) {
+                const grp = (window.todasLasAulas || []).find(g => g.name === currentClassroomGroupName);
+                if (grp) loadClassroomActivities(currentClassroomGroupName, grp.id);
+            }
         } else {
             showAlert('❌ Error: ' + result.error);
         }
@@ -1192,9 +1275,32 @@ async function submitEditActivity() {
     }
 }
 
-function openClassroomDetail(groupName) {
-    document.getElementById('classroomDetailTitle').textContent = '🪐 Aula ' + groupName;
-    const content = document.getElementById('classroomDetailContent');
+let currentClassroomGroupName = null;
+
+async function openClassroomDetail(groupName) {
+    currentClassroomGroupName = groupName;
+    const groupObj = (window.todasLasAulas || []).find(g => g.name === groupName);
+    const groupId = groupObj ? groupObj.id : null;
+    
+    document.getElementById('classroomDetailTitle').innerText = '🪐 Aula ' + groupName;
+    
+    const headerActions = document.getElementById('classroomDetailHeaderActions');
+    if (headerActions) {
+        headerActions.innerHTML = `
+            <button class="btn btn--sm" style="border-radius: 20px; font-weight: 700; background: linear-gradient(135deg, #6366f1, #4f46e5);" onclick="createActivityForGroup(${groupId}, '${groupName}')">
+                ➕ Crear Actividad para ${groupName}
+            </button>
+            <button class="btn btn--secondary btn--sm" style="border-radius: 20px;" onclick="openCreateStudentModal('${groupName}')">
+                ➕ Nuevo Estudiante
+            </button>
+            <button class="btn btn--outline btn--sm" style="border-color: rgba(255, 92, 122, 0.4); color: #ff5c7a; border-radius: 20px; font-size: 0.8rem;" onclick="resetGroupProgress('${groupName}')">
+                🔄 Reiniciar Progreso
+            </button>
+            <button class="btn btn--secondary btn--sm" style="border-radius: 20px;" onclick="showTeacherSection('dashboardHome', document.getElementById('navLinkHome'))">
+                ⬅️ Volver
+            </button>
+        `;
+    }
     
     // Hide all sections and show this one
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('show'));
@@ -1205,49 +1311,266 @@ function openClassroomDetail(groupName) {
     // Remove active class from sidebar
     document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
     
-    if (!estudiantes || estudiantes.length === 0) {
-        content.innerHTML = '<p>No hay estudiantes cargados. Vuelve e inténtalo de nuevo.</p>';
-        return;
-    }
-    
-    const studentsInGroup = estudiantes.filter(e => e.group_name === groupName || e.grado === groupName);
+    // Default to students tab
+    switchClassroomTab('students');
+
+    // 1. Renderizar Estudiantes del Aula
+    const content = document.getElementById('classroomDetailContent');
+    const studentsInGroup = (estudiantes || []).filter(e => e.group_name === groupName || e.grado === groupName);
+    const countEl = document.getElementById('classroomStudentsCount');
+    if (countEl) countEl.innerText = studentsInGroup.length;
     
     if (studentsInGroup.length === 0) {
-        content.innerHTML = '<p>Esta aula no tiene estudiantes todavía.</p>';
-        return;
+        content.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                <div style="font-size: 2.5rem; margin-bottom: 10px;">👥</div>
+                <p style="margin: 0 0 15px 0;">Esta aula aún no tiene estudiantes registrados.</p>
+                <button class="btn btn--sm" onclick="openCreateStudentModal('${groupName}')">➕ Agregar primer estudiante</button>
+            </div>
+        `;
+    } else {
+        let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-md);">';
+        studentsInGroup.forEach(s => {
+            let name = s.full_name || s.nombre;
+            let user = s.username || s.usuario;
+            let pass = s.password || 'N/A';
+            let xp = s.total_score || 0;
+            let levelName = s.levelInfo ? s.levelInfo.name : 'Principiante';
+            let levelIcon = s.levelInfo ? s.levelInfo.icon : '🌱';
+            
+            html += `
+            <div class="card" style="display: flex; flex-direction: column; gap: var(--space-sm);">
+                <h3 style="margin: 0; color: var(--color-primary);"><span style="font-size: 1.2rem;">👤</span> ${name}</h3>
+                <div style="font-size: var(--text-sm); color: var(--text-muted);">
+                    <p style="margin: 0;"><b>Usuario:</b> ${user} &nbsp;|&nbsp; <b>Contraseña:</b> ${pass}</p>
+                    <p style="margin: 0; margin-top: 4px;"><b>Progreso:</b> ${levelIcon} ${levelName} (${xp} XP)</p>
+                </div>
+                <button class="btn btn--secondary btn--sm" style="margin-top: auto;" onclick="showStudentProgress(${s.id}, '${name.replace(/'/g, "\\'")}')">📄 Ver Actividades y Exámenes</button>
+            </div>
+            `;
+        });
+        html += '</div>';
+        content.innerHTML = html;
+    }
+
+    // 2. Cargar Actividades específicas de esta aula
+    await loadClassroomActivities(groupName, groupId);
+}
+
+function switchClassroomTab(tab) {
+    const stView = document.getElementById('classroomStudentsView');
+    const actView = document.getElementById('classroomActivitiesView');
+    const stBtn = document.getElementById('tabClassroomStudentsBtn');
+    const actBtn = document.getElementById('tabClassroomActivitiesBtn');
+    
+    if (tab === 'students') {
+        if (stView) stView.style.display = 'block';
+        if (actView) actView.style.display = 'none';
+        if (stBtn) stBtn.className = 'btn btn--sm active';
+        if (actBtn) actBtn.className = 'btn btn--outline btn--sm';
+    } else {
+        if (stView) stView.style.display = 'none';
+        if (actView) actView.style.display = 'block';
+        if (stBtn) stBtn.className = 'btn btn--outline btn--sm';
+        if (actBtn) actBtn.className = 'btn btn--sm active';
+    }
+}
+
+async function loadClassroomActivities(groupName, groupId) {
+    const container = document.getElementById('classroomActivitiesView');
+    if (!container) return;
+    container.innerHTML = '<div class="spinner" style="display:block; margin: 30px auto;"></div>';
+    
+    try {
+        const res = await fetch('/api/activities');
+        const allActivities = await res.json();
+        
+        // Filtrar actividades asociadas a esta aula
+        const classroomActivities = allActivities.filter(a => {
+            if (groupId && (a.group_id === groupId || (Array.isArray(a.target_groups) && a.target_groups.includes(groupId)))) {
+                return true;
+            }
+            return false;
+        });
+
+        const actCountEl = document.getElementById('classroomActivitiesCount');
+        if (actCountEl) actCountEl.innerText = classroomActivities.length;
+
+        if (classroomActivities.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 45px 20px; color: var(--text-secondary); background: rgba(255,255,255,0.02); border-radius: var(--radius-lg); border: 1px dashed var(--color-border);">
+                    <div style="font-size: 3rem; margin-bottom: 12px;">📋</div>
+                    <h3 style="margin: 0 0 8px 0; color: #fff;">Sin actividades exclusivas para Aula ${groupName}</h3>
+                    <p style="margin: 0 0 20px 0; font-size: 0.95rem;">Crea evaluaciones, talleres prácticos o quices dirigidos puntualmente a este curso.</p>
+                    <button class="btn btn--sm" style="border-radius: 20px; padding: 8px 20px; font-weight: 700;" onclick="createActivityForGroup(${groupId}, '${groupName}')">
+                        ➕ Crear Actividad / Taller para ${groupName}
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+        classroomActivities.forEach(act => {
+            const icono = act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩'));
+            const qCount = act.preguntas ? act.preguntas.length : 0;
+            const isShared = act.target_group_names && act.target_group_names.length > 1;
+            const scopeBadge = isShared 
+                ? `<span style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">🤝 Compartida: ${act.target_group_names.join(', ')}</span>`
+                : `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">🔒 Exclusiva de ${groupName}</span>`;
+
+            html += `
+                <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 12px;">
+                    <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
+                        <div class="classroom-icon">${icono}</div>
+                        <div class="classroom-details">
+                            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: var(--text-md);">${act.title}</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="background: rgba(99, 102, 241, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 8px; font-weight: 600;">${act.type || 'Actividad'}</span>
+                                ${scopeBadge}
+                                <span>• ❓ ${qCount} preg.</span>
+                                <span>• 📅 ${new Date(act.created_at).toLocaleDateString()}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+                        <button class="btn btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(99, 102, 241, 0.25); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
+                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id})">✏️ Editar</button>
+                        <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch(err) {
+        console.error('Error cargando actividades del aula:', err);
+        container.innerHTML = '<p style="color: var(--color-danger);">❌ Error al cargar actividades del aula.</p>';
+    }
+}
+
+function createActivityForGroup(groupId, groupName) {
+    const link = document.getElementById('navLinkCreateActivity') || Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.textContent.includes('Crear'));
+    showTeacherSection('activitiesSection', link);
+    
+    const select = document.getElementById('activityTargetGroup');
+    if (select) {
+        select.value = groupId;
+        onActivityTargetGroupChange();
     }
     
-    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-md);">';
+    const themeInput = document.getElementById('activityTheme');
+    if (themeInput) {
+        themeInput.focus();
+        themeInput.placeholder = `Ej: Taller práctico para Aula ${groupName}`;
+    }
     
-    studentsInGroup.forEach(s => {
-        let name = s.full_name || s.nombre;
-        let user = s.username || s.usuario;
-        let pass = s.password || 'N/A';
-        let xp = s.total_score || 0;
-        let levelName = s.levelInfo ? s.levelInfo.name : 'Principiante';
-        let levelIcon = s.levelInfo ? s.levelInfo.icon : '🌱';
-        
-        html += `
-        <div class="card" style="display: flex; flex-direction: column; gap: var(--space-sm);">
-            <h3 style="margin: 0; color: var(--color-primary);"><span style="font-size: 1.2rem;">👤</span> ${name}</h3>
-            <div style="font-size: var(--text-sm); color: var(--text-muted);">
-                <p style="margin: 0;"><b>Usuario:</b> ${user} &nbsp;|&nbsp; <b>Contraseña:</b> ${pass}</p>
-                <p style="margin: 0; margin-top: 4px;"><b>Progreso:</b> ${levelIcon} ${levelName} (${xp} XP)</p>
-            </div>
-            <button class="btn btn--secondary btn--sm" style="margin-top: auto;" onclick="showStudentProgress(${s.id}, '${name.replace(/'/g, "\\'")}')">📄 Ver Actividades y Exámenes</button>
-        </div>
-        `;
-    });
+    showAlert(`📍 Asignando actividad para Aula ${groupName}`);
+}
+
+function populateGroupSelectors(groups) {
+    if (!groups || !Array.isArray(groups)) return;
     
-    html += '</div>';
-    content.innerHTML = html;
+    // 1. Selector en formulario de creación
+    const targetGroupSelect = document.getElementById('activityTargetGroup');
+    if (targetGroupSelect) {
+        const currentVal = targetGroupSelect.value;
+        let html = '<option value="">Todas las aulas (General)</option>';
+        groups.forEach(g => {
+            html += `<option value="${g.id}">Aula ${g.name}</option>`;
+        });
+        targetGroupSelect.innerHTML = html;
+        if (currentVal) targetGroupSelect.value = currentVal;
+    }
+
+    // 2. Selector en modal de edición
+    const editGroupSelect = document.getElementById('editActivityTargetGroup');
+    if (editGroupSelect) {
+        const currentVal = editGroupSelect.value;
+        let html = '<option value="">Todas las aulas (General)</option>';
+        groups.forEach(g => {
+            html += `<option value="${g.id}">Aula ${g.name}</option>`;
+        });
+        editGroupSelect.innerHTML = html;
+        if (currentVal) editGroupSelect.value = currentVal;
+    }
+
+    // 3. Checkboxes para replicar a otros cursos
+    const repList = document.getElementById('replicateGroupsList');
+    if (repList) {
+        let repHtml = '';
+        groups.forEach(g => {
+            repHtml += `
+                <label class="replicate-chk-item" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;" id="repItem_${g.id}">
+                    <input type="checkbox" value="${g.id}" class="replicate-group-chk" style="width: auto; margin: 0;" />
+                    <span>Aula ${g.name}</span>
+                </label>
+            `;
+        });
+        repList.innerHTML = repHtml;
+    }
+}
+
+function onActivityTargetGroupChange() {
+    const select = document.getElementById('activityTargetGroup');
+    const selectedGroupId = select ? select.value : "";
+    const repSection = document.getElementById('activityReplicateSection');
+    
+    if (selectedGroupId && window.todasLasAulas) {
+        const groupObj = window.todasLasAulas.find(g => String(g.id) === String(selectedGroupId));
+        if (groupObj) {
+            const gradeLetter = groupObj.name.charAt(0);
+            const gradeSelect = document.getElementById('activityTargetGrade');
+            if (gradeSelect && (gradeLetter === '4' || gradeLetter === '5')) {
+                gradeSelect.value = gradeLetter;
+            }
+        }
+        if (repSection) repSection.style.display = 'block';
+    } else {
+        if (repSection) repSection.style.display = 'none';
+        const chk = document.getElementById('chkReplicateActivity');
+        if (chk) chk.checked = false;
+        toggleReplicateCheckboxes();
+    }
+    
+    if (window.todasLasAulas) {
+        window.todasLasAulas.forEach(g => {
+            const item = document.getElementById(`repItem_${g.id}`);
+            if (item) {
+                if (String(g.id) === String(selectedGroupId)) {
+                    item.style.display = 'none';
+                    const chk = item.querySelector('input');
+                    if (chk) chk.checked = false;
+                } else {
+                    item.style.display = 'inline-flex';
+                }
+            }
+        });
+    }
+}
+
+function toggleReplicateCheckboxes() {
+    const chk = document.getElementById('chkReplicateActivity');
+    const list = document.getElementById('replicateGroupsList');
+    if (list) {
+        list.style.display = (chk && chk.checked) ? 'flex' : 'none';
+    }
 }
 
 async function showStudentProgress(studentId, studentName) {
     document.getElementById('studentProgressModal').style.display = 'flex';
     document.getElementById('progressModalTitle').innerHTML = `📈 Progreso: ${studentName}`;
     const content = document.getElementById('progressModalContent');
+    const footer = document.getElementById('progressModalFooter');
     content.innerHTML = '<div class="spinner" style="display:block; margin: 20px auto;"></div>';
+    
+    if (footer) {
+        footer.innerHTML = `
+            <button class="btn btn--secondary btn--sm" style="background: rgba(255, 92, 122, 0.15); color: #ff5c7a; border: 1px solid rgba(255, 92, 122, 0.3); border-radius: 20px; padding: 6px 14px; font-size: 0.8rem;" onclick="teacherResetStudentProgress(${studentId}, '${studentName.replace(/'/g, "\\'")}')">
+                🔄 Reiniciar Todo el Progreso del Estudiante
+            </button>
+        `;
+    }
     
     try {
         const res = await fetch(`/api/students/${studentId}/attempts`);
@@ -1279,5 +1602,229 @@ async function showStudentProgress(studentId, studentName) {
         }
     } catch (err) {
         content.innerHTML = '<p>Error de conexión.</p>';
+    }
+}
+
+async function teacherResetStudentProgress(studentId, studentName) {
+    if (!confirm(`¿Estás seguro de que deseas reiniciar TODO el progreso y puntajes de ${studentName}? Volverá a Nivel 1 con 0 puntos.`)) return;
+    try {
+        const res = await fetch(`/api/students/${studentId}/reset`, { method: 'POST' });
+        if (res.ok) {
+            showAlert(`✅ Progreso de ${studentName} reiniciado con éxito.`);
+            await showStudentProgress(studentId, studentName);
+            loadStudents();
+            loadDashboardStats();
+        } else {
+            showAlert('❌ Error al reiniciar progreso del estudiante.');
+        }
+    } catch(err) {
+        console.error(err);
+        showAlert('❌ Error de conexión al reiniciar.');
+    }
+}
+
+async function resetGroupProgress(groupName) {
+    if (!confirm(`⚠️ ATENCIÓN: ¿Estás seguro de que deseas reiniciar el progreso de TODOS los estudiantes del Aula ${groupName}? Sus puntajes e intentos volverán a 0.`)) return;
+    try {
+        const res = await fetch(`/api/groups/${encodeURIComponent(groupName)}/reset`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showAlert(`✅ ${data.message || 'Progreso del aula reiniciado'}`);
+            await loadStudents();
+            openClassroomDetail(groupName);
+            loadDashboardStats();
+        } else {
+            showAlert('❌ Error al reiniciar el aula: ' + (data.error || ''));
+        }
+    } catch(err) {
+        console.error(err);
+        showAlert('❌ Error de conexión al reiniciar el aula.');
+    }
+}
+
+let currentReviewActivity = null;
+
+async function openReviewActivityModal(id) {
+    const modal = document.getElementById('reviewActivityModal');
+    if (!modal) return;
+    
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    
+    document.getElementById('reviewActTitle').innerText = 'Cargando actividad...';
+    document.getElementById('reviewQuestionsView').innerHTML = '<div class="spinner" style="display:block; margin: 30px auto;"></div>';
+    document.getElementById('reviewSubmissionsView').innerHTML = '<div class="spinner" style="display:block; margin: 30px auto;"></div>';
+    
+    switchReviewTab('questions');
+
+    try {
+        const [resAct, resAttempts] = await Promise.all([
+            fetch(`/api/activities/${id}`),
+            fetch(`/api/activities/${id}/attempts`)
+        ]);
+        
+        const act = await resAct.json();
+        const attemptsData = await resAttempts.json();
+        
+        currentReviewActivity = act;
+        
+        document.getElementById('reviewActTitle').innerText = act.title;
+        document.getElementById('reviewActBadgeType').innerText = act.type || 'Actividad';
+        document.getElementById('reviewActBadgeGrade').innerText = act.theme || 'Grado General';
+        
+        const questions = act.preguntas || [];
+        const attempts = (attemptsData && attemptsData.attempts) ? attemptsData.attempts : [];
+        
+        document.getElementById('reviewQuestionsCount').innerText = questions.length;
+        document.getElementById('reviewSubmissionsCount').innerText = attempts.length;
+        
+        if (questions.length === 0) {
+            document.getElementById('reviewQuestionsView').innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                    <div style="font-size: 2.5rem; margin-bottom: 10px;">📝</div>
+                    <p style="margin: 0; font-size: 1rem;">Esta actividad aún no tiene preguntas configuradas.</p>
+                </div>
+            `;
+        } else {
+            let qHtml = '<div style="display: flex; flex-direction: column; gap: 14px;">';
+            questions.forEach((q, index) => {
+                const isOption = q.tipo === 'opcion';
+                let cleanText = q.pregunta;
+                let graphicHtml = '';
+                if (window.FractionGraphics && typeof window.FractionGraphics.parseQuestion === 'function') {
+                    const parsed = window.FractionGraphics.parseQuestion(q.pregunta);
+                    cleanText = parsed.cleanText;
+                    graphicHtml = parsed.graphicHtml;
+                }
+
+                qHtml += `
+                    <div class="card" style="background: rgba(16, 23, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 14px 16px; text-align: left;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.8rem; font-weight: 700; color: #818cf8; text-transform: uppercase;">Pregunta ${index + 1}</span>
+                            <span style="font-size: 0.75rem; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 8px; color: var(--text-muted);">${isOption ? '🔘 Opción Múltiple' : '✍️ Abierta'}</span>
+                        </div>
+                        <h4 style="margin: 0 0 10px 0; font-size: 0.95rem; color: #f8fafc; font-weight: 600;">${cleanText}</h4>
+                        ${graphicHtml ? `<div style="margin: 10px 0;">${graphicHtml}</div>` : ''}
+                `;
+                
+                if (isOption) {
+                    const opts = [
+                        { label: 'A', text: q.a },
+                        { label: 'B', text: q.b },
+                        { label: 'C', text: q.c }
+                    ];
+                    qHtml += '<div style="display: flex; flex-direction: column; gap: 6px;">';
+                    opts.forEach(opt => {
+                        const isCorrect = String(q.correcta).trim().toLowerCase() === String(opt.text).trim().toLowerCase() ||
+                                          String(q.correcta).trim().toLowerCase() === opt.label.toLowerCase();
+                        const optStyle = isCorrect 
+                            ? 'background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #a7f3d0; font-weight: 600;' 
+                            : 'background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary);';
+                        qHtml += `
+                            <div style="padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; ${optStyle}">
+                                <span><b>${opt.label})</b> ${opt.text || '(Vacía)'}</span>
+                                ${isCorrect ? '<span style="font-size: 0.75rem; background: #10b981; color: #042f2e; padding: 2px 6px; border-radius: 6px; font-weight: 800;">✓ CORRECTA</span>' : ''}
+                            </div>
+                        `;
+                    });
+                    qHtml += '</div>';
+                } else {
+                    qHtml += `
+                        <div style="margin-top: 6px; padding: 8px 12px; border-radius: 8px; background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #a7f3d0; font-size: 0.85rem;">
+                            <b>Respuesta esperada:</b> ${q.correcta}
+                        </div>
+                    `;
+                }
+                
+                qHtml += `</div>`;
+            });
+            qHtml += '</div>';
+            document.getElementById('reviewQuestionsView').innerHTML = qHtml;
+        }
+        
+        if (attempts.length === 0) {
+            document.getElementById('reviewSubmissionsView').innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                    <div style="font-size: 2.5rem; margin-bottom: 10px;">👥</div>
+                    <p style="margin: 0; font-size: 1rem;">Ningún estudiante ha completado esta actividad todavía.</p>
+                </div>
+            `;
+        } else {
+            let sHtml = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            attempts.forEach(att => {
+                const dateStr = new Date(att.completed_at).toLocaleString();
+                sHtml += `
+                    <div class="card" style="background: rgba(16, 23, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; text-align: left; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <h4 style="margin: 0 0 4px 0; color: #f8fafc; font-size: 0.95rem;">👤 ${att.student_name}</h4>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Usuario: ${att.username || 'N/A'} • 📅 ${dateStr}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 0.95rem; font-weight: 700; color: #38bdf8;">+${att.score} pts</span>
+                            <button class="btn btn--secondary btn--sm" style="background: rgba(255, 92, 122, 0.15); color: #ff5c7a; border: 1px solid rgba(255, 92, 122, 0.3); padding: 4px 8px; font-size: 0.75rem; border-radius: 12px;" onclick="deleteStudentActivityAttempt(${act.id}, ${att.id}, '${att.student_name.replace(/'/g, "\\'")}')">🔄 Reiniciar</button>
+                        </div>
+                    </div>
+                `;
+            });
+            sHtml += '</div>';
+            document.getElementById('reviewSubmissionsView').innerHTML = sHtml;
+        }
+
+    } catch (err) {
+        console.error('Error cargando detalle de actividad:', err);
+        document.getElementById('reviewQuestionsView').innerHTML = '<p style="color: var(--color-danger);">❌ Error al cargar datos de la actividad.</p>';
+        document.getElementById('reviewSubmissionsView').innerHTML = '<p style="color: var(--color-danger);">❌ Error al cargar entregas.</p>';
+    }
+}
+
+function closeReviewActivityModal() {
+    const modal = document.getElementById('reviewActivityModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function switchReviewTab(tab) {
+    const qView = document.getElementById('reviewQuestionsView');
+    const sView = document.getElementById('reviewSubmissionsView');
+    const qBtn = document.getElementById('tabReviewQuestionsBtn');
+    const sBtn = document.getElementById('tabReviewSubmissionsBtn');
+    
+    if (tab === 'questions') {
+        qView.style.display = 'block';
+        sView.style.display = 'none';
+        qBtn.className = 'btn btn--sm active';
+        sBtn.className = 'btn btn--outline btn--sm';
+    } else {
+        qView.style.display = 'none';
+        sView.style.display = 'block';
+        qBtn.className = 'btn btn--outline btn--sm';
+        sBtn.className = 'btn btn--sm active';
+    }
+}
+
+function testActivityAsTeacher() {
+    if (!currentReviewActivity) return;
+    closeReviewActivityModal();
+    window.playActivity(currentReviewActivity, 'A', (score) => {
+        showAlert(`🎉 Modo prueba finalizado. Puntaje simulado: ${score} pts`);
+    });
+}
+
+async function deleteStudentActivityAttempt(activityId, attemptId, studentName) {
+    if (!confirm(`¿Deseas reiniciar el intento de "${studentName}" para esta actividad? Se eliminará su entrega actual.`)) return;
+    try {
+        const res = await fetch(`/api/activities/${activityId}/attempts/${attemptId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showAlert(`Intento de ${studentName} reiniciado correctamente.`);
+            openReviewActivityModal(activityId);
+        } else {
+            showAlert('❌ No se pudo reiniciar el intento.');
+        }
+    } catch(err) {
+        console.error(err);
+        showAlert('❌ Error de conexión al reiniciar intento.');
     }
 }

@@ -89,11 +89,25 @@ router.get('/', async (req, res) => {
     }
 });
 
+function escapeRegex(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
 // Login de estudiante
 router.post('/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
-        const student = await Student.findOne({ username, password });
+        const username = String(req.body.username || '').trim();
+        const password = String(req.body.password || '').trim();
+
+        if (!username || !password) {
+            return res.status(400).json({ success: false, error: 'Usuario y contraseña requeridos' });
+        }
+
+        const safeUserRegex = new RegExp(`^${escapeRegex(username)}$`, 'i');
+        const student = await Student.findOne({
+            username: safeUserRegex,
+            password: password
+        });
 
         if (student) {
             const group = await Group.findOne({ id: student.group_id });
@@ -210,7 +224,7 @@ router.get('/:id/performance', async (req, res) => {
 
         // Calcular racha (días activos)
         const daysSet = new Set(attempts.map(a => new Date(a.completed_at).toISOString().split('T')[0]));
-        const streakDays = Math.max(1, daysSet.size || (student.total_score > 0 ? 1 : 1));
+        const streakDays = attempts.length > 0 ? daysSet.size : (student.total_score > 0 ? 1 : 0);
 
         // Categorías de temas
         const categories = [
@@ -263,17 +277,19 @@ router.get('/:id/performance', async (req, res) => {
             if (catAttempts.length > 0) {
                 const totalScore = catAttempts.reduce((acc, curr) => acc + curr.score, 0);
                 percentage = Math.min(100, Math.round((totalScore / (catAttempts.length * 20)) * 100));
-            } else {
-                // Cálculo proporcional basado en nivel de XP alcanzado
+            } else if (student.total_score > 0) {
+                // Cálculo proporcional basado en nivel de XP alcanzado solo si tiene puntos
                 if (idx === 0) {
-                    percentage = student.total_score > 0 ? Math.min(95, 30 + Math.round((student.total_score / 30) * 35)) : 15;
+                    percentage = Math.min(95, 30 + Math.round((student.total_score / 30) * 35));
                 } else if (idx === 1) {
-                    percentage = studentLevel >= 2 ? Math.min(85, 25 + (studentLevel - 1) * 20) : (student.total_score > 15 ? 20 : 5);
+                    percentage = studentLevel >= 2 ? Math.min(85, 25 + (studentLevel - 1) * 20) : 10;
                 } else if (idx === 2) {
-                    percentage = studentLevel >= 3 ? Math.min(80, 20 + (studentLevel - 2) * 20) : (studentLevel >= 2 ? 15 : 0);
+                    percentage = studentLevel >= 3 ? Math.min(80, 20 + (studentLevel - 2) * 20) : 0;
                 } else {
-                    percentage = studentLevel >= 4 ? Math.min(75, 20 + (studentLevel - 3) * 20) : (studentLevel >= 3 ? 10 : 0);
+                    percentage = studentLevel >= 4 ? Math.min(75, 20 + (studentLevel - 3) * 20) : 0;
                 }
+            } else {
+                percentage = 0;
             }
 
             return {

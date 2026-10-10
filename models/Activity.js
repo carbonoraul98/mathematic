@@ -4,6 +4,7 @@ const { getNextSequence } = require('./Counter');
 const activitySchema = new mongoose.Schema({
     id: { type: Number, unique: true },
     group_id: { type: Number },
+    target_groups: [{ type: Number }],
     title: { type: String, required: true },
     type: { type: String },
     theme: { type: String },

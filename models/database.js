@@ -20,7 +20,12 @@ const connectionPromise = mongoose.connect(uri)
         console.log(' Conectado exitosamente a MongoDB');
         // Inicializar admin por defecto si no existe
         try {
-            const adminExists = await Teacher.findOne({ username: 'Jorge Pajon' });
+            const adminExists = await Teacher.findOne({
+                $or: [
+                    { username: { $regex: /^jorge\s*pajon$/i } },
+                    { is_admin: true }
+                ]
+            });
             if (!adminExists) {
                 await Teacher.create({
                     full_name: 'Jorge Pajon',

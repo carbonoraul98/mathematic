@@ -1,20 +1,31 @@
 const express = require('express');
-const { Activity, Question } = require('../models/database');
+const { Activity, Question, Attempt, Student, Group } = require('../models/database');
 const router = express.Router();
 
-// Crear actividad (con preguntas opcionales)
+// Crear actividad (con preguntas opcionales y asignación de aulas)
 router.post('/', async (req, res) => {
     try {
-        const { title, type, theme, grade, questions } = req.body;
+        const { title, type, theme, grade, questions, group_id, target_groups } = req.body;
         
         if (!title) {
             return res.status(400).json({ error: 'El título es requerido' });
         }
+
+        let targets = [];
+        if (Array.isArray(target_groups) && target_groups.length > 0) {
+            targets = target_groups.map(Number);
+        } else if (group_id) {
+            targets = [Number(group_id)];
+        }
         
+        const primaryGroupId = group_id ? Number(group_id) : (targets[0] || null);
+
         const activity = await Activity.create({
             title,
             type: type || 'Actividad',
-            theme: theme || `Grado ${grade || 'General'}`
+            theme: theme || `Grado ${grade || 'General'}`,
+            group_id: primaryGroupId,
+            target_groups: targets
         });
         
         // Guardar las preguntas si vienen en el body
@@ -36,7 +47,9 @@ router.post('/', async (req, res) => {
         res.json({ 
             success: true, 
             activity_id: activity.id,
-            title: title
+            title: title,
+            group_id: activity.group_id,
+            target_groups: activity.target_groups
         });
     } catch (error) {
         console.error(error);
@@ -44,11 +57,28 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Listar todas las actividades
+// Listar actividades (soporta filtro opcional ?groupId=)
 router.get('/', async (req, res) => {
     try {
-        const activities = await Activity.find().sort({ created_at: -1 });
+        const { groupId } = req.query;
+        let queryFilter = {};
+        if (groupId) {
+            const gid = Number(groupId);
+            queryFilter = {
+                $or: [
+                    { group_id: gid },
+                    { target_groups: gid },
+                    { group_id: null },
+                    { group_id: { $exists: false } }
+                ]
+            };
+        }
+
+        const activities = await Activity.find(queryFilter).sort({ created_at: -1 });
         const allQuestions = await Question.find().sort({ order_num: 1 });
+        const allGroups = await Group.find();
+        const groupMap = {};
+        allGroups.forEach(g => { groupMap[g.id] = g.name; });
         
         const activitiesWithQuestions = activities.map(act => {
             const actQuestions = allQuestions.filter(q => q.activity_id === act.id);
@@ -65,11 +95,16 @@ router.get('/', async (req, res) => {
                     correcta: q.correct_answer
                 };
             });
+
+            const targetNames = (act.target_groups || []).map(gid => groupMap[gid] || `Aula ${gid}`);
+            const primaryGroupName = act.group_id ? (groupMap[act.group_id] || `Aula ${act.group_id}`) : null;
             
             return {
                 ...act.toObject(),
                 preguntas: formattedQuestions,
-                tema: act.theme || act.title
+                tema: act.theme || act.title,
+                primary_group_name: primaryGroupName,
+                target_group_names: targetNames
             };
         });
         
@@ -80,19 +115,114 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Obtener una actividad por ID con sus preguntas
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const act = await Activity.findOne({ id: Number(id) });
+        if (!act) {
+            return res.status(404).json({ error: 'Actividad no encontrada' });
+        }
+
+        const questions = await Question.find({ activity_id: Number(id) }).sort({ order_num: 1 });
+        const formattedQuestions = questions.map(q => {
+            let options = [];
+            try { options = JSON.parse(q.options) || []; } catch(e) {}
+            return {
+                id: q.id,
+                pregunta: q.question_text,
+                tipo: q.question_type,
+                a: options[0] || "",
+                b: options[1] || "",
+                c: options[2] || "",
+                correcta: q.correct_answer
+            };
+        });
+
+        res.json({
+            ...act.toObject(),
+            preguntas: formattedQuestions,
+            tema: act.theme || act.title
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Obtener entregas / intentos de estudiantes para esta actividad
+router.get('/:id/attempts', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const attempts = await Attempt.find({ activity_id: Number(id) }).sort({ completed_at: -1 });
+        const studentIds = [...new Set(attempts.map(a => a.student_id))];
+        const students = await Student.find({ id: { $in: studentIds } });
+        const studentMap = {};
+        students.forEach(s => {
+            studentMap[s.id] = s;
+        });
+
+        const detailedAttempts = attempts.map(att => {
+            const st = studentMap[att.student_id] || {};
+            return {
+                id: att.id,
+                student_id: att.student_id,
+                student_name: st.full_name || ('Estudiante #' + att.student_id),
+                username: st.username || '',
+                group_id: st.group_id,
+                score: att.score,
+                completed_at: att.completed_at
+            };
+        });
+
+        res.json({ success: true, attempts: detailedAttempts });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Eliminar / reiniciar un intento específico de un estudiante
+router.delete('/:id/attempts/:attemptId', async (req, res) => {
+    try {
+        const { attemptId } = req.params;
+        const attempt = await Attempt.findOne({ id: Number(attemptId) });
+        if (attempt) {
+            // Descontar puntaje del estudiante si corresponde
+            await Student.updateOne(
+                { id: attempt.student_id },
+                { $inc: { total_score: -attempt.score } }
+            );
+            await Attempt.deleteOne({ id: Number(attemptId) });
+        }
+        res.json({ success: true, message: 'Intento reiniciado' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Editar una actividad
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, type, theme } = req.body;
+        const { title, type, theme, group_id, target_groups } = req.body;
         
         if (!title) {
             return res.status(400).json({ error: 'El título es requerido' });
         }
+
+        const updateData = { title, type, theme };
+        if (group_id !== undefined) {
+            updateData.group_id = group_id ? Number(group_id) : null;
+        }
+        if (target_groups !== undefined) {
+            updateData.target_groups = Array.isArray(target_groups) ? target_groups.map(Number) : [];
+        }
         
         const result = await Activity.updateOne(
             { id: Number(id) },
-            { $set: { title, type, theme } }
+            { $set: updateData }
         );
         
         if (result.matchedCount === 0) {

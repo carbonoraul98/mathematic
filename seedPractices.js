@@ -41,11 +41,53 @@ const practicesData = [
     ]
   },
   {
-    title: 'Fracciones', theme: 'Grado 5',
+    title: 'Fracciones I', theme: 'Grado 5',
     questions: [
-      { q: "¿Cuál de estas es la mitad?", a: "1/4", b: "1/3", c: "1/2", correct: "1/2" },
-      { q: "¿Cuánto es 1/4 + 1/4?", a: "2/8", b: "1/2", c: "1/4", correct: "1/2" },
-      { q: "¿Qué fracción es mayor?", a: "1/2", b: "1/4", c: "1/8", correct: "1/2" }
+      { 
+        q: "Usa los modelos para completar la expresión con fracciones equivalentes. Las piezas de color representan partes del todo: 1/2 = ? / 6 [grafico:pies:2,1,#F59E0B|6,3,#3B82F6:1/2 = ?/6]", 
+        a: "3", b: "2", c: "4", correct: "3" 
+      },
+      { 
+        q: "Observa los modelos circulares: ¿Cuál es el numerador faltante en la equivalencia 1/3 = ? / 6? [grafico:pies:3,1,#10B981|6,2,#F97316:1/3 = ?/6]", 
+        a: "2", b: "3", c: "1", correct: "2" 
+      },
+      { 
+        q: "¿Son equivalentes las dos fracciones representadas en los modelos circulares? [grafico:pies:4,2,#8B5CF6|8,4,#06B6D4:2/4 = 4/8]", 
+        a: "Sí, representan la misma parte del círculo", b: "No, 4/8 es más grande", c: "No, 2/4 es más grande", correct: "Sí, representan la misma parte del círculo" 
+      },
+      { 
+        q: "Completa el denominador equivalente usando los modelos: 3/4 = 6 / ? [grafico:pies:4,3,#EAB308|8,6,#10B981:3/4 = 6/?]", 
+        a: "8", b: "6", c: "10", correct: "8" 
+      },
+      { 
+        q: "Observa las piezas de color: ¿Qué fracción del segundo modelo equivale a 2/3? [grafico:pies:3,2,#3B82F6|6,4,#EC4899:2/3 = 4/6]", 
+        a: "4/6", b: "3/6", c: "5/6", correct: "4/6" 
+      }
+    ]
+  },
+  {
+    title: 'Fracciones II', theme: 'Grado 5',
+    questions: [
+      { 
+        q: "¿La fracción 1/4 es equivalente a la fracción 1/8? Observa las dos rectas numéricas. [grafico:dual_lines:4,1,#10B981|8,1,#D946EF]", 
+        a: "No, no son equivalentes porque no se alinean en la misma posición", b: "Sí, son equivalentes porque ambas tienen numerador 1", c: "Sí, ambas están a la misma distancia de cero", correct: "No, no son equivalentes porque no se alinean en la misma posición" 
+      },
+      { 
+        q: "Observa las dos rectas numéricas: ¿La fracción 1/2 es equivalente a la fracción 2/4? [grafico:dual_lines:2,1,#3B82F6|4,2,#10B981]", 
+        a: "Sí, son equivalentes porque coinciden exactamente en la misma ubicación", b: "No, 2/4 está más hacia la derecha", c: "No, 1/2 representa un valor mayor", correct: "Sí, son equivalentes porque coinciden exactamente en la misma ubicación" 
+      },
+      { 
+        q: "Representa 1/4 en la recta numérica dividida en doceavos. ¿A qué fracción corresponde 1/4? [grafico:single_line:12:3:#3B82F6]", 
+        a: "3/12", b: "4/12", c: "2/12", correct: "3/12" 
+      },
+      { 
+        q: "Observa la recta numérica en octavos: ¿Qué fracción marcada equivale a 1/2? [grafico:dual_lines:2,1,#F59E0B|8,4,#8B5CF6]", 
+        a: "4/8", b: "2/8", c: "6/8", correct: "4/8" 
+      },
+      { 
+        q: "Ubica 1/3 en una recta numérica graduada en doceavos. ¿Cuál es su fracción equivalente? [grafico:single_line:12:4:#10B981]", 
+        a: "4/12", b: "3/12", c: "6/12", correct: "4/12" 
+      }
     ]
   },
   {
