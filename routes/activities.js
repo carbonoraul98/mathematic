@@ -87,6 +87,7 @@ router.get('/', async (req, res) => {
                 try { options = JSON.parse(q.options) || []; } catch(e) {}
                 
                 return {
+                    id: q.id,
                     pregunta: q.question_text,
                     tipo: q.question_type,
                     a: options[0] || "",
@@ -252,6 +253,72 @@ router.delete('/:id', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Actualizar una pregunta específica de una actividad
+router.put('/:id/questions/:questionId', async (req, res) => {
+    try {
+        const { id, questionId } = req.params;
+        const { pregunta, tipo, a, b, c, correcta } = req.body;
+        
+        const options = JSON.stringify([a || "", b || "", c || ""]);
+        const result = await Question.updateOne(
+            { id: Number(questionId), activity_id: Number(id) },
+            {
+                $set: {
+                    question_text: pregunta,
+                    question_type: tipo || 'opcion',
+                    options,
+                    correct_answer: correcta
+                }
+            }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ success: false, error: 'Pregunta no encontrada' });
+        }
+        
+        res.json({ success: true, message: 'Pregunta actualizada correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Agregar una nueva pregunta a una actividad existente
+router.post('/:id/questions', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { pregunta, tipo, a, b, c, correcta } = req.body;
+        
+        const count = await Question.countDocuments({ activity_id: Number(id) });
+        const options = JSON.stringify([a || "", b || "", c || ""]);
+        const newQ = await Question.create({
+            activity_id: Number(id),
+            question_text: pregunta || 'Nueva pregunta',
+            question_type: tipo || 'opcion',
+            options,
+            correct_answer: correcta || a || '',
+            order_num: count
+        });
+        
+        res.json({ success: true, question: newQ });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Eliminar una pregunta de una actividad
+router.delete('/:id/questions/:questionId', async (req, res) => {
+    try {
+        const { id, questionId } = req.params;
+        await Question.deleteOne({ id: Number(questionId), activity_id: Number(id) });
+        res.json({ success: true, message: 'Pregunta eliminada' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

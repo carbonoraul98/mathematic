@@ -271,7 +271,7 @@ function updateStudentLevelUI(student) {
       for (let i = 1; i <= maxLevels; i++) {
         const node = document.createElement('div');
         node.className = 'map-node-v2';
-        const nodeLabel = nodeTitles[i-1] || `Misión ${i}`;
+        const nodeLabel = nodeTitles[i-1] || `Nivel ${i}`;
         
         if (i < student.levelInfo.level) {
           node.classList.add('completed');
@@ -821,8 +821,6 @@ function showTeacherSection(id, btnElement) {
     mostrarNotas();
   } else if (id === "viewActivitiesSection") {
     loadActivities();
-  } else if (id === "practicesSection") {
-    loadPractices();
   } else if (id === "dashboardHome") {
     loadDashboardStats();
   }
@@ -1694,13 +1692,20 @@ async function openReviewActivityModal(id) {
         
         if (questions.length === 0) {
             document.getElementById('reviewQuestionsView').innerHTML = `
-                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                <div style="text-align: center; padding: 30px 20px; color: var(--text-secondary);">
                     <div style="font-size: 2.5rem; margin-bottom: 10px;">📝</div>
-                    <p style="margin: 0; font-size: 1rem;">Esta actividad aún no tiene preguntas configuradas.</p>
+                    <p style="margin: 0 0 16px 0; font-size: 1rem;">Esta actividad aún no tiene preguntas configuradas.</p>
+                    <button class="btn btn--sm" onclick="openAddQuestionModal()" style="border-radius: 20px;">➕ Agregar Primera Pregunta</button>
                 </div>
             `;
         } else {
-            let qHtml = '<div style="display: flex; flex-direction: column; gap: 14px;">';
+            let qHtml = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Preguntas registradas: <b style="color: #f8fafc;">${questions.length}</b></span>
+                    <button class="btn btn--sm" style="border-radius: 20px; font-size: 0.8rem; padding: 6px 14px;" onclick="openAddQuestionModal()">➕ Agregar Pregunta</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+            `;
             questions.forEach((q, index) => {
                 const isOption = q.tipo === 'opcion';
                 let cleanText = q.pregunta;
@@ -1714,8 +1719,14 @@ async function openReviewActivityModal(id) {
                 qHtml += `
                     <div class="card" style="background: rgba(16, 23, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 14px 16px; text-align: left;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-size: 0.8rem; font-weight: 700; color: #818cf8; text-transform: uppercase;">Pregunta ${index + 1}</span>
-                            <span style="font-size: 0.75rem; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 8px; color: var(--text-muted);">${isOption ? '🔘 Opción Múltiple' : '✍️ Abierta'}</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: #818cf8; text-transform: uppercase;">Pregunta ${index + 1}</span>
+                                <span style="font-size: 0.75rem; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 8px; color: var(--text-muted);">${isOption ? '🔘 Opción Múltiple' : '✍️ Abierta'}</span>
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn btn--secondary btn--sm" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 8px;" onclick="openEditQuestionModal(${index})" title="Editar pregunta">✏️ Editar</button>
+                                <button class="btn btn--secondary btn--sm" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; font-size: 0.75rem; border-radius: 8px;" onclick="deleteQuestionFromActivity(${q.id})" title="Eliminar pregunta">🗑️</button>
+                            </div>
                         </div>
                         <h4 style="margin: 0 0 10px 0; font-size: 0.95rem; color: #f8fafc; font-weight: 600;">${cleanText}</h4>
                         ${graphicHtml ? `<div style="margin: 10px 0;">${graphicHtml}</div>` : ''}
@@ -1842,3 +1853,150 @@ async function deleteStudentActivityAttempt(activityId, attemptId, studentName) 
         showAlert('❌ Error de conexión al reiniciar intento.');
     }
 }
+
+// GESTIÓN Y EDICIÓN DE PREGUNTAS EN ACTIVIDADES/TALLERES
+function openEditQuestionModal(index) {
+    if (!currentReviewActivity || !currentReviewActivity.preguntas || !currentReviewActivity.preguntas[index]) return;
+    const q = currentReviewActivity.preguntas[index];
+
+    const modal = document.getElementById('editQuestionModal');
+    if (!modal) return;
+
+    document.getElementById('editQuestionModalTitle').innerText = `✏️ Editar Pregunta ${index + 1}`;
+    document.getElementById('editQuestionId').value = q.id || '';
+    document.getElementById('editQuestionIndex').value = index;
+    document.getElementById('editQuestionText').value = q.pregunta || '';
+    document.getElementById('editOptionA').value = q.a || '';
+    document.getElementById('editOptionB').value = q.b || '';
+    document.getElementById('editOptionC').value = q.c || '';
+
+    // Determinar opción correcta seleccionada
+    const correctVal = String(q.correcta || '').trim().toLowerCase();
+    const optA = String(q.a || '').trim().toLowerCase();
+    const optB = String(q.b || '').trim().toLowerCase();
+    const optC = String(q.c || '').trim().toLowerCase();
+
+    let selectVal = 'A';
+    if (correctVal === 'b' || (optB && correctVal === optB)) {
+        selectVal = 'B';
+    } else if (correctVal === 'c' || (optC && correctVal === optC)) {
+        selectVal = 'C';
+    } else if (correctVal === 'a' || (optA && correctVal === optA)) {
+        selectVal = 'A';
+    }
+    document.getElementById('editCorrectOption').value = selectVal;
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+}
+
+function openAddQuestionModal() {
+    if (!currentReviewActivity) return;
+    const modal = document.getElementById('editQuestionModal');
+    if (!modal) return;
+
+    document.getElementById('editQuestionModalTitle').innerText = '➕ Nueva Pregunta';
+    document.getElementById('editQuestionId').value = '';
+    document.getElementById('editQuestionIndex').value = '';
+    document.getElementById('editQuestionText').value = '';
+    document.getElementById('editOptionA').value = '';
+    document.getElementById('editOptionB').value = '';
+    document.getElementById('editOptionC').value = '';
+    document.getElementById('editCorrectOption').value = 'A';
+
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+}
+
+function closeEditQuestionModal() {
+    const modal = document.getElementById('editQuestionModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+async function saveQuestionModal() {
+    if (!currentReviewActivity) return;
+    const qId = document.getElementById('editQuestionId').value;
+    const pregunta = document.getElementById('editQuestionText').value.trim();
+    const a = document.getElementById('editOptionA').value.trim();
+    const b = document.getElementById('editOptionB').value.trim();
+    const c = document.getElementById('editOptionC').value.trim();
+    const selectedLetter = document.getElementById('editCorrectOption').value;
+
+    if (!pregunta) {
+        showAlert('⚠️ Por favor ingresa el enunciado de la pregunta.');
+        return;
+    }
+    if (!a || !b || !c) {
+        showAlert('⚠️ Por favor completa las 3 opciones (A, B y C).');
+        return;
+    }
+
+    let correcta = a;
+    if (selectedLetter === 'B') correcta = b;
+    if (selectedLetter === 'C') correcta = c;
+
+    const payload = {
+        pregunta,
+        tipo: 'opcion',
+        a,
+        b,
+        c,
+        correcta
+    };
+
+    try {
+        let res;
+        if (qId) {
+            // Actualizar existente
+            res = await fetch(`/api/activities/${currentReviewActivity.id}/questions/${qId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            // Agregar nueva
+            res = await fetch(`/api/activities/${currentReviewActivity.id}/questions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        const data = await res.json();
+        if (data.success) {
+            closeEditQuestionModal();
+            showAlert(qId ? '✅ Pregunta actualizada exitosamente.' : '✅ Pregunta agregada exitosamente.');
+            await openReviewActivityModal(currentReviewActivity.id);
+        } else {
+            showAlert('❌ Error: ' + (data.error || 'No se pudo guardar la pregunta'));
+        }
+    } catch (err) {
+        console.error(err);
+        showAlert('❌ Error de conexión al guardar pregunta.');
+    }
+}
+
+async function deleteQuestionFromActivity(questionId) {
+    if (!currentReviewActivity) return;
+    if (!confirm('¿Estás seguro de eliminar esta pregunta de la actividad?')) return;
+
+    try {
+        const res = await fetch(`/api/activities/${currentReviewActivity.id}/questions/${questionId}`, {
+            method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+            showAlert('🗑️ Pregunta eliminada correctamente.');
+            await openReviewActivityModal(currentReviewActivity.id);
+        } else {
+            showAlert('❌ Error: ' + (data.error || 'No se pudo eliminar la pregunta'));
+        }
+    } catch (err) {
+        console.error(err);
+        showAlert('❌ Error de conexión al eliminar pregunta.');
+    }
+}
+

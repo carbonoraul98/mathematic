@@ -109,7 +109,6 @@
         <button class="sidebar-link" id="navLinkStudents" onclick="showTeacherSection('studentsSection', this)">👥 Estudiantes</button>
         <button class="sidebar-link" id="navLinkActivities" onclick="showTeacherSection('viewActivitiesSection', this)">📋 Actividades y Talleres</button>
         <button class="sidebar-link" id="navLinkCreateActivity" onclick="showTeacherSection('activitiesSection', this)">➕ Crear Actividad / Taller</button>
-        <button class="sidebar-link" id="navLinkPractices" onclick="showTeacherSection('practicesSection', this)">🎮 Prácticas</button>
         <button class="sidebar-link" id="navLinkGrades" onclick="showTeacherSection('gradesSection', this)">📊 Reportes / Notas</button>
         <button type="button" class="sidebar-link" style="margin-top: auto;" onclick="logout()">🚪 Cerrar Sesión</button>
       </nav>
@@ -119,10 +118,13 @@
     <main class="dashboard-main">
       <div class="dashboard-header">
         <div>
-          <h1>Hola, Profe</h1>
-          <p>Aquí puedes gestionar tus aulas y actividades.</p>
+          <h1 style="font-size: 1.4rem; margin: 0; text-align: left;">👋 Hola, Profe</h1>
+          <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.85rem; text-align: left;">Aquí puedes gestionar tus aulas y actividades.</p>
         </div>
-        <img src="images/teacher-illustration.png" alt="Profile" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--color-primary); background: var(--bg-glass);" />
+        <div class="header-profile-badge">
+          <button class="btn btn--outline btn--sm header-profile-logout" onclick="logout()" title="Cerrar sesión">Salir</button>
+          <img src="images/teacher-illustration.png" alt="Perfil Profesor" class="header-profile-avatar" />
+        </div>
       </div>
 
       <!-- HOME (DASHBOARD) -->
@@ -314,35 +316,6 @@
         <div id="activitiesList"></div>
       </div>
 
-      <!-- PRÁCTICAS -->
-      <div class="section" id="practicesSection" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
-          <h2 style="margin: 0;">🎮 Módulos de Práctica</h2>
-          <div>
-            <button class="btn btn--secondary btn--sm" onclick="showTeacherSection('dashboardHome', document.querySelectorAll('.sidebar-link')[0])">⬅️ Volver</button>
-            <button class="btn btn--sm" onclick="showCreatePractice()" style="margin-left: var(--space-sm);">➕ Nueva Práctica</button>
-          </div>
-        </div>
-        
-        <div id="createPracticeContainer" style="display: none; background: var(--bg-glass); border: 1px solid var(--color-primary); padding: var(--space-lg); border-radius: var(--radius-lg); margin-bottom: var(--space-xl);">
-          <h3 style="margin-top: 0;">Configurar Nueva Práctica</h3>
-          <select id="practiceTargetGrade" style="margin-bottom: var(--space-md);">
-            <option value="4">Para Grado 4</option>
-            <option value="5">Para Grado 5</option>
-          </select>
-          <input type="text" id="practiceTheme" placeholder="Tema de la práctica (ej: Sumas y Restas)" style="margin-bottom: var(--space-md);" />
-          
-          <div id="practiceQuestionsList" style="margin-bottom: var(--space-md);"></div>
-          
-          <div style="display: flex; gap: var(--space-md);">
-            <button class="btn btn--outline" style="flex: 1;" onclick="agregarPreguntaPractica()">➕ AGREGAR PREGUNTA</button>
-            <button class="btn" style="flex: 1;" onclick="crearPractica()">💾 GUARDAR MÓDULO</button>
-          </div>
-        </div>
-
-        <div id="practicesList"></div>
-      </div>
-
       <!-- NOTAS -->
       <div class="section" id="gradesSection" style="display: none;">
         <h2>Reportes y Notas</h2>
@@ -437,18 +410,59 @@
     </div>
   </div>
 
+  <!-- MODAL: Editar / Agregar Pregunta -->
+  <div class="modal-overlay" id="editQuestionModal" style="display: none;">
+    <div class="modal-content" style="max-width: 580px; width: 95%; text-align: left; padding: var(--space-2xl);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <h3 id="editQuestionModalTitle" style="margin: 0; color: #f8fafc; font-size: 1.2rem;">✏️ Editar Pregunta</h3>
+        <button class="btn btn--outline btn--sm" onclick="closeEditQuestionModal()" style="border-radius: 50%; width: 32px; height: 32px; padding: 0;">✕</button>
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: var(--space-lg); font-size: 0.85rem;">Modifica el enunciado y las opciones de respuesta de la pregunta.</p>
+
+      <input type="hidden" id="editQuestionId" />
+      <input type="hidden" id="editQuestionIndex" />
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Enunciado de la Pregunta:</label>
+      <textarea id="editQuestionText" rows="3" class="input" style="width: 100%; margin-bottom: var(--space-md); resize: vertical;" placeholder="Escribe el enunciado de la pregunta..."></textarea>
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Opción A:</label>
+      <input type="text" id="editOptionA" class="input" style="width: 100%; margin-bottom: var(--space-sm);" placeholder="Texto de la opción A" />
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Opción B:</label>
+      <input type="text" id="editOptionB" class="input" style="width: 100%; margin-bottom: var(--space-sm);" placeholder="Texto de la opción B" />
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Opción C:</label>
+      <input type="text" id="editOptionC" class="input" style="width: 100%; margin-bottom: var(--space-md);" placeholder="Texto de la opción C" />
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Respuesta Correcta:</label>
+      <select id="editCorrectOption" style="width: 100%; margin-bottom: var(--space-xl);">
+        <option value="A">Opción A</option>
+        <option value="B">Opción B</option>
+        <option value="C">Opción C</option>
+      </select>
+
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+        <button class="btn btn--secondary btn--sm" onclick="closeEditQuestionModal()">Cancelar</button>
+        <button class="btn btn--sm" onclick="saveQuestionModal()">💾 Guardar Pregunta</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PANEL ESTUDIANTE -->
 
   <div class="screen" id="studentPanel" style="padding: 10px 16px 80px;">
     
     <!-- VISTA INICIO (HOME) -->
     <div id="studentHomeView" class="student-container">
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 0 16px;">
-          <div>
-            <h1 style="font-size: 1.4rem; margin: 0; text-align: left;">👋 Hola, <span id="studentPanelName" style="color: var(--color-primary);">Estudiante</span>!</h1>
-            <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.85rem; text-align: left;">Bienvenido a tu aventura matemática</p>
-          </div>
-          <button class="btn btn--outline btn--sm" style="border-radius: 20px; font-size: 0.75rem; padding: 6px 14px;" onclick="logout()">Salir</button>
+      <div class="dashboard-header student-dashboard-header" style="padding: 10px 0 16px; margin-bottom: 0;">
+        <div>
+          <h1 style="font-size: 1.4rem; margin: 0; text-align: left;">👋 Hola, <span id="studentPanelName" style="color: var(--color-primary);">Estudiante</span>!</h1>
+          <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.85rem; text-align: left;">Bienvenido a tu aventura matemática</p>
+        </div>
+        <div class="header-profile-badge">
+          <button class="btn btn--outline btn--sm header-profile-logout" onclick="logout()" title="Cerrar sesión">Salir</button>
+          <img src="images/student-illustration.png" alt="Perfil Estudiante" class="header-profile-avatar" onclick="switchStudentTab('profile')" style="cursor: pointer;" title="Ver mi perfil" />
+        </div>
       </div>
 
       <!-- SECCIÓN DE NIVEL Y EXPERIENCIA -->
@@ -462,9 +476,9 @@
         </div>
         
         <h3 style="margin-top: var(--space-xl); text-align: center; color: var(--color-cyan); font-size: 0.95rem;">MAPA DE ENTRENAMIENTO</h3>
-        <p style="text-align: center; color: var(--text-secondary); font-size: var(--text-xs); margin-bottom: 12px;">Sube de nivel completando prácticas para desbloquear el siguiente nodo.</p>
+        <p style="text-align: center; color: var(--text-secondary); font-size: var(--text-xs); margin-bottom: 12px;">Sube de nivel completando prácticas para desbloquear el siguiente nivel.</p>
         <div class="level-map-container" id="levelMapContainer">
-          <!-- Nodos dinámicos del mapa -->
+          <!-- Niveles dinámicos del mapa -->
         </div>
       </div>
 
@@ -485,12 +499,12 @@
 
       <!-- TARJETA DE PERFIL HERO -->
       <div class="student-profile-hero">
-        <div class="student-hero-avatar-wrapper">
-          <img src="images/student-illustration.png" alt="Avatar" class="student-hero-avatar" id="studentHeroAvatar" />
-        </div>
         <div class="student-hero-info">
           <h3 class="student-hero-name" id="studentProfileName">Cargando...</h3>
           <span class="student-hero-grade" id="studentProfileGrade">Grado -</span>
+        </div>
+        <div class="student-hero-avatar-wrapper">
+          <img src="images/student-illustration.png" alt="Avatar" class="student-hero-avatar" id="studentHeroAvatar" />
         </div>
       </div>
 
