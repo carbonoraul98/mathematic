@@ -357,11 +357,97 @@
       return svg;
     },
 
+    // Renderiza gráfico de barras estadístico
+    renderBarChart(config) {
+      const width = 480;
+      const height = 270;
+      const x0 = 55;
+      const y0 = 215;
+      const chartWidth = 385;
+      const chartHeight = 160;
+      const items = config.items || [];
+      const title = config.title || 'Gráfico de Barras';
+
+      const maxRaw = Math.max(...items.map(it => it.val || 0), 10);
+      const stepVal = maxRaw <= 15 ? 5 : (maxRaw <= 30 ? 10 : 20);
+      const maxVal = Math.ceil(maxRaw / stepVal) * stepVal;
+
+      let svg = `
+        <div class="math-chart-card" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 12px; margin: 12px auto; max-width: 520px; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
+          <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: auto; display: block;" xmlns="http://www.w3.org/2000/svg">
+            <!-- Título del gráfico -->
+            <text x="240" y="28" text-anchor="middle" font-family="'Inter', sans-serif" font-size="14" font-weight="700" fill="#0F172A">${title}</text>
+      `;
+
+      // Líneas de cuadrícula horizontal y etiquetas de eje Y
+      const gridSteps = maxVal / stepVal;
+      for (let i = 0; i <= gridSteps; i++) {
+        const val = i * stepVal;
+        const gy = y0 - (val / maxVal) * chartHeight;
+        svg += `
+          <line x1="${x0}" y1="${gy}" x2="${x0 + chartWidth}" y2="${gy}" stroke="#E2E8F0" stroke-width="1.2" stroke-dasharray="${i === 0 ? 'none' : '3,3'}" />
+          <text x="${x0 - 12}" y="${gy + 4}" text-anchor="end" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#64748B">${val}</text>
+        `;
+      }
+
+      // Eje X e Y base
+      svg += `
+        <line x1="${x0}" y1="${y0}" x2="${x0 + chartWidth + 10}" y2="${y0}" stroke="#475569" stroke-width="2" />
+        <line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0 - chartHeight - 10}" stroke="#475569" stroke-width="2" />
+      `;
+
+      // Barras y categorías
+      if (items.length > 0) {
+        const slotWidth = chartWidth / items.length;
+        const barWidth = Math.min(slotWidth * 0.58, 48);
+
+        items.forEach((item, idx) => {
+          const bx = x0 + idx * slotWidth + (slotWidth - barWidth) / 2;
+          const bHeight = (item.val / maxVal) * chartHeight;
+          const by = y0 - bHeight;
+          const color = item.color || '#3B82F6';
+
+          svg += `
+            <!-- Barra con sombra ligera -->
+            <rect x="${bx}" y="${by}" width="${barWidth}" height="${bHeight}" rx="5" fill="${color}">
+              <animate attributeName="height" from="0" to="${bHeight}" dur="0.6s" fill="freeze" />
+              <animate attributeName="y" from="${y0}" to="${by}" dur="0.6s" fill="freeze" />
+            </rect>
+            <!-- Valor numérico arriba -->
+            <text x="${bx + barWidth / 2}" y="${by - 7}" text-anchor="middle" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#0F172A">${item.val}</text>
+            <!-- Etiqueta de categoría abajo -->
+            <text x="${bx + barWidth / 2}" y="${y0 + 20}" text-anchor="middle" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#334155">${item.label}</text>
+          `;
+        });
+      }
+
+      svg += `
+          </svg>
+        </div>
+      `;
+      return svg;
+    },
+
+    // Renderiza tarjeta visual para expresiones algebraicas
+    renderAlgebraCard(config) {
+      const expr = config.expression || 'x + 5';
+      const note = config.note || '';
+      return `
+        <div class="math-algebra-card" style="background: linear-gradient(135deg, #0F172A, #1E293B); border: 1px solid #334155; border-radius: 16px; padding: 18px 24px; margin: 12px auto; max-width: 380px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); text-align: center;">
+          <div style="font-size: 0.85rem; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Expresión Algebraica</div>
+          <div style="font-family: 'Courier New', Courier, monospace; font-size: 2.2rem; font-weight: 700; color: #38BDF8; letter-spacing: 2px; margin: 10px 0;">
+            ${expr}
+          </div>
+          ${note ? `<div style="font-size: 0.95rem; font-weight: 600; color: #FBBF24; background: rgba(251, 191, 36, 0.12); padding: 4px 12px; border-radius: 20px; display: inline-block;">${note}</div>` : ''}
+        </div>
+      `;
+    },
+
     // Parsea texto de pregunta para detectar si contiene tag de gráfico
     parseQuestion(rawText) {
       if (!rawText) return { cleanText: '', graphicHtml: '' };
 
-      const tagMatch = rawText.match(/\[grafico:(pies|dual_lines|single_line|vertical_mult|vertical_div|plane):([^\]]+)\]/i);
+      const tagMatch = rawText.match(/\[grafico:(pies|dual_lines|single_line|vertical_mult|vertical_div|plane|bar_chart|algebra):([^\]]+)\]/i);
       if (!tagMatch) {
         return { cleanText: rawText, graphicHtml: '' };
       }
@@ -403,23 +489,35 @@
           });
           return { cleanText, graphicHtml: html };
         } else if (type === 'vertical_mult') {
-          // payload: "12:44"
           const [top, bottom] = payload.split(':');
           const html = this.renderVerticalMult({ top, bottom });
           return { cleanText, graphicHtml: html };
         } else if (type === 'vertical_div') {
-          // payload: "456:12"
           const [dividend, divisor] = payload.split(':');
           const html = this.renderVerticalDiv({ dividend, divisor });
           return { cleanText, graphicHtml: html };
         } else if (type === 'plane') {
-          // payload: "heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8"
           const pointsRaw = payload.split('|');
           const points = pointsRaw.map(p => {
             const [shape, x, y, color] = p.split(',');
             return { shape: shape.trim(), x: parseFloat(x), y: parseFloat(y), color: color ? color.trim() : '#3B82F6' };
           });
           const html = this.renderCoordinatePlane({ points, max: 10 });
+          return { cleanText, graphicHtml: html };
+        } else if (type === 'bar_chart') {
+          // payload: "Fútbol,25,#3B82F6|Básquet,15,#F59E0B|Natación,20,#10B981:Deportes Favoritos"
+          const [itemsPart, titlePart] = payload.split(':');
+          const rawItems = itemsPart.split('|');
+          const items = rawItems.map(it => {
+            const [label, val, color] = it.split(',');
+            return { label: label.trim(), val: parseFloat(val), color: color ? color.trim() : '#3B82F6' };
+          });
+          const html = this.renderBarChart({ title: titlePart || 'Gráfico de Barras', items });
+          return { cleanText, graphicHtml: html };
+        } else if (type === 'algebra') {
+          // payload: "3x + 5:x = 4"
+          const [expr, note] = payload.split(':');
+          const html = this.renderAlgebraCard({ expression: expr, note });
           return { cleanText, graphicHtml: html };
         }
       } catch (err) {

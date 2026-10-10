@@ -151,6 +151,36 @@ const practicesData = [
     ]
   },
   {
+    title: 'Estadística I', theme: 'Grado 5',
+    questions: [
+      { q: 'Observa el gráfico de barras: ¿Cuál fue el deporte más elegido por los estudiantes? [grafico:bar_chart:Fútbol,25,#3B82F6|Básquet,15,#F59E0B|Natación,20,#10B981|Vóley,10,#EC4899:Deportes Favoritos]', a: 'Fútbol (25 estudiantes)', b: 'Natación (20 estudiantes)', c: 'Básquet (15 estudiantes)', correct: 'Fútbol (25 estudiantes)' },
+      { q: '¿Cuántos estudiantes en total eligieron entre Fútbol y Básquet? [grafico:bar_chart:Fútbol,25,#3B82F6|Básquet,15,#F59E0B|Natación,20,#10B981|Vóley,10,#EC4899:Deportes Favoritos]', a: '40 estudiantes', b: '35 estudiantes', c: '50 estudiantes', correct: '40 estudiantes' },
+      { q: '¿Cuál fue el día de mayor venta de libros según el gráfico? [grafico:bar_chart:Lunes,12,#8B5CF6|Martes,18,#06B6D4|Miércoles,8,#F59E0B|Jueves,22,#10B981|Viernes,16,#EC4899:Libros Vendidos en la Semana]', a: 'Jueves (22 libros)', b: 'Martes (18 libros)', c: 'Viernes (16 libros)', correct: 'Jueves (22 libros)' },
+      { q: '¿Cuántos libros más se vendieron el Jueves que el Miércoles? [grafico:bar_chart:Lunes,12,#8B5CF6|Martes,18,#06B6D4|Miércoles,8,#F59E0B|Jueves,22,#10B981|Viernes,16,#EC4899:Libros Vendidos en la Semana]', a: '14 libros', b: '12 libros', c: '10 libros', correct: '14 libros' },
+      { q: '¿Cuál fue la fruta menos elegida por los niños? [grafico:bar_chart:Manzana,30,#EF4444|Banana,25,#FBBF24|Fresa,18,#F43F5E|Uva,12,#8B5CF6:Frutas Preferidas]', a: 'Uva (12 votos)', b: 'Fresa (18 votos)', c: 'Banana (25 votos)', correct: 'Uva (12 votos)' }
+    ]
+  },
+  {
+    title: 'Estadística II', theme: 'Grado 5',
+    questions: [
+      { q: 'Calcula la MEDIA (promedio) de las siguientes calificaciones: 8, 9, 7, 10, 6', a: '8', b: '7.5', c: '9', correct: '8' },
+      { q: 'En el conjunto de datos [4, 7, 7, 8, 9, 7, 10], ¿cuál es la MODA?', a: '7 (el que más se repite)', b: '8', c: '9', correct: '7 (el que más se repite)' },
+      { q: 'Para los datos ordenados [3, 5, 6, 8, 9, 12, 14], ¿cuál es la MEDIANA (dato central)?', a: '8', b: '6', c: '9', correct: '8' },
+      { q: 'Un atleta corrió 4 km el lunes, 6 km el martes y 5 km el miércoles. ¿Cuál fue su promedio de km diarios?', a: '5 km', b: '4.5 km', c: '6 km', correct: '5 km' },
+      { q: '¿Cuál es la mediana del grupo [2, 4, 6, 8, 10]?', a: '6', b: '5', c: '7', correct: '6' }
+    ]
+  },
+  {
+    title: 'Álgebra Básica', theme: 'Grado 5',
+    questions: [
+      { q: 'Calcula el valor numérico de la expresión cuando x = 4: [grafico:algebra:3x + 5:x = 4]', a: '17', b: '12', c: '19', correct: '17' },
+      { q: 'Si n = 6, ¿cuál es el resultado de la expresión: [grafico:algebra:2n - 3:n = 6]', a: '9', b: '12', c: '15', correct: '9' },
+      { q: 'Resuelve la ecuación para hallar el valor de x: [grafico:algebra:x + 18 = 45:Halla x]', a: '27', b: '25', c: '33', correct: '27' },
+      { q: '¿Cuál es el valor de la incógnita \'m\' en la ecuación: [grafico:algebra:4m = 36:Halla m]', a: '9', b: '8', c: '7', correct: '9' },
+      { q: '¿Qué expresión algebraica representa: \'El triple de un número aumentado en 7\'?', a: '3x + 7', b: 'x + 21', c: '3(x - 7)', correct: '3x + 7' }
+    ]
+  },
+  {
     title: 'Decimales', theme: 'Grado 5',
     questions: [
       { q: "¿Cuánto es 0.5 + 0.5?", a: "0.10", b: "1.0", c: "0.25", correct: "1.0" },

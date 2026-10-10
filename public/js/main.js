@@ -262,7 +262,10 @@ function updateStudentLevelUI(student) {
         "División II",
         "División III",
         "Plano I",
-        "Plano II"
+        "Plano II",
+        "Estadística I",
+        "Estadística II",
+        "Álgebra Básica"
       ];
       const maxLevels = nodeTitles.length;
       for (let i = 1; i <= maxLevels; i++) {
