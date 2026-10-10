@@ -250,13 +250,24 @@ function updateStudentLevelUI(student) {
       mapContainer.innerHTML = '';
       mapContainer.className = 'level-map-container-v2';
       
-      const maxLevels = 10;
+      const nodeTitles = [
+        "Suma",
+        "Resta",
+        "Multiplicación I",
+        "División I",
+        "Fracciones I",
+        "Fracciones II",
+        "Mult. 2 Cifras",
+        "Mult. 3-4 Cifras",
+        "División II",
+        "División III",
+        "Plano I",
+        "Plano II"
+      ];
+      const maxLevels = nodeTitles.length;
       for (let i = 1; i <= maxLevels; i++) {
         const node = document.createElement('div');
         node.className = 'map-node-v2';
-        
-        // Títulos para los nodos de práctica
-        const nodeTitles = ["Suma", "Resta", "Multiplicación", "División", "Fracciones I", "Fracciones II", "Decimales", "Geometría", "Álgebra", "Potencias"];
         const nodeLabel = nodeTitles[i-1] || `Misión ${i}`;
         
         if (i < student.levelInfo.level) {

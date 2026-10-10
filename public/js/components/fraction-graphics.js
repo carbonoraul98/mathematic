@@ -220,11 +220,148 @@
       `;
     },
 
+    // Renderiza multiplicación vertical en columna con caja de respuesta
+    renderVerticalMult(config) {
+      const width = 280;
+      const height = 230;
+      const topStr = String(config.top);
+      const bottomStr = String(config.bottom);
+      return `
+        <div class="math-vertical-card" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 14px 20px; margin: 12px auto; max-width: 300px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); text-align: center;">
+          <svg viewBox="0 0 ${width} ${height}" style="width: 100%; max-width: 220px; height: auto; display: block; margin: 0 auto;" xmlns="http://www.w3.org/2000/svg">
+            <!-- Primer número -->
+            <text x="210" y="55" text-anchor="end" font-family="'Courier New', Courier, monospace" font-size="44" font-weight="700" fill="#0F172A" letter-spacing="4">${topStr}</text>
+            
+            <!-- Signo de multiplicación -->
+            <text x="60" y="115" text-anchor="start" font-family="'Inter', sans-serif" font-size="38" font-weight="700" fill="#0F172A">×</text>
+            
+            <!-- Segundo número -->
+            <text x="210" y="115" text-anchor="end" font-family="'Courier New', Courier, monospace" font-size="44" font-weight="700" fill="#0F172A" letter-spacing="4">${bottomStr}</text>
+            
+            <!-- Línea separadora -->
+            <line x1="50" y1="135" x2="225" y2="135" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" />
+            
+            <!-- Caja de respuesta -->
+            <rect x="50" y="150" width="175" height="58" rx="8" fill="#F0F9FF" stroke="#0284C7" stroke-width="2.5" />
+          </svg>
+        </div>
+      `;
+    },
+
+    // Renderiza división en formato de galera
+    renderVerticalDiv(config) {
+      const width = 320;
+      const height = 180;
+      const divStr = String(config.dividend);
+      const dvrStr = String(config.divisor);
+      return `
+        <div class="math-vertical-card" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 14px 20px; margin: 12px auto; max-width: 320px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); text-align: center;">
+          <svg viewBox="0 0 ${width} ${height}" style="width: 100%; max-width: 250px; height: auto; display: block; margin: 0 auto;" xmlns="http://www.w3.org/2000/svg">
+            <!-- Dividendo -->
+            <text x="140" y="70" text-anchor="end" font-family="'Courier New', Courier, monospace" font-size="38" font-weight="700" fill="#0F172A" letter-spacing="2">${divStr}</text>
+            
+            <!-- Líneas de la galera -->
+            <line x1="152" y1="25" x2="152" y2="85" stroke="#0F172A" stroke-width="3" />
+            <line x1="152" y1="85" x2="265" y2="85" stroke="#0F172A" stroke-width="3" />
+            
+            <!-- Divisor -->
+            <text x="170" y="70" text-anchor="start" font-family="'Courier New', Courier, monospace" font-size="38" font-weight="700" fill="#0F172A" letter-spacing="2">${dvrStr}</text>
+            
+            <!-- Caja de cociente bajo la galera -->
+            <rect x="165" y="100" width="100" height="50" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="2" />
+            <text x="215" y="132" text-anchor="middle" font-family="'Inter', sans-serif" font-size="20" font-weight="700" fill="#0284C7">?</text>
+          </svg>
+        </div>
+      `;
+    },
+
+    // Dibuja una forma geométrica en el plano cartesiano
+    renderShape(type, x, y, color) {
+      if (type === 'heart') {
+        return `<path d="M 0 5 C -2.5 -6 -14 -6 -14 2.5 C -14 9.5 0 17 0 17 C 0 17 14 9.5 14 2.5 C 14 -6 2.5 -6 0 5 Z" fill="${color}" stroke="#FFFFFF" stroke-width="1.5" transform="translate(${x}, ${y - 6}) scale(1.15)"/>`;
+      } else if (type === 'circle') {
+        return `<circle cx="${x}" cy="${y}" r="12" fill="${color}" stroke="#FFFFFF" stroke-width="2"/>`;
+      } else if (type === 'star') {
+        return `<polygon points="0,-14 4.2,-4.2 14.5,-4.2 6.5,2.5 9.5,13 0,6.8 -9.5,13 -6.5,2.5 -14.5,-4.2 -4.2,-4.2" fill="${color}" stroke="#FFFFFF" stroke-width="1.5" transform="translate(${x}, ${y}) scale(1.1)"/>`;
+      } else if (type === 'pentagon') {
+        return `<polygon points="0,-14 13.3,-4.3 8.2,11.3 -8.2,11.3 -13.3,-4.3" fill="${color}" stroke="#FFFFFF" stroke-width="1.5" transform="translate(${x}, ${y}) scale(1.1)"/>`;
+      } else if (type === 'triangle') {
+        return `<polygon points="0,-14 13,10 -13,10" fill="${color}" stroke="#FFFFFF" stroke-width="1.5" transform="translate(${x}, ${y})"/>`;
+      } else if (type === 'diamond') {
+        return `<polygon points="0,-14 13,0 0,14 -13,0" fill="${color}" stroke="#FFFFFF" stroke-width="1.5" transform="translate(${x}, ${y})"/>`;
+      }
+      return `<circle cx="${x}" cy="${y}" r="8" fill="${color}" />`;
+    },
+
+    // Renderiza el plano cartesiano con cuadrícula y figuras geométricas
+    renderCoordinatePlane(config) {
+      const width = 450;
+      const height = 450;
+      const x0 = 55;
+      const y0 = 390;
+      const step = 33; // 10 unidades * 33 = 330px
+      const maxVal = config.max || 10;
+
+      let svg = `
+        <div class="math-plane-card" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 12px; margin: 12px auto; max-width: 480px; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
+          <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: auto; display: block;" xmlns="http://www.w3.org/2000/svg">
+      `;
+
+      // Cuadrícula gris
+      for (let i = 0; i <= maxVal; i++) {
+        const x = x0 + i * step;
+        const y = y0 - i * step;
+
+        // Línea vertical
+        svg += `<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0 - maxVal * step}" stroke="#CBD5E1" stroke-width="1.2" />`;
+        // Línea horizontal
+        svg += `<line x1="${x0}" y1="${y}" x2="${x0 + maxVal * step}" y2="${y}" stroke="#CBD5E1" stroke-width="1.2" />`;
+
+        // Etiquetas Eje X
+        svg += `<text x="${x}" y="${y0 + 20}" text-anchor="middle" font-family="'Inter', sans-serif" font-size="13" font-weight="600" fill="#475569">${i}</text>`;
+
+        // Etiquetas Eje Y (no repetir 0)
+        if (i > 0) {
+          svg += `<text x="${x0 - 14}" y="${y + 5}" text-anchor="end" font-family="'Inter', sans-serif" font-size="13" font-weight="600" fill="#475569">${i}</text>`;
+        }
+      }
+
+      // Ejes principales con flechas
+      // Eje X
+      svg += `
+        <line x1="${x0}" y1="${y0}" x2="${x0 + maxVal * step + 22}" y2="${y0}" stroke="#475569" stroke-width="2.5" />
+        <polygon points="${x0 + maxVal * step + 22},${y0} ${x0 + maxVal * step + 12},${y0 - 5} ${x0 + maxVal * step + 12},${y0 + 5}" fill="#475569" />
+        <text x="${x0 + maxVal * step + 18}" y="${y0 - 8}" font-family="'Inter', sans-serif" font-size="14" font-style="italic" font-weight="700" fill="#0F172A">x</text>
+      `;
+
+      // Eje Y
+      svg += `
+        <line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0 - maxVal * step - 22}" stroke="#475569" stroke-width="2.5" />
+        <polygon points="${x0},${y0 - maxVal * step - 22} ${x0 - 5},${y0 - maxVal * step - 12} ${x0 + 5},${y0 - maxVal * step - 12}" fill="#475569" />
+        <text x="${x0 + 10}" y="${y0 - maxVal * step - 16}" font-family="'Inter', sans-serif" font-size="14" font-style="italic" font-weight="700" fill="#0F172A">y</text>
+      `;
+
+      // Dibujar puntos / figuras geométricas
+      if (Array.isArray(config.points)) {
+        config.points.forEach(pt => {
+          const px = x0 + pt.x * step;
+          const py = y0 - pt.y * step;
+          svg += this.renderShape(pt.shape, px, py, pt.color || '#3B82F6');
+        });
+      }
+
+      svg += `
+          </svg>
+        </div>
+      `;
+      return svg;
+    },
+
     // Parsea texto de pregunta para detectar si contiene tag de gráfico
     parseQuestion(rawText) {
       if (!rawText) return { cleanText: '', graphicHtml: '' };
 
-      const tagMatch = rawText.match(/\[grafico:(pies|dual_lines|single_line):([^\]]+)\]/i);
+      const tagMatch = rawText.match(/\[grafico:(pies|dual_lines|single_line|vertical_mult|vertical_div|plane):([^\]]+)\]/i);
       if (!tagMatch) {
         return { cleanText: rawText, graphicHtml: '' };
       }
@@ -236,7 +373,6 @@
 
       try {
         if (type === 'pies') {
-          // payload: "2,1,#F59E0B|6,3,#3B82F6:1/2 = ?/6"
           const [piesPart, formulaPart] = payload.split(':');
           const [p1, p2] = piesPart.split('|');
           const [d1, n1, c1] = p1.split(',');
@@ -249,7 +385,6 @@
           });
           return { cleanText, graphicHtml: html };
         } else if (type === 'dual_lines') {
-          // payload: "4,1,#10B981|8,1,#D946EF"
           const [l1, l2] = payload.split('|');
           const [d1, pt1, c1] = l1.split(',');
           const [d2, pt2, c2] = l2.split(',');
@@ -260,7 +395,6 @@
           });
           return { cleanText, graphicHtml: html };
         } else if (type === 'single_line') {
-          // payload: "12" o "12:3:#3B82F6"
           const [dPart, ptPart, colorPart] = payload.split(':');
           const html = this.renderSingleNumberLine({
             d: parseInt(dPart) || 12,
@@ -268,9 +402,28 @@
             color: colorPart || '#3B82F6'
           });
           return { cleanText, graphicHtml: html };
+        } else if (type === 'vertical_mult') {
+          // payload: "12:44"
+          const [top, bottom] = payload.split(':');
+          const html = this.renderVerticalMult({ top, bottom });
+          return { cleanText, graphicHtml: html };
+        } else if (type === 'vertical_div') {
+          // payload: "456:12"
+          const [dividend, divisor] = payload.split(':');
+          const html = this.renderVerticalDiv({ dividend, divisor });
+          return { cleanText, graphicHtml: html };
+        } else if (type === 'plane') {
+          // payload: "heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8"
+          const pointsRaw = payload.split('|');
+          const points = pointsRaw.map(p => {
+            const [shape, x, y, color] = p.split(',');
+            return { shape: shape.trim(), x: parseFloat(x), y: parseFloat(y), color: color ? color.trim() : '#3B82F6' };
+          });
+          const html = this.renderCoordinatePlane({ points, max: 10 });
+          return { cleanText, graphicHtml: html };
         }
       } catch (err) {
-        console.error('Error parseando gráfico de fracciones:', err);
+        console.error('Error parseando gráfico matemático:', err);
       }
 
       return { cleanText, graphicHtml: '' };
@@ -278,4 +431,5 @@
   };
 
   window.FractionGraphics = FractionGraphics;
+  window.MathGraphics = FractionGraphics; // Alias
 })(window);

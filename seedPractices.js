@@ -91,6 +91,66 @@ const practicesData = [
     ]
   },
   {
+    title: 'Multiplicación II', theme: 'Grado 4',
+    questions: [
+      { q: 'Multiplica los dos factores de dos cifras: 12 × 44 [grafico:vertical_mult:12:44]', a: '528', b: '488', c: '548', correct: '528' },
+      { q: 'Calcula el producto en columna: 25 × 36 [grafico:vertical_mult:25:36]', a: '900', b: '850', c: '925', correct: '900' },
+      { q: 'Resuelve la multiplicación en columna: 48 × 15 [grafico:vertical_mult:48:15]', a: '720', b: '680', c: '740', correct: '720' },
+      { q: 'Multiplica: 64 × 23 [grafico:vertical_mult:64:23]', a: '1472', b: '1382', c: '1512', correct: '1472' },
+      { q: 'Resuelve la operación: 38 × 42 [grafico:vertical_mult:38:42]', a: '1596', b: '1546', c: '1626', correct: '1596' }
+    ]
+  },
+  {
+    title: 'Multiplicación III', theme: 'Grado 5',
+    questions: [
+      { q: 'Multiplica el número de tres cifras por dos cifras: 245 × 32 [grafico:vertical_mult:245:32]', a: '7840', b: '7350', c: '7940', correct: '7840' },
+      { q: 'Calcula el producto: 418 × 16 [grafico:vertical_mult:418:16]', a: '6688', b: '6588', c: '6788', correct: '6688' },
+      { q: 'Multiplica el número de cuatro cifras por dos cifras: 1250 × 24 [grafico:vertical_mult:1250:24]', a: '30000', b: '28500', c: '32000', correct: '30000' },
+      { q: 'Calcula el resultado en columna: 3420 × 15 [grafico:vertical_mult:3420:15]', a: '51300', b: '49800', c: '52400', correct: '51300' },
+      { q: 'Multiplica: 2105 × 43 [grafico:vertical_mult:2105:43]', a: '90515', b: '89415', c: '91615', correct: '90515' }
+    ]
+  },
+  {
+    title: 'División II', theme: 'Grado 5',
+    questions: [
+      { q: 'Resuelve la división: 456 ÷ 12 [grafico:vertical_div:456:12]', a: '38', b: '34', c: '42', correct: '38' },
+      { q: 'Calcula el cociente exacto: 720 ÷ 24 [grafico:vertical_div:720:24]', a: '30', b: '28', c: '35', correct: '30' },
+      { q: 'Resuelve la división: 585 ÷ 15 [grafico:vertical_div:585:15]', a: '39', b: '35', c: '41', correct: '39' },
+      { q: 'Calcula el cociente: 896 ÷ 28 [grafico:vertical_div:896:28]', a: '32', b: '28', c: '34', correct: '32' },
+      { q: 'Resuelve: 960 ÷ 32 [grafico:vertical_div:960:32]', a: '30', b: '32', c: '28', correct: '30' }
+    ]
+  },
+  {
+    title: 'División III', theme: 'Grado 6',
+    questions: [
+      { q: 'Calcula la división de cuatro cifras: 1560 ÷ 24 [grafico:vertical_div:1560:24]', a: '65', b: '60', c: '70', correct: '65' },
+      { q: 'Resuelve: 3840 ÷ 32 [grafico:vertical_div:3840:32]', a: '120', b: '115', c: '125', correct: '120' },
+      { q: 'Calcula el cociente: 4250 ÷ 25 [grafico:vertical_div:4250:25]', a: '170', b: '165', c: '175', correct: '170' },
+      { q: 'Resuelve la división: 2688 ÷ 42 [grafico:vertical_div:2688:42]', a: '64', b: '58', c: '68', correct: '64' },
+      { q: 'Calcula el resultado: 5670 ÷ 54 [grafico:vertical_div:5670:54]', a: '105', b: '102', c: '110', correct: '105' }
+    ]
+  },
+  {
+    title: 'Plano Cartesiano I', theme: 'Geometría',
+    questions: [
+      { q: '¿Qué forma está en las coordenadas (10, 6)? [grafico:plane:heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8]', a: 'Pentágono azul', b: 'Corazón verde', c: 'Estrella lila', correct: 'Pentágono azul' },
+      { q: '¿Qué figura se ubica en las coordenadas (5, 5)? [grafico:plane:heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8]', a: 'Estrella lila', b: 'Círculo amarillo', c: 'Pentágono azul', correct: 'Estrella lila' },
+      { q: 'Observa el plano: ¿Qué forma está en las coordenadas (6, 10)? [grafico:plane:heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8]', a: 'Corazón verde', b: 'Círculo amarillo', c: 'Estrella lila', correct: 'Corazón verde' },
+      { q: '¿Qué figura se encuentra en las coordenadas (9, 5)? [grafico:plane:heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8]', a: 'Círculo amarillo', b: 'Pentágono azul', c: 'Corazón verde', correct: 'Círculo amarillo' },
+      { q: '¿Qué objeto se encuentra en el punto (3, 8)? [grafico:plane:triangle,3,8,#EF4444|diamond,7,2,#8B5CF6|circle,2,3,#F59E0B|star,8,9,#10B981]', a: 'Triángulo rojo', b: 'Diamante morado', c: 'Estrella verde', correct: 'Triángulo rojo' }
+    ]
+  },
+  {
+    title: 'Plano Cartesiano II', theme: 'Geometría',
+    questions: [
+      { q: '¿En qué coordenadas (x, y) se encuentra el corazón verde? [grafico:plane:heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8]', a: '(6, 10)', b: '(10, 6)', c: '(6, 6)', correct: '(6, 10)' },
+      { q: '¿Cuáles son las coordenadas del pentágono azul? [grafico:plane:heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8]', a: '(10, 6)', b: '(6, 10)', c: '(10, 10)', correct: '(10, 6)' },
+      { q: '¿En qué par ordenado (x, y) está ubicado el círculo amarillo? [grafico:plane:heart,6,10,#10B981|star,5,5,#818CF8|circle,9,5,#FBBF24|pentagon,10,6,#38BDF8]', a: '(9, 5)', b: '(5, 9)', c: '(9, 9)', correct: '(9, 5)' },
+      { q: 'Identifica las coordenadas del diamante morado: [grafico:plane:triangle,3,8,#EF4444|diamond,7,2,#8B5CF6|circle,2,3,#F59E0B|star,8,9,#10B981]', a: '(7, 2)', b: '(2, 7)', c: '(7, 7)', correct: '(7, 2)' },
+      { q: '¿En qué coordenadas se ubica la estrella verde? [grafico:plane:triangle,3,8,#EF4444|diamond,7,2,#8B5CF6|circle,2,3,#F59E0B|star,8,9,#10B981]', a: '(8, 9)', b: '(9, 8)', c: '(8, 8)', correct: '(8, 9)' }
+    ]
+  },
+  {
     title: 'Decimales', theme: 'Grado 5',
     questions: [
       { q: "¿Cuánto es 0.5 + 0.5?", a: "0.10", b: "1.0", c: "0.25", correct: "1.0" },
