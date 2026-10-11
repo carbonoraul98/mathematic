@@ -241,15 +241,15 @@ let activeMapGradeUserSelected = false;
 
 const TRAINING_MAPS = {
   '4': {
-    title: '4° Grado (Básico)',
-    subtitle: '📘 Ruta de Fundamentos: Suma, resta, multiplicación, división exacta y figuras geométricas.',
+    title: '4° Grado',
+    subtitle: '📘 Ruta 4° Grado: Multiplicación de dos cifras, división de dos cifras y fracciones sencillas.',
     levels: [
-      { id: 1, title: 'Suma', activityId: 2, icon: '➕' },
-      { id: 2, title: 'Resta', activityId: 3, icon: '➖' },
-      { id: 3, title: 'Multiplicación I', activityId: 4, icon: '✖️' },
-      { id: 4, title: 'Mult. 2 Cifras', activityId: 17, icon: '🔢' },
-      { id: 5, title: 'División I', activityId: 5, icon: '➗' },
-      { id: 6, title: 'Geometría Básica', activityId: 8, icon: '📐' }
+      { id: 1, title: 'Mult. 2 Cifras I', activityId: 2, icon: '✖️' },
+      { id: 2, title: 'Mult. 2 Cifras II', activityId: 3, icon: '🔢' },
+      { id: 3, title: 'División 2 Cifras I', activityId: 4, icon: '➗' },
+      { id: 4, title: 'División 2 Cifras II', activityId: 17, icon: '➗' },
+      { id: 5, title: 'Fracciones I (Modelos)', activityId: 28, icon: '🥧' },
+      { id: 6, title: 'Fracciones II (Rectas)', activityId: 29, icon: '📏' }
     ]
   },
   '5': {
