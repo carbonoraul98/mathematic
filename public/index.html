@@ -475,9 +475,16 @@
           <div id="studentXpBar" style="background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); height: 100%; width: 0%; transition: width 0.5s ease; border-radius: 25px;"></div>
         </div>
         
-        <h3 style="margin-top: var(--space-xl); text-align: center; color: var(--color-cyan); font-size: 0.95rem;">MAPA DE ENTRENAMIENTO</h3>
-        <p style="text-align: center; color: var(--text-secondary); font-size: var(--text-xs); margin-bottom: 12px;">Sube de nivel completando prácticas para desbloquear el siguiente nivel.</p>
-        <div class="level-map-container" id="levelMapContainer">
+        <h3 style="margin-top: var(--space-xl); text-align: center; color: var(--color-cyan); font-size: 0.95rem; margin-bottom: 8px;">MAPA DE ENTRENAMIENTO</h3>
+        
+        <!-- SELECTOR DE MAPA POR GRADO -->
+        <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 10px;" onclick="event.stopPropagation();">
+          <button type="button" class="btn btn--sm active" id="mapTabGrade4Btn" onclick="selectTrainingMapGrade('4')" style="border-radius: 20px; font-size: 0.78rem; padding: 5px 14px;">📘 4° Grado (Básico)</button>
+          <button type="button" class="btn btn--outline btn--sm" id="mapTabGrade5Btn" onclick="selectTrainingMapGrade('5')" style="border-radius: 20px; font-size: 0.78rem; padding: 5px 14px;">🚀 5° Grado (Avanzado)</button>
+        </div>
+
+        <p id="mapGradeSubtitle" style="text-align: center; color: var(--text-secondary); font-size: var(--text-xs); margin-bottom: 12px;">Sube de nivel completando prácticas para desbloquear el siguiente nivel.</p>
+        <div class="level-map-container" id="levelMapContainer" onclick="event.stopPropagation();">
           <!-- Niveles dinámicos del mapa -->
         </div>
       </div>

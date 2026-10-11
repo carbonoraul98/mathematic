@@ -155,6 +155,7 @@ const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 function logout() {
   authenticatedRole = null;
   estudianteActual = null;
+  activeMapGradeUserSelected = false;
   if(document.getElementById("loginUser")) document.getElementById("loginUser").value = "";
   if(document.getElementById("loginPass")) document.getElementById("loginPass").value = "";
   if(document.getElementById("loginResult")) document.getElementById("loginResult").innerHTML = "";
@@ -235,6 +236,48 @@ function enterAsRole(role) {
   }
 }
 
+let activeMapGrade = '4';
+let activeMapGradeUserSelected = false;
+
+const TRAINING_MAPS = {
+  '4': {
+    title: '4° Grado (Básico)',
+    subtitle: '📘 Ruta de Fundamentos: Suma, resta, multiplicación, división exacta y figuras geométricas.',
+    levels: [
+      { id: 1, title: 'Suma', activityId: 2, icon: '➕' },
+      { id: 2, title: 'Resta', activityId: 3, icon: '➖' },
+      { id: 3, title: 'Multiplicación I', activityId: 4, icon: '✖️' },
+      { id: 4, title: 'Mult. 2 Cifras', activityId: 17, icon: '🔢' },
+      { id: 5, title: 'División I', activityId: 5, icon: '➗' },
+      { id: 6, title: 'Geometría Básica', activityId: 8, icon: '📐' }
+    ]
+  },
+  '5': {
+    title: '5° Grado (Avanzado)',
+    subtitle: '🚀 Ruta Avanzada: Aritmética de múltiples cifras, fracciones visuales, coordenadas cartesianas, estadística y álgebra.',
+    levels: [
+      { id: 1, title: 'Mult. 3-4 Cifras', activityId: 18, icon: '✖️' },
+      { id: 2, title: 'División Galera II', activityId: 19, icon: '➗' },
+      { id: 3, title: 'División Larga III', activityId: 20, icon: '➗' },
+      { id: 4, title: 'Fracciones I (Modelos)', activityId: 6, icon: '🥧' },
+      { id: 5, title: 'Fracciones II (Rectas)', activityId: 16, icon: '📏' },
+      { id: 6, title: 'Plano Cartesiano I', activityId: 21, icon: '📍' },
+      { id: 7, title: 'Plano Cartesiano II', activityId: 22, icon: '🎯' },
+      { id: 8, title: 'Estadística I (Barras)', activityId: 23, icon: '📊' },
+      { id: 9, title: 'Estadística II (Media)', activityId: 24, icon: '📈' },
+      { id: 10, title: 'Álgebra Básica', activityId: 25, icon: '⚖️' }
+    ]
+  }
+};
+
+function selectTrainingMapGrade(grade) {
+  activeMapGradeUserSelected = true;
+  activeMapGrade = grade;
+  if (estudianteActual) {
+    updateStudentLevelUI(estudianteActual);
+  }
+}
+
 function updateStudentLevelUI(student) {
   if (student && student.levelInfo) {
     document.getElementById('studentLevelDisplay').innerText = student.levelInfo.level;
@@ -243,58 +286,70 @@ function updateStudentLevelUI(student) {
         document.getElementById('studentXpGoal').innerText = student.levelInfo.xpPerLevel;
     }
     document.getElementById('studentXpBar').style.width = student.levelInfo.progressPercent + '%';
-    
+
+    // Determinar grado por defecto si el usuario no ha seleccionado manualmente
+    if (!activeMapGradeUserSelected) {
+      const gName = String(student.group_name || '');
+      activeMapGrade = gName.startsWith('5') ? '5' : '4';
+    }
+
+    // Actualizar estado de los botones de pestañas
+    const btn4 = document.getElementById('mapTabGrade4Btn');
+    const btn5 = document.getElementById('mapTabGrade5Btn');
+    const subtitleEl = document.getElementById('mapGradeSubtitle');
+
+    if (btn4 && btn5) {
+      if (activeMapGrade === '4') {
+        btn4.className = 'btn btn--sm active';
+        btn5.className = 'btn btn--outline btn--sm';
+      } else {
+        btn4.className = 'btn btn--outline btn--sm';
+        btn5.className = 'btn btn--sm active';
+      }
+    }
+
+    const currentMapConfig = TRAINING_MAPS[activeMapGrade] || TRAINING_MAPS['4'];
+    if (subtitleEl) {
+      subtitleEl.innerText = currentMapConfig.subtitle;
+    }
+
     // Renderizar Mapa de Niveles (Diseño V2 - Gamificado)
     const mapContainer = document.getElementById('levelMapContainer');
     if (mapContainer) {
       mapContainer.innerHTML = '';
       mapContainer.className = 'level-map-container-v2';
       
-      const nodeTitles = [
-        "Suma",
-        "Resta",
-        "Multiplicación I",
-        "División I",
-        "Fracciones I",
-        "Fracciones II",
-        "Mult. 2 Cifras",
-        "Mult. 3-4 Cifras",
-        "División II",
-        "División III",
-        "Plano I",
-        "Plano II",
-        "Estadística I",
-        "Estadística II",
-        "Álgebra Básica"
-      ];
-      const maxLevels = nodeTitles.length;
-      for (let i = 1; i <= maxLevels; i++) {
+      const levels = currentMapConfig.levels;
+      levels.forEach(lvl => {
         const node = document.createElement('div');
         node.className = 'map-node-v2';
-        const nodeLabel = nodeTitles[i-1] || `Nivel ${i}`;
+        const nodeLabel = lvl.title;
         
-        if (i < student.levelInfo.level) {
+        if (lvl.id < student.levelInfo.level) {
           node.classList.add('completed');
+          node.title = `Nivel ${lvl.id}: ${nodeLabel} (Completado - Clic para volver a practicar)`;
+          node.onclick = () => startPracticeLevel(lvl);
           node.innerHTML = `
-            <div class="node-circle-v2">${i}
+            <div class="node-circle-v2">${lvl.id}
                 <div class="node-icon-v2" style="color: #10b981;">✔️</div>
             </div>
             <div class="node-label-v2">${nodeLabel}</div>
           `;
-        } else if (i === student.levelInfo.level) {
+        } else if (lvl.id === student.levelInfo.level) {
           node.classList.add('active');
-          node.onclick = () => startPracticeMode();
-          node.title = "¡Jugar Práctica!";
+          node.onclick = () => startPracticeLevel(lvl);
+          node.title = `Nivel ${lvl.id}: ${nodeLabel} (¡Nivel actual - Clic para jugar!)`;
           node.innerHTML = `
-            <div class="node-circle-v2">${i}
+            <div class="node-circle-v2">${lvl.id}
                 <div class="node-icon-v2" style="color: #3b82f6;">▶️</div>
             </div>
             <div class="node-label-v2">${nodeLabel}</div>
           `;
         } else {
           node.classList.add('locked');
+          node.title = `Nivel ${lvl.id}: ${nodeLabel} (Bloqueado - Alcanza el Nivel ${lvl.id} para desbloquear)`;
           node.innerHTML = `
-            <div class="node-circle-v2">${i}
+            <div class="node-circle-v2">${lvl.id}
                 <div class="node-icon-v2" style="color: #64748b;">🔒</div>
             </div>
             <div class="node-label-v2">${nodeLabel}</div>
@@ -302,43 +357,44 @@ function updateStudentLevelUI(student) {
         }
         
         mapContainer.appendChild(node);
-      }
+      });
     }
   }
 }
 
-async function startPracticeMode() {
+async function startPracticeLevel(levelObj) {
   try {
-    const res = await fetch('/api/activities');
-    const todasActividades = await res.json();
+    let act = null;
+    if (levelObj && levelObj.activityId) {
+      const res = await fetch(`/api/activities/${levelObj.activityId}`);
+      if (res.ok) {
+        act = await res.json();
+      }
+    }
     
-    // Buscar actividades de tipo Práctica
-    const practicas = todasActividades.filter(a => a.type === 'Práctica');
+    // Si no se encuentra por ID directo o no tiene preguntas, fallback a lista de prácticas
+    if (!act || !act.preguntas || act.preguntas.length === 0) {
+      const resAll = await fetch('/api/activities');
+      const todas = await resAll.json();
+      const practicas = todas.filter(a => a.type === 'Práctica');
+      act = practicas.find(p => p.id === (levelObj && levelObj.activityId) || (levelObj && p.title.toLowerCase() === levelObj.title.toLowerCase())) || practicas[0];
+    }
     
-    if (practicas.length === 0) {
-      showAlert("🚧 Aún no hay módulos de práctica disponibles. ¡Pídele a tu profesor que cree uno!");
+    if (!act || !act.preguntas || act.preguntas.length === 0) {
+      showAlert("🚧 Módulo de práctica en preparación. ¡Intenta con otro nivel!");
       return;
     }
     
-    // Elegir la práctica correspondiente al nivel actual
-    // Asegurarse de que están ordenadas (asumiendo que id más viejo es nivel más bajo)
-    practicas.sort((a, b) => a.id - b.id);
-    const nivelIndex = (estudianteActual.levelInfo ? estudianteActual.levelInfo.level : 1) - 1;
-    
-    // Si ya pasó el límite de prácticas creadas, darle la última o una aleatoria
-    const practicaSeleccionada = practicas[Math.min(nivelIndex, practicas.length - 1)];
-    
     let seccion = estudianteActual.group_name ? estudianteActual.group_name.charAt(1) : "A";
     
-      window.playActivity(practicaSeleccionada, seccion, async (puntosObtenidos) => {
-      // Llamar al backend para sumar XP y registrar el intento de práctica
+    window.playActivity(act, seccion, async (puntosObtenidos) => {
       try {
         const xpRes = await fetch(`/api/students/${estudianteActual.id}/add-xp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             xp: puntosObtenidos,
-            activity_id: practicaSeleccionada.id
+            activity_id: act.id
           })
         });
         const xpData = await xpRes.json();
@@ -349,16 +405,23 @@ async function startPracticeMode() {
           if (document.getElementById('studentProfileView') && document.getElementById('studentProfileView').style.display !== 'none') {
             loadStudentPerformance();
           }
-          showAlert(`🎮 ¡Bien hecho! Sumaste ${puntosObtenidos} XP. (Nivel ${xpData.levelInfo.level})`);
+          showAlert(`🎮 ¡Excelente! Sumaste ${puntosObtenidos} XP en "${act.title}".`);
         }
       } catch (err) {
         console.error('Error guardando XP:', err);
       }
     });
   } catch (error) {
-    console.error('Error al iniciar práctica:', error);
-    showAlert("❌ Error al cargar las prácticas");
+    console.error('Error al iniciar práctica de nivel:', error);
+    showAlert("❌ Error al cargar la práctica");
   }
+}
+
+async function startPracticeMode() {
+  const currentMapConfig = TRAINING_MAPS[activeMapGrade] || TRAINING_MAPS['4'];
+  const curLevel = estudianteActual && estudianteActual.levelInfo ? estudianteActual.levelInfo.level : 1;
+  const targetLevelObj = currentMapConfig.levels.find(l => l.id === curLevel) || currentMapConfig.levels[currentMapConfig.levels.length - 1];
+  await startPracticeLevel(targetLevelObj);
 }
 
 // Navegación de pestañas para el estudiante

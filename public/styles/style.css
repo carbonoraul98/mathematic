@@ -1792,6 +1792,12 @@ textarea {
 /* ESTADOS */
 
 /* Completed */
+.map-node-v2.completed {
+  cursor: pointer;
+}
+.map-node-v2.completed:hover {
+  transform: scale(1.08);
+}
 .map-node-v2.completed .node-circle-v2 {
   background: #10b981;
 }
