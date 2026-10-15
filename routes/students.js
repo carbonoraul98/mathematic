@@ -1,6 +1,16 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { Student, Group, Attempt, Activity } = require('../models/database');
 const router = express.Router();
+
+async function findStudentById(id) {
+    if (id === undefined || id === null) return null;
+    const numId = Number(id);
+    const filter = !isNaN(numId)
+        ? { $or: [{ id: numId }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }
+        : (mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { id: -1 });
+    return await Student.findOne(filter);
+}
 
 // Función para calcular el nivel basado en el total_score (XP)
 function calculateLevel(total_score) {
@@ -134,7 +144,7 @@ router.post('/:id/add-xp', async (req, res) => {
             return res.status(400).json({ error: 'XP válido es requerido' });
         }
 
-        const student = await Student.findOne({ id: Number(id) });
+        const student = await findStudentById(id);
         
         if (!student) {
             return res.status(404).json({ error: 'Estudiante no encontrado' });
@@ -147,7 +157,7 @@ router.post('/:id/add-xp', async (req, res) => {
         // Registrar intento para historial y rendimiento
         if (req.body.activity_id) {
             await Attempt.create({
-                student_id: Number(id),
+                student_id: student.id,
                 activity_id: Number(req.body.activity_id),
                 score: parseInt(xp)
             });
@@ -170,13 +180,33 @@ router.post('/:id/add-xp', async (req, res) => {
 router.post('/:id/reset', async (req, res) => {
     try {
         const { id } = req.params;
-        await Student.updateOne({ id: Number(id) }, { total_score: 0 });
-        await Attempt.deleteMany({ student_id: Number(id) });
+        const student = await findStudentById(id);
+
+        if (!student) {
+            return res.status(404).json({ success: false, error: 'Estudiante no encontrado' });
+        }
+
+        student.total_score = 0;
+        await student.save();
+
+        const numId = Number(id);
+        const studentId = student.id;
+        const deleteConditions = [{ student_id: studentId }];
+        if (!isNaN(numId) && numId !== studentId) {
+            deleteConditions.push({ student_id: numId });
+        }
+
+        await Attempt.deleteMany({ $or: deleteConditions });
         
-        res.json({ success: true, message: 'Progreso reiniciado a 0' });
+        res.json({ 
+            success: true, 
+            message: 'Progreso reiniciado a 0',
+            total_score: 0,
+            levelInfo: calculateLevel(0)
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -184,7 +214,9 @@ router.post('/:id/reset', async (req, res) => {
 router.get('/:id/attempts', async (req, res) => {
     try {
         const { id } = req.params;
-        const attempts = await Attempt.find({ student_id: Number(id) }).sort({ completed_at: -1 });
+        const student = await findStudentById(id);
+        const studentId = student ? student.id : (isNaN(Number(id)) ? -1 : Number(id));
+        const attempts = await Attempt.find({ student_id: studentId }).sort({ completed_at: -1 });
         
         const activityIds = [...new Set(attempts.map(a => a.activity_id))];
         const activities = await Activity.find({ id: { $in: activityIds } });
@@ -214,13 +246,13 @@ router.get('/:id/attempts', async (req, res) => {
 router.get('/:id/performance', async (req, res) => {
     try {
         const { id } = req.params;
-        const student = await Student.findOne({ id: Number(id) });
+        const student = await findStudentById(id);
         if (!student) {
             return res.status(404).json({ error: 'Estudiante no encontrado' });
         }
 
         const group = await Group.findOne({ id: student.group_id });
-        const attempts = await Attempt.find({ student_id: Number(id) }).sort({ completed_at: -1 });
+        const attempts = await Attempt.find({ student_id: student.id }).sort({ completed_at: -1 });
 
         // Calcular racha (días activos)
         const daysSet = new Set(attempts.map(a => new Date(a.completed_at).toISOString().split('T')[0]));

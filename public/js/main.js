@@ -750,19 +750,42 @@ async function crearActividad() {
 }
 
 async function resetStudentProgress() {
-  showConfirm("¿Estás seguro de que deseas reiniciar todo tu progreso? Volverás al Nivel 1.", async () => {
+  if (!estudianteActual) return;
+  const studentId = estudianteActual.id || estudianteActual._id;
+  if (!studentId) return;
+
+  showConfirm("¿Estás seguro de que deseas reiniciar todo tu progreso? Volverás al Nivel 1 con 0 XP.", async () => {
     try {
-      const res = await fetch(`/api/students/${estudianteActual.id}/reset`, { method: 'POST' });
-      if (res.ok) {
+      const res = await fetch(`/api/students/${studentId}/reset`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
          estudianteActual.total_score = 0;
          estudianteActual.puntos = 0;
          estudianteActual.levelInfo = { level: 1, currentXP: 0, xpPerLevel: 30, progressPercent: 0 };
+         
+         // 1. Actualizar inmediatamente interfaz de nivel, barra XP y mapa de niveles
          updateStudentLevelUI(estudianteActual);
+
+         // 2. Actualizar inmediatamente estadísticas de la pestaña de perfil
+         if (document.getElementById('profileLevelVal')) document.getElementById('profileLevelVal').innerText = '1';
+         if (document.getElementById('profilePointsVal')) document.getElementById('profilePointsVal').innerText = '0';
+         if (document.getElementById('profileStreakVal')) document.getElementById('profileStreakVal').innerText = '0 días';
+
+         // 3. Restablecer barras y porcentajes de temas a 0%
+         document.querySelectorAll('.student-topic-fill').forEach(el => {
+           el.style.width = '0%';
+           el.setAttribute('data-percent', '0');
+         });
+         document.querySelectorAll('.student-topic-percent').forEach(el => {
+           el.innerText = '0%';
+         });
+
+         // 4. Recargar actividades y métricas actualizadas
          mostrarPendientes();
          await loadStudentPerformance();
-         showAlert("Tu progreso ha sido reiniciado con éxito.");
+         showAlert("✅ Tu progreso y experiencia han sido reiniciados con éxito a 0 XP.");
       } else {
-         showAlert("Hubo un error al reiniciar el progreso.");
+         showAlert(data.error || "Hubo un error al reiniciar el progreso.");
       }
     } catch (err) {
       console.error(err);
