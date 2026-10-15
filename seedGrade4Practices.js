@@ -294,11 +294,16 @@ async function seedGrade4() {
         await Question.deleteMany({ activity_id: act.id });
         for (let i = 0; i < p.questions.length; i++) {
             const q = p.questions[i];
+            const opts = [q.a, q.b, q.c];
+            for (let j = opts.length - 1; j > 0; j--) {
+                const k = Math.floor(Math.random() * (j + 1));
+                [opts[j], opts[k]] = [opts[k], opts[j]];
+            }
             await Question.create({
                 activity_id: act.id,
                 question_text: q.q,
                 question_type: 'opcion',
-                options: JSON.stringify([q.a, q.b, q.c]),
+                options: JSON.stringify(opts),
                 correct_answer: q.correct,
                 points: 10,
                 order_num: i

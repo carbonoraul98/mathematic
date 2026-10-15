@@ -261,7 +261,12 @@ async function seedPractices() {
 
         let order = 0;
         for (const q of p.questions) {
-          const options = JSON.stringify([q.a, q.b, q.c]);
+          const opts = [q.a, q.b, q.c];
+          for (let j = opts.length - 1; j > 0; j--) {
+            const k = Math.floor(Math.random() * (j + 1));
+            [opts[j], opts[k]] = [opts[k], opts[j]];
+          }
+          const options = JSON.stringify(opts);
           await Question.create({
             activity_id: act.id,
             question_text: q.q,

@@ -208,7 +208,7 @@ class ActivityPlayer extends HTMLElement {
     
     // Shuffle logic (Anti-macheteo)
     let questions = [...actividad.preguntas];
-    seccion = seccion.toUpperCase();
+    seccion = (seccion || 'A').toUpperCase();
     
     if (seccion === 'B') {
       questions.reverse();
@@ -221,6 +221,24 @@ class ActivityPlayer extends HTMLElement {
       questions = [...evens, ...odds];
     }
     
+    // Aleatorizar el orden de las opciones para cada pregunta
+    const letters = ['A', 'B', 'C', 'D'];
+    questions = questions.map(q => {
+      const qCopy = { ...q };
+      if (qCopy.tipo === "opcion") {
+        const rawOptions = [qCopy.a, qCopy.b, qCopy.c, qCopy.d].filter(t => t !== undefined && t !== null && String(t).trim() !== "");
+        for (let i = rawOptions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [rawOptions[i], rawOptions[j]] = [rawOptions[j], rawOptions[i]];
+        }
+        qCopy._shuffledOptions = rawOptions.map((text, idx) => ({
+          letter: letters[idx] || String.fromCharCode(65 + idx),
+          text: String(text).trim()
+        }));
+      }
+      return qCopy;
+    });
+
     this.shuffledQuestions = questions;
     this.currentIndex = 0;
     this.answers = new Array(questions.length).fill(null);
@@ -293,11 +311,20 @@ class ActivityPlayer extends HTMLElement {
     container.innerHTML = "";
     
     if (q.tipo === "opcion") {
-      const options = [
-        { letter: 'A', text: q.a },
-        { letter: 'B', text: q.b },
-        { letter: 'C', text: q.c }
-      ].filter(o => o.text && o.text.trim() !== "");
+      let options = q._shuffledOptions;
+      if (!options || options.length === 0) {
+        const rawOptions = [q.a, q.b, q.c, q.d].filter(t => t !== undefined && t !== null && String(t).trim() !== "");
+        for (let i = rawOptions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [rawOptions[i], rawOptions[j]] = [rawOptions[j], rawOptions[i]];
+        }
+        const lettersList = ['A', 'B', 'C', 'D'];
+        options = rawOptions.map((text, idx) => ({
+          letter: lettersList[idx] || String.fromCharCode(65 + idx),
+          text: String(text).trim()
+        }));
+        q._shuffledOptions = options;
+      }
       
       options.forEach(opt => {
         const div = document.createElement('div');
