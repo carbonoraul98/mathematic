@@ -259,7 +259,7 @@ const TRAINING_MAPS = {
   },
   '5': {
     title: '5° Grado (Avanzado)',
-    subtitle: '🚀 Ruta Avanzada: Aritmética de múltiples cifras, fracciones visuales, coordenadas cartesianas, estadística y álgebra.',
+    subtitle: '🚀 Ruta Avanzada: Aritmética de múltiples cifras, fracciones, plano cartesiano, estadística, álgebra y operaciones mixtas.',
     levels: [
       { id: 1, title: 'Mult. 3-4 Cifras', activityId: 18, icon: '✖️' },
       { id: 2, title: 'División Galera II', activityId: 19, icon: '➗' },
@@ -270,7 +270,9 @@ const TRAINING_MAPS = {
       { id: 7, title: 'Plano Cartesiano II', activityId: 22, icon: '🎯' },
       { id: 8, title: 'Estadística I (Barras)', activityId: 23, icon: '📊' },
       { id: 9, title: 'Estadística II (Media)', activityId: 24, icon: '📈' },
-      { id: 10, title: 'Álgebra Básica', activityId: 25, icon: '⚖️' }
+      { id: 10, title: 'Álgebra Básica', activityId: 25, icon: '⚖️' },
+      { id: 11, title: 'Operaciones Mixtas I', activityId: 30, icon: '⚡' },
+      { id: 12, title: 'Operaciones Mixtas II', activityId: 31, icon: '🎯' }
     ]
   }
 };

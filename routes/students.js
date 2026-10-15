@@ -258,15 +258,9 @@ router.get('/:id/performance', async (req, res) => {
         const daysSet = new Set(attempts.map(a => new Date(a.completed_at).toISOString().split('T')[0]));
         const streakDays = attempts.length > 0 ? daysSet.size : (student.total_score > 0 ? 1 : 0);
 
-        // Categorías de temas
+        // Categorías de temas alineadas al currículo oficial
+        const isGrade5 = group && group.name && String(group.name).startsWith('5');
         const categories = [
-            {
-                name: 'Suma y resta',
-                icon: '➕',
-                color: '#10b981', // Verde
-                bg: 'rgba(16, 185, 129, 0.15)',
-                keywords: ['suma', 'resta']
-            },
             {
                 name: 'Multiplicación',
                 icon: '✖️',
@@ -290,13 +284,34 @@ router.get('/:id/performance', async (req, res) => {
             }
         ];
 
+        if (isGrade5) {
+            categories.push({
+                name: 'Operaciones Mixtas',
+                icon: '⚡',
+                color: '#10b981', // Verde esmeralda
+                bg: 'rgba(16, 185, 129, 0.15)',
+                keywords: ['mixta', 'mixtas', 'orden', 'combinada', 'combinadas']
+            });
+            categories.push({
+                name: 'Plano y Álgebra',
+                icon: '📍',
+                color: '#8b5cf6', // Violeta
+                bg: 'rgba(139, 92, 246, 0.15)',
+                keywords: ['plano', 'cartesiano', 'estadística', 'estadistica', 'álgebra', 'algebra']
+            });
+        }
+
         const allActivities = await Activity.find();
         const actMap = {};
         allActivities.forEach(a => { actMap[a.id] = a; });
 
-        const studentLevel = Math.floor((student.total_score || 0) / 30) + 1;
+        const allQuestions = await Question.find();
+        const actQuestionCounts = {};
+        allQuestions.forEach(q => {
+            actQuestionCounts[q.activity_id] = (actQuestionCounts[q.activity_id] || 0) + 1;
+        });
 
-        const topicPerformance = categories.map((cat, idx) => {
+        const topicPerformance = categories.map((cat) => {
             const matchedActs = allActivities.filter(a => {
                 const title = (a.title || '').toLowerCase();
                 const theme = (a.theme || '').toLowerCase();
@@ -306,19 +321,19 @@ router.get('/:id/performance', async (req, res) => {
             const catAttempts = attempts.filter(att => matchedIds.includes(att.activity_id));
 
             let percentage = 0;
+            let totalPointsEarned = 0;
+            let totalPointsPossible = 0;
+
             if (catAttempts.length > 0) {
-                const totalScore = catAttempts.reduce((acc, curr) => acc + curr.score, 0);
-                percentage = Math.min(100, Math.round((totalScore / (catAttempts.length * 20)) * 100));
-            } else if (student.total_score > 0) {
-                // Cálculo proporcional basado en nivel de XP alcanzado solo si tiene puntos
-                if (idx === 0) {
-                    percentage = Math.min(95, 30 + Math.round((student.total_score / 30) * 35));
-                } else if (idx === 1) {
-                    percentage = studentLevel >= 2 ? Math.min(85, 25 + (studentLevel - 1) * 20) : 10;
-                } else if (idx === 2) {
-                    percentage = studentLevel >= 3 ? Math.min(80, 20 + (studentLevel - 2) * 20) : 0;
-                } else {
-                    percentage = studentLevel >= 4 ? Math.min(75, 20 + (studentLevel - 3) * 20) : 0;
+                catAttempts.forEach(att => {
+                    const qCount = actQuestionCounts[att.activity_id] || 5;
+                    totalPointsEarned += (att.score || 0);
+                    totalPointsPossible += (qCount * 10);
+                });
+
+                if (totalPointsPossible > 0) {
+                    percentage = Math.round((totalPointsEarned / totalPointsPossible) * 100);
+                    percentage = Math.min(100, Math.max(0, percentage));
                 }
             } else {
                 percentage = 0;
@@ -329,7 +344,7 @@ router.get('/:id/performance', async (req, res) => {
                 icon: cat.icon,
                 color: cat.color,
                 bg: cat.bg,
-                percentage: Math.max(0, Math.min(100, percentage)),
+                percentage: percentage,
                 attemptsCount: catAttempts.length
             };
         });
