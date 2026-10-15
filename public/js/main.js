@@ -155,7 +155,7 @@ const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 function logout() {
   authenticatedRole = null;
   estudianteActual = null;
-  activeMapGradeUserSelected = false;
+  activeMapGrade = '4';
   if(document.getElementById("loginUser")) document.getElementById("loginUser").value = "";
   if(document.getElementById("loginPass")) document.getElementById("loginPass").value = "";
   if(document.getElementById("loginResult")) document.getElementById("loginResult").innerHTML = "";
@@ -237,7 +237,12 @@ function enterAsRole(role) {
 }
 
 let activeMapGrade = '4';
-let activeMapGradeUserSelected = false;
+
+function getStudentGrade(student) {
+  if (!student || !student.group_name) return '4';
+  const name = String(student.group_name).trim();
+  return name.startsWith('5') ? '5' : '4';
+}
 
 const TRAINING_MAPS = {
   '4': {
@@ -271,9 +276,9 @@ const TRAINING_MAPS = {
 };
 
 function selectTrainingMapGrade(grade) {
-  activeMapGradeUserSelected = true;
-  activeMapGrade = grade;
+  // El mapa de juego está estrictamente asignado según el grado del estudiante
   if (estudianteActual) {
+    activeMapGrade = getStudentGrade(estudianteActual);
     updateStudentLevelUI(estudianteActual);
   }
 }
@@ -287,28 +292,27 @@ function updateStudentLevelUI(student) {
     }
     document.getElementById('studentXpBar').style.width = student.levelInfo.progressPercent + '%';
 
-    // Determinar grado por defecto si el usuario no ha seleccionado manualmente
-    if (!activeMapGradeUserSelected) {
-      const gName = String(student.group_name || '');
-      activeMapGrade = gName.startsWith('5') ? '5' : '4';
-    }
+    // Determinar grado exclusivo del estudiante
+    activeMapGrade = getStudentGrade(student);
 
-    // Actualizar estado de los botones de pestañas
-    const btn4 = document.getElementById('mapTabGrade4Btn');
-    const btn5 = document.getElementById('mapTabGrade5Btn');
-    const subtitleEl = document.getElementById('mapGradeSubtitle');
-
-    if (btn4 && btn5) {
-      if (activeMapGrade === '4') {
-        btn4.className = 'btn btn--sm active';
-        btn5.className = 'btn btn--outline btn--sm';
+    // Actualizar insignia indicadora de grado exclusivo
+    const badgeEl = document.getElementById('studentMapGradeBadge');
+    if (badgeEl) {
+      if (activeMapGrade === '5') {
+        badgeEl.innerHTML = '🚀 Ruta 5° Grado (Avanzado)';
+        badgeEl.style.background = 'rgba(168, 85, 247, 0.2)';
+        badgeEl.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+        badgeEl.style.color = '#e9d5ff';
       } else {
-        btn4.className = 'btn btn--outline btn--sm';
-        btn5.className = 'btn btn--sm active';
+        badgeEl.innerHTML = '📘 Ruta 4° Grado';
+        badgeEl.style.background = 'rgba(99, 102, 241, 0.2)';
+        badgeEl.style.borderColor = 'rgba(99, 102, 241, 0.4)';
+        badgeEl.style.color = '#c7d2fe';
       }
     }
 
     const currentMapConfig = TRAINING_MAPS[activeMapGrade] || TRAINING_MAPS['4'];
+    const subtitleEl = document.getElementById('mapGradeSubtitle');
     if (subtitleEl) {
       subtitleEl.innerText = currentMapConfig.subtitle;
     }
@@ -364,6 +368,14 @@ function updateStudentLevelUI(student) {
 
 async function startPracticeLevel(levelObj) {
   try {
+    const studentGrade = getStudentGrade(estudianteActual);
+    const currentMapConfig = TRAINING_MAPS[studentGrade] || TRAINING_MAPS['4'];
+
+    if (levelObj && !currentMapConfig.levels.some(l => l.id === levelObj.id)) {
+      showAlert("⚠️ Este nivel no corresponde al mapa de tu grado.");
+      return;
+    }
+
     let act = null;
     if (levelObj && levelObj.activityId) {
       const res = await fetch(`/api/activities/${levelObj.activityId}`);
@@ -372,11 +384,11 @@ async function startPracticeLevel(levelObj) {
       }
     }
     
-    // Si no se encuentra por ID directo o no tiene preguntas, fallback a lista de prácticas
+    // Si no se encuentra por ID directo o no tiene preguntas, fallback a lista de prácticas del grado
     if (!act || !act.preguntas || act.preguntas.length === 0) {
       const resAll = await fetch('/api/activities');
       const todas = await resAll.json();
-      const practicas = todas.filter(a => a.type === 'Práctica');
+      const practicas = todas.filter(a => a.type === 'Práctica' && (!a.theme || a.theme.includes(`Grado ${studentGrade}`) || a.theme === 'General'));
       act = practicas.find(p => p.id === (levelObj && levelObj.activityId) || (levelObj && p.title.toLowerCase() === levelObj.title.toLowerCase())) || practicas[0];
     }
     
@@ -418,7 +430,8 @@ async function startPracticeLevel(levelObj) {
 }
 
 async function startPracticeMode() {
-  const currentMapConfig = TRAINING_MAPS[activeMapGrade] || TRAINING_MAPS['4'];
+  const studentGrade = getStudentGrade(estudianteActual);
+  const currentMapConfig = TRAINING_MAPS[studentGrade] || TRAINING_MAPS['4'];
   const curLevel = estudianteActual && estudianteActual.levelInfo ? estudianteActual.levelInfo.level : 1;
   const targetLevelObj = currentMapConfig.levels.find(l => l.id === curLevel) || currentMapConfig.levels[currentMapConfig.levels.length - 1];
   await startPracticeLevel(targetLevelObj);

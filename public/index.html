@@ -477,10 +477,9 @@
         
         <h3 style="margin-top: var(--space-xl); text-align: center; color: var(--color-cyan); font-size: 0.95rem; margin-bottom: 8px;">MAPA DE ENTRENAMIENTO</h3>
         
-        <!-- SELECTOR DE MAPA POR GRADO -->
-        <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 10px;" onclick="event.stopPropagation();">
-          <button type="button" class="btn btn--sm active" id="mapTabGrade4Btn" onclick="selectTrainingMapGrade('4')" style="border-radius: 20px; font-size: 0.78rem; padding: 5px 14px;">📘 4° Grado</button>
-          <button type="button" class="btn btn--outline btn--sm" id="mapTabGrade5Btn" onclick="selectTrainingMapGrade('5')" style="border-radius: 20px; font-size: 0.78rem; padding: 5px 14px;">🚀 5° Grado (Avanzado)</button>
+        <!-- INDICADOR EXCLUSIVO DE MAPA POR GRADO -->
+        <div id="studentMapGradeContainer" style="display: flex; justify-content: center; margin-bottom: 10px;" onclick="event.stopPropagation();">
+          <span id="studentMapGradeBadge" style="background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); color: #c7d2fe; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">📘 Ruta 4° Grado</span>
         </div>
 
         <p id="mapGradeSubtitle" style="text-align: center; color: var(--text-secondary); font-size: var(--text-xs); margin-bottom: 12px;">Sube de nivel completando prácticas para desbloquear el siguiente nivel.</p>
