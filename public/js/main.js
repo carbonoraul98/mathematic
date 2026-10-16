@@ -244,7 +244,7 @@ function getStudentGrade(student) {
   return name.startsWith('5') ? '5' : '4';
 }
 
-const TRAINING_MAPS = {
+const BASE_TRAINING_MAPS = {
   '4': {
     title: '4° Grado',
     subtitle: '📘 Ruta 4° Grado: Multiplicación de dos cifras, división de dos cifras y fracciones sencillas.',
@@ -277,15 +277,61 @@ const TRAINING_MAPS = {
   }
 };
 
+let cachedDynamicMaps = {};
+
+async function fetchDynamicTrainingMapConfig(grade) {
+  const g = String(grade || '4');
+  const base = BASE_TRAINING_MAPS[g] || BASE_TRAINING_MAPS['4'];
+  const config = {
+    title: base.title,
+    subtitle: base.subtitle,
+    levels: [...base.levels.map(l => ({ ...l }))]
+  };
+
+  try {
+    const res = await fetch('/api/activities');
+    if (res.ok) {
+      const allActivities = await res.json();
+      const customLevels = allActivities.filter(a => {
+        if (!a.is_training_level) return false;
+        const tg = a.training_grade ? String(a.training_grade).trim() : '';
+        return tg === g || (tg === '' && (a.theme || '').includes(g));
+      });
+      // Orden cronológico por id ascendente
+      customLevels.sort((a, b) => a.id - b.id);
+
+      let nextLevelId = base.levels.length + 1;
+      customLevels.forEach(act => {
+        config.levels.push({
+          id: nextLevelId++,
+          title: act.title,
+          activityId: act.id,
+          icon: act.map_icon || (act.type === 'Examen' ? '📝' : '🏆'),
+          isCustom: true
+        });
+      });
+    }
+  } catch (err) {
+    console.warn('No se pudieron cargar actividades dinámicas para el mapa:', err);
+  }
+
+  cachedDynamicMaps[g] = config;
+  return config;
+}
+
+function getCachedTrainingMapConfig(grade) {
+  const g = String(grade || '4');
+  return cachedDynamicMaps[g] || BASE_TRAINING_MAPS[g] || BASE_TRAINING_MAPS['4'];
+}
+
 function selectTrainingMapGrade(grade) {
-  // El mapa de juego está estrictamente asignado según el grado del estudiante
   if (estudianteActual) {
     activeMapGrade = getStudentGrade(estudianteActual);
     updateStudentLevelUI(estudianteActual);
   }
 }
 
-function updateStudentLevelUI(student) {
+async function updateStudentLevelUI(student) {
   if (student && student.levelInfo) {
     document.getElementById('studentLevelDisplay').innerText = student.levelInfo.level;
     document.getElementById('studentXpDisplay').innerText = student.levelInfo.currentXP;
@@ -313,7 +359,7 @@ function updateStudentLevelUI(student) {
       }
     }
 
-    const currentMapConfig = TRAINING_MAPS[activeMapGrade] || TRAINING_MAPS['4'];
+    const currentMapConfig = await fetchDynamicTrainingMapConfig(activeMapGrade);
     const subtitleEl = document.getElementById('mapGradeSubtitle');
     if (subtitleEl) {
       subtitleEl.innerText = currentMapConfig.subtitle;
@@ -347,7 +393,7 @@ function updateStudentLevelUI(student) {
           node.title = `Nivel ${lvl.id}: ${nodeLabel} (¡Nivel actual - Clic para jugar!)`;
           node.innerHTML = `
             <div class="node-circle-v2">${lvl.id}
-                <div class="node-icon-v2" style="color: #3b82f6;">▶️</div>
+                <div class="node-icon-v2" style="color: #3b82f6;">${lvl.icon || '▶️'}</div>
             </div>
             <div class="node-label-v2">${nodeLabel}</div>
           `;
@@ -371,7 +417,7 @@ function updateStudentLevelUI(student) {
 async function startPracticeLevel(levelObj) {
   try {
     const studentGrade = getStudentGrade(estudianteActual);
-    const currentMapConfig = TRAINING_MAPS[studentGrade] || TRAINING_MAPS['4'];
+    const currentMapConfig = await fetchDynamicTrainingMapConfig(studentGrade);
 
     if (levelObj && !currentMapConfig.levels.some(l => l.id === levelObj.id)) {
       showAlert("⚠️ Este nivel no corresponde al mapa de tu grado.");
@@ -390,12 +436,12 @@ async function startPracticeLevel(levelObj) {
     if (!act || !act.preguntas || act.preguntas.length === 0) {
       const resAll = await fetch('/api/activities');
       const todas = await resAll.json();
-      const practicas = todas.filter(a => a.type === 'Práctica' && (!a.theme || a.theme.includes(`Grado ${studentGrade}`) || a.theme === 'General'));
+      const practicas = todas.filter(a => (a.type === 'Práctica' || a.type === 'Examen' || a.is_training_level) && (!a.theme || a.theme.includes(`Grado ${studentGrade}`) || a.theme === 'General'));
       act = practicas.find(p => p.id === (levelObj && levelObj.activityId) || (levelObj && p.title.toLowerCase() === levelObj.title.toLowerCase())) || practicas[0];
     }
     
     if (!act || !act.preguntas || act.preguntas.length === 0) {
-      showAlert("🚧 Módulo de práctica en preparación. ¡Intenta con otro nivel!");
+      showAlert("🚧 Módulo de práctica o evaluación en preparación. ¡Intenta con otro nivel!");
       return;
     }
     
@@ -415,7 +461,7 @@ async function startPracticeLevel(levelObj) {
         if (xpData.success) {
           estudianteActual.levelInfo = xpData.levelInfo;
           estudianteActual.total_score = xpData.total_score;
-          updateStudentLevelUI(estudianteActual);
+          await updateStudentLevelUI(estudianteActual);
           if (document.getElementById('studentProfileView') && document.getElementById('studentProfileView').style.display !== 'none') {
             loadStudentPerformance();
           }
@@ -433,7 +479,7 @@ async function startPracticeLevel(levelObj) {
 
 async function startPracticeMode() {
   const studentGrade = getStudentGrade(estudianteActual);
-  const currentMapConfig = TRAINING_MAPS[studentGrade] || TRAINING_MAPS['4'];
+  const currentMapConfig = await fetchDynamicTrainingMapConfig(studentGrade);
   const curLevel = estudianteActual && estudianteActual.levelInfo ? estudianteActual.levelInfo.level : 1;
   const targetLevelObj = currentMapConfig.levels.find(l => l.id === curLevel) || currentMapConfig.levels[currentMapConfig.levels.length - 1];
   await startPracticeLevel(targetLevelObj);
@@ -703,6 +749,11 @@ async function crearActividad() {
     });
   }
   
+  const chkManualTraining = document.getElementById("chkManualTrainingLevel");
+  const isTrainingLevel = chkManualTraining ? chkManualTraining.checked : false;
+  const trainingGrade = isTrainingLevel ? document.getElementById("manualTrainingGrade").value : "";
+  const trainingIcon = isTrainingLevel ? document.getElementById("manualTrainingIcon").value : "🏆";
+  
   try {
     const res = await fetch('/api/activities', {
       method: 'POST',
@@ -714,7 +765,10 @@ async function crearActividad() {
         grade: gradoBase,
         group_id: primaryGroupId ? Number(primaryGroupId) : null,
         target_groups: targetGroups,
-        questions: preguntasTemp
+        questions: preguntasTemp,
+        is_training_level: isTrainingLevel,
+        training_grade: trainingGrade,
+        map_icon: trainingIcon
       })
     });
     
@@ -726,6 +780,10 @@ async function crearActividad() {
       document.getElementById("activityTheme").value = "";
       if (chkReplicate) chkReplicate.checked = false;
       toggleReplicateCheckboxes();
+      if (chkManualTraining) {
+        chkManualTraining.checked = false;
+        toggleManualTrainingOptions();
+      }
       
       showAlert(`✅ Actividad "${tema}" guardada exitosamente`);
       
@@ -965,69 +1023,130 @@ function mostrarNotas() {
   });
 }
 
-// Función unificada para cargar examen JSON
-async function importJsonExam() {
-    const jsonInput = document.getElementById('jsonExamInput');
-    const titleInput = document.getElementById('examTitle');
-    const grade = document.getElementById('activityTargetGrade').value;
-    const uploadBtn = document.getElementById('importExamBtn');
-    const btnText = document.getElementById('importBtnText');
-    const spinner = document.getElementById('importSpinner');
-    
-    if (!jsonInput.value.trim()) {
-        showAlert('❌ Pega el JSON del examen');
-        return;
+// Toggles para opciones de niveles en la ruta de entrenamiento
+function toggleManualTrainingOptions() {
+  const chk = document.getElementById('chkManualTrainingLevel');
+  const opt = document.getElementById('manualTrainingOptions');
+  if (opt) {
+    opt.style.display = chk && chk.checked ? 'grid' : 'none';
+  }
+}
+
+function toggleDocxTrainingOptions() {
+  const chk = document.getElementById('chkDocxTrainingLevel');
+  const opt = document.getElementById('docxTrainingOptions');
+  if (opt) {
+    opt.style.display = chk && chk.checked ? 'grid' : 'none';
+  }
+}
+
+function toggleEditTrainingOptions() {
+  const chk = document.getElementById('editIsTrainingLevel');
+  const opt = document.getElementById('editTrainingOptions');
+  if (opt) {
+    opt.style.display = chk && chk.checked ? 'grid' : 'none';
+  }
+}
+
+// Subir examen o actividad en formato Word (.docx)
+async function uploadDocxExam() {
+  const fileInput = document.getElementById('docxFileInput');
+  const titleInput = document.getElementById('docxExamTitle');
+  const typeSelect = document.getElementById('docxExamType');
+  const targetGroupEl = document.getElementById('activityTargetGroup');
+  const targetGradeEl = document.getElementById('activityTargetGrade');
+  const chkReplicate = document.getElementById('chkReplicateActivity');
+  const chkDocxTraining = document.getElementById('chkDocxTrainingLevel');
+  const trainingGradeEl = document.getElementById('docxTrainingGrade');
+  const trainingIconEl = document.getElementById('docxTrainingIcon');
+  
+  const uploadBtn = document.getElementById('importDocxBtn');
+  const btnText = document.getElementById('importDocxBtnText');
+  const spinner = document.getElementById('importDocxSpinner');
+
+  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    showAlert('❌ Selecciona un archivo de Word (.docx)');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  if (!file.name.toLowerCase().endsWith('.docx')) {
+    showAlert('❌ El archivo debe tener extensión .docx');
+    return;
+  }
+
+  const title = titleInput.value.trim() || file.name.replace(/\.[^/.]+$/, "");
+  const type = typeSelect ? typeSelect.value : 'Examen';
+  const grade = targetGradeEl ? targetGradeEl.value : '4';
+  const primaryGroupId = targetGroupEl ? targetGroupEl.value : '';
+
+  let targetGroups = [];
+  if (primaryGroupId) {
+    targetGroups.push(Number(primaryGroupId));
+  }
+  if (chkReplicate && chkReplicate.checked) {
+    const checkBoxes = document.querySelectorAll('.replicate-group-chk:checked');
+    checkBoxes.forEach(cb => {
+      const val = Number(cb.value);
+      if (!targetGroups.includes(val)) targetGroups.push(val);
+    });
+  }
+
+  const isTrainingLevel = chkDocxTraining ? chkDocxTraining.checked : false;
+  const trainingGrade = isTrainingLevel ? (trainingGradeEl ? trainingGradeEl.value : grade) : '';
+  const trainingIcon = isTrainingLevel ? (trainingIconEl ? trainingIconEl.value : '📝') : '📝';
+
+  uploadBtn.disabled = true;
+  btnText.textContent = 'PROCESANDO DOCUMENTO...';
+  spinner.style.display = 'inline-block';
+
+  try {
+    const formData = new FormData();
+    formData.append('exam', file);
+    formData.append('title', title);
+    formData.append('type', type);
+    formData.append('grade', grade);
+    if (primaryGroupId) formData.append('group_id', primaryGroupId);
+    formData.append('target_groups', JSON.stringify(targetGroups));
+    formData.append('is_training_level', isTrainingLevel ? 'true' : 'false');
+    formData.append('training_grade', trainingGrade);
+    formData.append('map_icon', trainingIcon);
+
+    const res = await fetch('/api/exams/docx', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await res.json();
+
+    uploadBtn.disabled = false;
+    btnText.textContent = '📤 SUBIR Y PROCESAR ARCHIVO WORD (.DOCX)';
+    spinner.style.display = 'none';
+
+    if (result.success) {
+      showAlert(`✅ "${result.title}" creado con ${result.questions_count} preguntas desde Word`);
+      fileInput.value = '';
+      titleInput.value = '';
+      if (chkDocxTraining) {
+        chkDocxTraining.checked = false;
+        toggleDocxTrainingOptions();
+      }
+      loadActivities();
+      loadDashboardStats();
+      const activitiesLink = document.getElementById('navLinkActivities') || Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.textContent.includes('Actividades'));
+      if (activitiesLink) {
+        showTeacherSection('viewActivitiesSection', activitiesLink);
+      }
+    } else {
+      showAlert(`❌ ${result.error || 'Error al procesar el archivo Word'}`);
     }
-    
-    // Mostrar loader
-    uploadBtn.disabled = true;
-    btnText.textContent = 'CARGANDO...';
-    spinner.style.display = 'inline-block';
-    
-    try {
-        const examData = JSON.parse(jsonInput.value);
-        
-        // Aceptar array directo o objeto con questions
-        const questions = Array.isArray(examData) ? examData : examData.questions;
-        
-        if (!questions || !Array.isArray(questions)) {
-            throw new Error('El JSON debe ser un array de preguntas o tener una propiedad "questions"');
-        }
-        
-        const title = titleInput.value.trim() || 'Examen sin título';
-        
-        const res = await fetch('/api/exams', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title,
-                grade: grade,
-                questions: questions
-            })
-        });
-        
-        const result = await res.json();
-        
-        // Resetear UI
-        uploadBtn.disabled = false;
-        btnText.textContent = 'CARGAR EXAMEN';
-        spinner.style.display = 'none';
-        
-        if (result.success) {
-            showAlert(`✅ "${title}" cargado con ${result.questions_count} preguntas`);
-            jsonInput.value = '';
-            titleInput.value = '';
-        } else {
-            showAlert(`❌ ${result.error || 'Error al cargar'}`);
-        }
-    } catch (error) {
-        uploadBtn.disabled = false;
-        btnText.textContent = 'CARGAR EXAMEN';
-        spinner.style.display = 'none';
-        
-        console.error('Error:', error);
-        showAlert('❌ Error: ' + error.message);
-    }
+  } catch (error) {
+    uploadBtn.disabled = false;
+    btnText.textContent = '📤 SUBIR Y PROCESAR ARCHIVO WORD (.DOCX)';
+    spinner.style.display = 'none';
+    console.error('Error al subir Word:', error);
+    showAlert('❌ Error de conexión al subir el archivo');
+  }
 }
 
 async function loadActivities() {
@@ -1045,13 +1164,17 @@ async function loadActivities() {
         
         let html = '';
         activities.forEach(act => {
-            const icono = act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩'));
+            const icono = act.map_icon || (act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩')));
             const qCount = act.preguntas ? act.preguntas.length : 0;
             const aulaBadge = act.target_group_names && act.target_group_names.length > 0 
                 ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.target_group_names.join(', ')}</span>`
                 : (act.primary_group_name 
                     ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.primary_group_name}</span>`
                     : `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 8px; font-weight: 500;">🪐 Todas las aulas</span>`);
+
+            const trainingBadge = act.is_training_level
+                ? `<span style="background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 8px; font-weight: 700;">🗺️ Nivel de Ruta (${act.training_grade || '?'}° Grado ${act.map_icon || '🏆'})</span>`
+                : '';
 
             html += `
                 <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: var(--space-md); flex-wrap: wrap; gap: 12px;">
@@ -1061,6 +1184,7 @@ async function loadActivities() {
                             <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: var(--text-md);">${act.title}</h4>
                             <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <span style="background: rgba(99, 102, 241, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 8px; font-weight: 600;">${act.type || 'Actividad'}</span>
+                                ${trainingBadge}
                                 ${aulaBadge}
                                 <span>• 📚 ${act.theme || 'Sin grado'}</span>
                                 <span>• ❓ ${qCount} pregunta${qCount === 1 ? '' : 's'}</span>
@@ -1070,7 +1194,7 @@ async function loadActivities() {
                     </div>
                     <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
                         <button class="btn btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(99, 102, 241, 0.25); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
-                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'})">✏️ Editar</button>
+                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
                         <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
                     </div>
                 </div>
@@ -1176,7 +1300,7 @@ async function loadPractices() {
                         </div>
                     </div>
                     <div style="display: flex; gap: var(--space-sm);">
-                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}')">✏️ Editar</button>
+                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
                         <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
                     </div>
                 </div>
@@ -1320,7 +1444,7 @@ async function deleteActivity(id) {
     }
 }
 
-function openEditActivityModal(id, title, type, theme, groupId) {
+function openEditActivityModal(id, title, type, theme, groupId, isTrainingLevel, trainingGrade, mapIcon) {
     document.getElementById('editActivityId').value = id;
     document.getElementById('editActivityTitle').value = title;
     document.getElementById('editActivityType').value = type;
@@ -1329,6 +1453,20 @@ function openEditActivityModal(id, title, type, theme, groupId) {
     const groupSelect = document.getElementById('editActivityTargetGroup');
     if (groupSelect) {
         groupSelect.value = (groupId !== undefined && groupId !== null) ? groupId : '';
+    }
+
+    const chkTraining = document.getElementById('editIsTrainingLevel');
+    if (chkTraining) {
+        chkTraining.checked = Boolean(isTrainingLevel);
+        toggleEditTrainingOptions();
+    }
+    const gradeSelect = document.getElementById('editTrainingGrade');
+    if (gradeSelect && trainingGrade) {
+        gradeSelect.value = String(trainingGrade);
+    }
+    const iconSelect = document.getElementById('editTrainingIcon');
+    if (iconSelect && mapIcon) {
+        iconSelect.value = mapIcon;
     }
     
     const modal = document.getElementById('editActivityModal');
@@ -1347,6 +1485,13 @@ async function submitEditActivity() {
     const theme = document.getElementById('editActivityTheme').value;
     const groupSelect = document.getElementById('editActivityTargetGroup');
     const groupId = groupSelect ? groupSelect.value : null;
+
+    const chkTraining = document.getElementById('editIsTrainingLevel');
+    const isTrainingLevel = chkTraining ? chkTraining.checked : false;
+    const gradeSelect = document.getElementById('editTrainingGrade');
+    const iconSelect = document.getElementById('editTrainingIcon');
+    const trainingGrade = isTrainingLevel ? (gradeSelect ? gradeSelect.value : '') : '';
+    const mapIcon = isTrainingLevel ? (iconSelect ? iconSelect.value : '🏆') : '🏆';
     
     if (!title) {
         showAlert('❌ Por favor, ingresa el título.');
@@ -1361,7 +1506,10 @@ async function submitEditActivity() {
             type, 
             theme,
             group_id: groupId ? Number(groupId) : null,
-            target_groups: groupId ? [Number(groupId)] : []
+            target_groups: groupId ? [Number(groupId)] : [],
+            is_training_level: isTrainingLevel,
+            training_grade: trainingGrade,
+            map_icon: mapIcon
         };
         
         const res = await fetch(`/api/activities/${id}`, {
@@ -1372,6 +1520,7 @@ async function submitEditActivity() {
         const result = await res.json();
         
         if (result.success) {
+            cachedDynamicMaps = {};
             showAlert('✅ Actividad actualizada con éxito');
             loadActivities();
             loadPractices();
@@ -1548,7 +1697,7 @@ async function loadClassroomActivities(groupName, groupId) {
                     </div>
                     <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
                         <button class="btn btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(99, 102, 241, 0.25); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
-                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id})">✏️ Editar</button>
+                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
                         <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
                     </div>
                 </div>

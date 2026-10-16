@@ -5,7 +5,7 @@ const router = express.Router();
 // Crear actividad (con preguntas opcionales y asignación de aulas)
 router.post('/', async (req, res) => {
     try {
-        const { title, type, theme, grade, questions, group_id, target_groups } = req.body;
+        const { title, type, theme, grade, questions, group_id, target_groups, is_training_level, training_grade, map_icon } = req.body;
         
         if (!title) {
             return res.status(400).json({ error: 'El título es requerido' });
@@ -25,7 +25,10 @@ router.post('/', async (req, res) => {
             type: type || 'Actividad',
             theme: theme || `Grado ${grade || 'General'}`,
             group_id: primaryGroupId,
-            target_groups: targets
+            target_groups: targets,
+            is_training_level: Boolean(is_training_level),
+            training_grade: training_grade ? String(training_grade) : (grade ? String(grade) : ''),
+            map_icon: map_icon || (type === 'Examen' ? '📝' : '🏆')
         });
         
         // Guardar las preguntas si vienen en el body
@@ -207,7 +210,7 @@ router.delete('/:id/attempts/:attemptId', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, type, theme, group_id, target_groups } = req.body;
+        const { title, type, theme, group_id, target_groups, is_training_level, training_grade, map_icon } = req.body;
         
         if (!title) {
             return res.status(400).json({ error: 'El título es requerido' });
@@ -219,6 +222,15 @@ router.put('/:id', async (req, res) => {
         }
         if (target_groups !== undefined) {
             updateData.target_groups = Array.isArray(target_groups) ? target_groups.map(Number) : [];
+        }
+        if (is_training_level !== undefined) {
+            updateData.is_training_level = Boolean(is_training_level);
+        }
+        if (training_grade !== undefined) {
+            updateData.training_grade = String(training_grade);
+        }
+        if (map_icon !== undefined) {
+            updateData.map_icon = String(map_icon);
         }
         
         const result = await Activity.updateOne(

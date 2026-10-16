@@ -275,6 +275,34 @@
         <label style="display: block; margin-top: var(--space-xl); margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Título o Tema de la actividad / taller:</label>
         <input type="text" id="activityTheme" placeholder="Ej: Taller de Multiplicaciones y Divisiones" />
 
+        <!-- INCLUIR EN LA RUTA DE ESTUDIO (MAPA DE ENTRENAMIENTO) -->
+        <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 14px 18px; margin-top: var(--space-md); margin-bottom: var(--space-md);">
+          <label style="display: flex; align-items: center; gap: 10px; font-size: var(--text-md); color: var(--text-primary); cursor: pointer; font-weight: 600;">
+            <input type="checkbox" id="chkManualTrainingLevel" onchange="toggleManualTrainingOptions()" style="width: 18px; height: 18px; accent-color: var(--color-primary); margin: 0;" />
+            <span>🗺️ Incluir como nuevo nivel en la Ruta de Estudio (Mapa de Juego)</span>
+          </label>
+          <div id="manualTrainingOptions" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="display: block; font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: 4px;">Grado de la Ruta:</label>
+              <select id="manualTrainingGrade" style="width: 100%;">
+                <option value="4">4° Grado</option>
+                <option value="5">5° Grado</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: 4px;">Ícono del Nivel:</label>
+              <select id="manualTrainingIcon" style="width: 100%;">
+                <option value="🏆">🏆 Trofeo</option>
+                <option value="📝">📝 Examen / Evaluación</option>
+                <option value="⚡">⚡ Desafío</option>
+                <option value="🎯">🎯 Diana</option>
+                <option value="🌟">🌟 Estrella</option>
+                <option value="👑">👑 Jefe de Nivel</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div id="questionsList"></div>
 
         <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl); flex-wrap: wrap;">
@@ -287,20 +315,73 @@
           </button>
         </div>
 
+        <!-- SUBIR DESDE WORD (.DOCX) -->
         <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl);">
-          <h3>📄 Cargar Examen / Taller (JSON)</h3>
-          
-          <input type="text" id="examTitle" placeholder="Título del examen o taller" style="margin-bottom: var(--space-md);" />
-          
-          <textarea id="jsonExamInput" placeholder="Pega aquí el JSON con las preguntas..." 
-            style="width: 100%; min-height: 200px; background: var(--bg-input); color: var(--text-primary); 
-            border: 1px solid var(--color-primary); border-radius: var(--radius-md); padding: var(--space-md); 
-            font-family: monospace; margin-bottom: var(--space-md); resize: vertical;"></textarea>
-            
-          <button class="btn" onclick="importJsonExam()" id="importExamBtn">
-            <span id="importBtnText">CARGAR EXAMEN / TALLER</span>
-            <div class="spinner" id="importSpinner" style="display: none;"></div>
-          </button>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: var(--space-xs);">
+            <span style="font-size: 28px;">📄</span>
+            <div>
+              <h3 style="margin: 0;">Subir Actividad o Evaluación desde Word (.docx)</h3>
+              <p style="margin: 2px 0 0 0; color: var(--text-secondary); font-size: var(--text-sm);">Sube tu documento con preguntas y respuestas tipo A, B, C, D para crearlas al instante sin escribirlas a mano.</p>
+            </div>
+          </div>
+
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--color-primary); border-radius: var(--radius-lg); padding: var(--space-xl); margin-top: var(--space-md);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
+              <div>
+                <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Título de la actividad / evaluación:</label>
+                <input type="text" id="docxExamTitle" placeholder="Ej: Evaluación Bimestral de Matemáticas" />
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Tipo de contenido:</label>
+                <select id="docxExamType">
+                  <option value="Examen">📝 Examen / Evaluación</option>
+                  <option value="Taller">🛠️ Taller</option>
+                  <option value="Quiz">⏱️ Quiz</option>
+                  <option value="Actividad">🧩 Actividad</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- INCLUIR EN LA RUTA DE ESTUDIO (DOCX) -->
+            <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: var(--space-md);">
+              <label style="display: flex; align-items: center; gap: 10px; font-size: var(--text-md); color: var(--text-primary); cursor: pointer; font-weight: 600;">
+                <input type="checkbox" id="chkDocxTrainingLevel" onchange="toggleDocxTrainingOptions()" style="width: 18px; height: 18px; accent-color: var(--color-primary); margin: 0;" />
+                <span>🗺️ Incluir como nuevo nivel en la Ruta de Estudio (Mapa de Juego)</span>
+              </label>
+              <div id="docxTrainingOptions" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                  <label style="display: block; font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: 4px;">Grado de la Ruta:</label>
+                  <select id="docxTrainingGrade" style="width: 100%;">
+                    <option value="4">4° Grado</option>
+                    <option value="5">5° Grado</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display: block; font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: 4px;">Ícono del Nivel:</label>
+                  <select id="docxTrainingIcon" style="width: 100%;">
+                    <option value="📝">📝 Examen / Evaluación</option>
+                    <option value="🏆">🏆 Trofeo</option>
+                    <option value="⚡">⚡ Desafío</option>
+                    <option value="🎯">🎯 Diana</option>
+                    <option value="👑">👑 Jefe de Nivel</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: var(--space-lg);">
+              <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Archivo de Word (.docx):</label>
+              <input type="file" id="docxFileInput" accept=".docx" style="padding: 10px; background: var(--bg-input); border: 1px solid var(--color-border); border-radius: var(--radius-md); width: 100%; color: var(--text-primary);" />
+              <small style="display: block; margin-top: 6px; color: var(--text-muted); font-size: 12px;">
+                💡 Formato aceptado: preguntas numeradas (1., 2.), opciones (A), B), C), D)) y respuesta (Respuesta: B).
+              </small>
+            </div>
+
+            <button class="btn" onclick="uploadDocxExam()" id="importDocxBtn" style="width: 100%; justify-content: center;">
+              <span id="importDocxBtnText">📤 SUBIR Y PROCESAR ARCHIVO WORD (.DOCX)</span>
+              <div class="spinner" id="importDocxSpinner" style="display: none;"></div>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -370,7 +451,35 @@
       </select>
 
       <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Tema / Grado:</label>
-      <input type="text" id="editActivityTheme" placeholder="Ej: Grado 4 o Multiplicación" class="input" style="margin-bottom: var(--space-2xl); width: 100%;" />
+      <input type="text" id="editActivityTheme" placeholder="Ej: Grado 4 o Multiplicación" class="input" style="margin-bottom: var(--space-md); width: 100%;" />
+
+      <!-- INCLUIR EN LA RUTA DE ESTUDIO (EDICIÓN) -->
+      <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: var(--space-xl);">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: var(--text-sm); color: var(--text-primary); cursor: pointer; font-weight: 600;">
+          <input type="checkbox" id="editIsTrainingLevel" onchange="toggleEditTrainingOptions()" style="width: 16px; height: 16px; accent-color: var(--color-primary); margin: 0;" />
+          <span>🗺️ Incluir como nivel en la Ruta de Estudio</span>
+        </label>
+        <div id="editTrainingOptions" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;">Grado de la Ruta:</label>
+            <select id="editTrainingGrade" style="width: 100%;">
+              <option value="4">4° Grado</option>
+              <option value="5">5° Grado</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;">Ícono:</label>
+            <select id="editTrainingIcon" style="width: 100%;">
+              <option value="🏆">🏆 Trofeo</option>
+              <option value="📝">📝 Examen</option>
+              <option value="⚡">⚡ Desafío</option>
+              <option value="🎯">🎯 Diana</option>
+              <option value="🌟">🌟 Estrella</option>
+              <option value="👑">👑 Jefe</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
       <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
         <button class="btn btn--secondary btn--sm" onclick="closeEditActivityModal()">Cancelar</button>

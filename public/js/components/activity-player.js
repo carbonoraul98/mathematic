@@ -351,7 +351,8 @@ class ActivityPlayer extends HTMLElement {
              }
           } else {
              // Optional: highlight correct answer if they got it wrong?
-             const isThisCorrect = (opt.text.trim().toLowerCase() === q.correcta.trim().toLowerCase());
+             const isThisCorrect = (opt.text.trim().toLowerCase() === (q.correcta || '').trim().toLowerCase()) ||
+                                   (opt.letter.trim().toUpperCase() === (q.correcta || '').trim().toUpperCase());
              if (isThisCorrect) {
                  div.style.borderColor = '#10B981';
              }
@@ -391,7 +392,8 @@ class ActivityPlayer extends HTMLElement {
     
     this.answers[this.currentIndex] = letter;
     const q = this.shuffledQuestions[this.currentIndex];
-    const isCorrect = (text.trim().toLowerCase() === q.correcta.trim().toLowerCase());
+    const isCorrect = (text.trim().toLowerCase() === (q.correcta || '').trim().toLowerCase()) ||
+                      (letter.trim().toUpperCase() === (q.correcta || '').trim().toUpperCase());
     
     this.results[this.currentIndex] = isCorrect;
     

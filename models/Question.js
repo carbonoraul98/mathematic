@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { getNextSequence } = require('./Counter');
+const { Counter, getNextSequence } = require('./Counter');
 
 const questionSchema = new mongoose.Schema({
     id: { type: Number, unique: true },
@@ -20,7 +20,14 @@ questionSchema.index({ activity_id: 1, order_num: 1 });
 
 questionSchema.pre('save', async function() {
     if (this.isNew && (this.id === undefined || this.id === null)) {
-        this.id = await getNextSequence('questions');
+        let nextId = await getNextSequence('questions');
+        const QuestionModel = mongoose.models.Question || mongoose.model('Question');
+        const maxDoc = await QuestionModel.findOne().sort({ id: -1 });
+        if (maxDoc && nextId <= maxDoc.id) {
+            nextId = maxDoc.id + 1;
+            await Counter.findByIdAndUpdate('questions', { seq: nextId });
+        }
+        this.id = nextId;
     }
 });
 
