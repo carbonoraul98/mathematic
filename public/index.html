@@ -7,7 +7,7 @@
 
   <title>Mathematic's Adventure</title>
 
-  <link rel="stylesheet" href="styles/style.css?v=5" />
+  <link rel="stylesheet" href="styles/style.css?v=7" />
 </head>
 
 <body>
@@ -58,9 +58,9 @@
       <button type="button" class="btn btn--outline btn--sm" onclick="showComingSoon()">Crear cuenta</button>
     </div>
 
-    <!-- Imagen institucional (Mendoza Docente) centrada -->
-    <div style="margin-top: 15px; display: flex; justify-content: center; align-items: center; width: 100%;">
-      <img src="http://mendozadocente.weebly.com/uploads/5/8/6/1/58617155/4144174_orig.png" alt="Institucional" style="max-height: 45px; object-fit: contain; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5)); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />
+    <!-- Imagen institucional (COTEDIBA) centrada y animada -->
+    <div style="margin-top: 18px; display: flex; justify-content: center; align-items: center; width: 100%;">
+      <img src="images/cotediba-logo.png" alt="COTEDIBA" class="institutional-logo" />
     </div>
   </div>
 
@@ -98,21 +98,13 @@
   <!-- PANEL PROFESOR -->
 
   <div class="screen dashboard-layout" id="teacherPanel">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
+    <!-- CABECERA SUPERIOR CENTRADA (TÍTULO DE LA APLICACIÓN) -->
+    <header class="teacher-top-header">
       <div class="sidebar-logo">
-        <img src="images/astronaut-hero.png" alt="Logo" style="width: 32px; height: 32px;" />
-        Mathematic's<br>Adventure
+        <img src="images/astronaut-hero.png" alt="Logo" class="sidebar-logo-img" />
+        <span class="sidebar-logo-text">Mathematic's Adventure</span>
       </div>
-      <nav class="sidebar-nav">
-        <button class="sidebar-link active" id="navLinkHome" onclick="showTeacherSection('dashboardHome', this)">🏠 Inicio</button>
-        <button class="sidebar-link" id="navLinkStudents" onclick="showTeacherSection('studentsSection', this)">👥 Estudiantes</button>
-        <button class="sidebar-link" id="navLinkActivities" onclick="showTeacherSection('viewActivitiesSection', this)">📋 Actividades y Talleres</button>
-        <button class="sidebar-link" id="navLinkCreateActivity" onclick="showTeacherSection('activitiesSection', this)">➕ Crear Actividad / Taller</button>
-        <button class="sidebar-link" id="navLinkGrades" onclick="showTeacherSection('gradesSection', this)">📊 Reportes / Notas</button>
-        <button type="button" class="sidebar-link" style="margin-top: auto;" onclick="logout()">🚪 Cerrar Sesión</button>
-      </nav>
-    </aside>
+    </header>
 
     <!-- MAIN CONTENT -->
     <main class="dashboard-main">
@@ -405,6 +397,40 @@
       </div>
 
     </main>
+
+    <!-- MENÚ DE NAVEGACIÓN INFERIOR (3 OPCIONES CON DROPDOWN) -->
+    <nav class="teacher-bottom-nav" id="teacherSidebarNav">
+      <button class="sidebar-link active" id="navLinkHome" onclick="showTeacherSection('dashboardHome', this)">
+        <span class="sidebar-link-icon">🏠</span>
+        <span class="sidebar-link-text">Inicio</span>
+      </button>
+      <button class="sidebar-link" id="navLinkStudents" onclick="showTeacherSection('studentsSection', this)">
+        <span class="sidebar-link-icon">👥</span>
+        <span class="sidebar-link-text">Estudiantes</span>
+      </button>
+      <div class="nav-dropdown-wrapper" id="teacherMoreMenuWrapper">
+        <button type="button" class="sidebar-link nav-dropdown-trigger" id="navLinkMore" onclick="toggleTeacherNavDropdown(event)">
+          <span class="sidebar-link-icon">☰</span>
+          <span class="sidebar-link-text">Menú</span>
+          <span class="dropdown-chevron">▾</span>
+        </button>
+        <div class="nav-dropdown-menu" id="teacherNavDropdown">
+          <button class="nav-dropdown-item" id="navLinkActivities" onclick="showTeacherSection('viewActivitiesSection', this)">
+            <span class="dropdown-item-icon">📋</span> Actividades y Talleres
+          </button>
+          <button class="nav-dropdown-item" id="navLinkCreateActivity" onclick="showTeacherSection('activitiesSection', this)">
+            <span class="dropdown-item-icon">➕</span> Crear Actividad / Taller
+          </button>
+          <button class="nav-dropdown-item" id="navLinkGrades" onclick="showTeacherSection('gradesSection', this)">
+            <span class="dropdown-item-icon">📊</span> Reportes / Notas
+          </button>
+          <div class="nav-dropdown-divider"></div>
+          <button type="button" class="nav-dropdown-item nav-dropdown-item--danger" onclick="closeTeacherNavDropdown(); logout();">
+            <span class="dropdown-item-icon">🚪</span> Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </nav>
   </div>
 
   <!-- MODAL CREAR AULA -->
@@ -564,9 +590,13 @@
     <!-- VISTA INICIO (HOME) -->
     <div id="studentHomeView" class="student-container">
       <div class="dashboard-header student-dashboard-header" style="padding: 10px 0 16px; margin-bottom: 0;">
-        <div>
-          <h1 style="font-size: 1.4rem; margin: 0; text-align: left;">👋 Hola, <span id="studentPanelName" style="color: var(--color-primary);">Estudiante</span>!</h1>
-          <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.85rem; text-align: left;">Bienvenido a tu aventura matemática</p>
+        <div style="flex: 1; min-width: 0;">
+          <h1 style="font-size: 1.25rem; margin: 0; text-align: left; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span>👋 Hola,</span>
+            <span id="studentPanelName" style="color: var(--color-primary); font-weight: 700; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Estudiante</span>
+            <button type="button" class="btn-edit-nickname" onclick="openEditNicknameModal()" title="Personalizar mi nombre" aria-label="Personalizar nombre">✏️</button>
+          </h1>
+          <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.8rem; text-align: left;">Bienvenido a tu aventura matemática</p>
         </div>
         <div class="header-profile-badge">
           <button class="btn btn--outline btn--sm header-profile-logout" onclick="logout()" title="Cerrar sesión">Salir</button>
@@ -597,6 +627,17 @@
         <p id="mapGradeSubtitle" style="text-align: center; color: var(--text-secondary); font-size: var(--text-xs); margin-bottom: 12px;">Sube de nivel completando prácticas para desbloquear el siguiente nivel.</p>
         <div class="level-map-container" id="levelMapContainer" onclick="event.stopPropagation();">
           <!-- Niveles dinámicos del mapa -->
+        </div>
+      </div>
+
+      <!-- AVANCE POR TEMAS EN INICIO -->
+      <div class="student-performance-section" style="margin-bottom: var(--space-xl);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 class="student-performance-title" style="margin: 0; font-size: 0.95rem;">📊 Tu avance por tema</h3>
+          <button type="button" class="btn btn--outline btn--sm" style="border-radius: 14px; font-size: 0.75rem; padding: 2px 10px;" onclick="switchStudentTab('profile')">Ver perfil ›</button>
+        </div>
+        <div class="student-performance-card" id="studentHomeTopicsList">
+          <!-- Renderizado dinámicamente con barras de progreso animadas -->
         </div>
       </div>
 
@@ -726,6 +767,23 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=13"></script>
+  <!-- MODAL: Personalizar Nombre de Estudiante -->
+  <div id="editNicknameModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000; padding: 16px;">
+    <div class="panel panel--sm" style="background: rgba(22, 22, 48, 0.98); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 20px; padding: 22px; width: 100%; max-width: 360px; box-shadow: 0 16px 40px rgba(0,0,0,0.6);">
+      <h3 style="margin-top: 0; margin-bottom: 8px; color: var(--text-primary); font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+        <span>✏️</span> Tu nombre en la app
+      </h3>
+      <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 16px; line-height: 1.4;">
+        Personaliza cómo quieres que aparezca tu nombre en la parte superior para aprovechar mejor el espacio:
+      </p>
+      <input type="text" id="nicknameInput" class="input" placeholder="Ej: Sofi, Mateo, Sofía Jiménez..." maxlength="25" style="width: 100%; margin-bottom: 18px;" onkeydown="if(event.key === 'Enter') saveStudentNickname()" />
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" class="btn btn--secondary btn--sm" onclick="closeEditNicknameModal()">Cancelar</button>
+        <button type="button" class="btn btn--sm" onclick="saveStudentNickname()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/main.js?v=14"></script>
 </body>
 </html>

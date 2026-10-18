@@ -54,6 +54,7 @@ test.after(async () => {
     if (fs.existsSync(testDocxPath)) {
         fs.unlinkSync(testDocxPath);
     }
+    await Activity.deleteMany({ title: { $in: ['Taller de Fracciones Especial', 'Quiz de Prueba Promovido', 'Evaluación Docx Bimestral'] } });
     if (server) {
         await new Promise((resolve) => server.close(resolve));
     }

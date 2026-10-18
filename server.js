@@ -19,11 +19,20 @@ app.use('/api/exams', require('./routes/exams'));
 app.use('/api/grades', require('./routes/grades'));
 app.use('/api/groups', require('./routes/groups'));
 
+const seedGrade4Activity = require('./seedGrade4Activity');
+const seedGrade5Activity = require('./seedGrade5Activity');
+
 // Seed inicial tras conectar a la base de datos
-connectionPromise.then(() => {
-    seedPractices();
+connectionPromise.then(async () => {
+    if (process.env.NODE_ENV !== 'test') {
+        await seedPractices();
+        await seedGrade4Activity();
+        await seedGrade5Activity();
+    }
 }).catch(err => {
-    console.error('Error inicializando datos en MongoDB:', err);
+    if (process.env.NODE_ENV !== 'test') {
+        console.error('Error inicializando datos en MongoDB:', err);
+    }
 });
 
 if (require.main === module) {

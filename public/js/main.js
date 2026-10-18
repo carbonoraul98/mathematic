@@ -215,6 +215,72 @@ async function unifiedLogin() {
   }
 }
 
+function getStudentDisplayName(student) {
+  if (!student) return 'Estudiante';
+  const customNickname = localStorage.getItem(`student_nickname_${student.id}`) || student.nickname;
+  if (customNickname && customNickname.trim()) {
+    return customNickname.trim();
+  }
+  
+  const raw = (student.full_name || student.username || 'Estudiante').trim();
+  const parts = raw.split(/\s+/);
+  
+  if (parts.length > 2) {
+    // Si viene en formato escolar "APELLIDOS NOMBRES" (ej: JIMENEZ MONTALVO MARIA SOFIA),
+    // tomamos el nombre de pila más familiar formateado en Title Case para ahorrar espacio
+    const formatted = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase());
+    return formatted[formatted.length - 1]; // "Sofia"
+  } else if (parts.length === 2) {
+    return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+  }
+  return parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
+}
+
+function openEditNicknameModal() {
+  const modal = document.getElementById('editNicknameModal');
+  const input = document.getElementById('nicknameInput');
+  if (modal && input) {
+    const current = localStorage.getItem(`student_nickname_${estudianteActual?.id}`) || getStudentDisplayName(estudianteActual);
+    input.value = current !== 'Estudiante' ? current : '';
+    modal.style.display = 'flex';
+    setTimeout(() => input.focus(), 50);
+  }
+}
+
+function closeEditNicknameModal() {
+  const modal = document.getElementById('editNicknameModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function saveStudentNickname() {
+  const input = document.getElementById('nicknameInput');
+  if (!input || !estudianteActual) return;
+  const newName = input.value.trim();
+  if (newName) {
+    localStorage.setItem(`student_nickname_${estudianteActual.id}`, newName);
+  } else {
+    localStorage.removeItem(`student_nickname_${estudianteActual.id}`);
+  }
+  closeEditNicknameModal();
+  updateStudentDisplayNameUI();
+}
+
+function updateStudentDisplayNameUI() {
+  if (!estudianteActual) return;
+  const displayName = getStudentDisplayName(estudianteActual);
+  const panelNameEl = document.getElementById('studentPanelName');
+  if (panelNameEl) {
+    panelNameEl.innerText = displayName;
+    panelNameEl.title = estudianteActual.full_name || estudianteActual.username || displayName;
+  }
+  const profileNameEl = document.getElementById('studentProfileName');
+  if (profileNameEl) {
+    profileNameEl.innerText = displayName;
+  }
+}
+
 function enterAsRole(role) {
   if (role !== authenticatedRole) {
     showAlert('❌ Esta cuenta no tiene acceso como ' + (role === 'profesor' ? 'Profesor' : 'Estudiante'));
@@ -227,12 +293,11 @@ function enterAsRole(role) {
     loadDashboardStats();
   } else {
     showScreen("studentPanel");
-    if (document.getElementById('studentPanelName')) {
-        document.getElementById('studentPanelName').innerText = estudianteActual.full_name || estudianteActual.username || 'Estudiante';
-    }
+    updateStudentDisplayNameUI();
     updateStudentLevelUI(estudianteActual);
     switchStudentTab('home');
     mostrarPendientes();
+    loadStudentPerformance();
   }
 }
 
@@ -513,7 +578,7 @@ async function loadStudentPerformance() {
 
   const nameEl = document.getElementById('studentProfileName');
   const gradeEl = document.getElementById('studentProfileGrade');
-  if (nameEl) nameEl.innerText = estudianteActual.full_name || estudianteActual.username || 'Estudiante';
+  if (nameEl) nameEl.innerText = getStudentDisplayName(estudianteActual);
   if (gradeEl) gradeEl.innerText = estudianteActual.group_name ? `${estudianteActual.group_name}` : 'Grado General';
 
   try {
@@ -531,27 +596,33 @@ async function loadStudentPerformance() {
         document.getElementById('profileStreakVal').innerText = data.streakDays + (data.streakDays === 1 ? ' día' : ' días');
       }
 
-      const listContainer = document.getElementById('studentTopicsList');
-      if (listContainer && data.topics) {
-        listContainer.innerHTML = '';
-        data.topics.forEach(t => {
-          const row = document.createElement('div');
-          row.className = 'student-topic-row';
-          row.innerHTML = `
-            <div class="student-topic-badge" style="background: ${t.bg}; color: ${t.color};">
-              ${t.icon}
-            </div>
-            <div class="student-topic-name" title="${t.name}">
-              ${t.name}
-            </div>
-            <div class="student-topic-track">
-              <div class="student-topic-fill" style="background: ${t.color}; width: 0%; box-shadow: 0 0 10px ${t.color};" data-percent="${t.percentage}"></div>
-            </div>
-            <div class="student-topic-percent">
-              ${t.percentage}%
-            </div>
-          `;
-          listContainer.appendChild(row);
+      const listContainers = [
+        document.getElementById('studentTopicsList'),
+        document.getElementById('studentHomeTopicsList')
+      ].filter(Boolean);
+
+      if (listContainers.length > 0 && data.topics) {
+        listContainers.forEach(listContainer => {
+          listContainer.innerHTML = '';
+          data.topics.forEach(t => {
+            const row = document.createElement('div');
+            row.className = 'student-topic-row';
+            row.innerHTML = `
+              <div class="student-topic-badge" style="background: ${t.bg}; color: ${t.color};">
+                ${t.icon}
+              </div>
+              <div class="student-topic-name" title="${t.name}">
+                ${t.name}
+              </div>
+              <div class="student-topic-track">
+                <div class="student-topic-fill" style="background: ${t.color}; width: 0%; box-shadow: 0 0 10px ${t.color};" data-percent="${t.percentage}"></div>
+              </div>
+              <div class="student-topic-percent">
+                ${t.percentage}%
+              </div>
+            `;
+            listContainer.appendChild(row);
+          });
         });
 
         // Animación suave de las barras
@@ -870,23 +941,30 @@ async function mostrarPendientes() {
     
     contenedor.innerHTML = "";
     
-    // Filtrar actividades del aula del estudiante y que no sean Práctica (van aparte)
+    // Filtrar actividades del aula y grado del estudiante (excluyendo Prácticas del mapa de juego)
     const actividadesFiltradas = todasActividades.filter(a => {
       const noEsPractica = a.type !== 'Práctica';
       if (!noEsPractica) return false;
 
-      // Si la actividad tiene aulas específicas asignadas
+      const themeLower = (a.theme || '').toLowerCase();
+      const titleLower = (a.title || '').toLowerCase();
       const hasSpecificClassroom = (a.target_groups && a.target_groups.length > 0) || a.group_id;
+
       if (hasSpecificClassroom) {
         const matchesGroup = a.group_id === estudianteActual.group_id || 
                              (Array.isArray(a.target_groups) && a.target_groups.includes(estudianteActual.group_id));
-        return matchesGroup;
+        if (!matchesGroup) return false;
       }
 
-      // Si es una actividad general sin aula puntual, validar por grado
-      const gradoActividad = a.theme ? a.theme.replace('Grado ', '') : '';
-      const coincideGrado = gradoActividad === gradoAlumnoBase || !gradoActividad || a.theme === 'General' || !a.theme.includes('Grado');
-      return coincideGrado;
+      // Si el tema o título especifica grado, debe corresponder exactamente al grado del estudiante
+      if (themeLower.includes('grado 4') || titleLower.includes('4°') || titleLower.includes('4to')) {
+        return gradoAlumnoBase === '4';
+      }
+      if (themeLower.includes('grado 5') || titleLower.includes('5°') || titleLower.includes('5to')) {
+        return gradoAlumnoBase === '5';
+      }
+
+      return hasSpecificClassroom;
     });
     
     if (actividadesFiltradas.length === 0) {
@@ -960,6 +1038,32 @@ async function realizarActividad(actId) {
   });
 }
 
+function toggleTeacherNavDropdown(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const wrapper = document.getElementById('teacherMoreMenuWrapper');
+  if (wrapper) {
+    wrapper.classList.toggle('open');
+  }
+}
+
+function closeTeacherNavDropdown() {
+  const wrapper = document.getElementById('teacherMoreMenuWrapper');
+  if (wrapper) {
+    wrapper.classList.remove('open');
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const wrapper = document.getElementById('teacherMoreMenuWrapper');
+  if (wrapper && wrapper.classList.contains('open')) {
+    if (!wrapper.contains(e.target)) {
+      wrapper.classList.remove('open');
+    }
+  }
+});
+
 function showTeacherSection(id, btnElement) {
   document.querySelectorAll("#teacherPanel .section").forEach((sec) => {
     sec.classList.remove("show");
@@ -972,9 +1076,20 @@ function showTeacherSection(id, btnElement) {
   }
   
   if (btnElement) {
-    document.querySelectorAll(".sidebar-link").forEach(btn => btn.classList.remove("active"));
+    document.querySelectorAll(".sidebar-link, .nav-dropdown-item").forEach(btn => btn.classList.remove("active"));
     btnElement.classList.add("active");
+
+    const moreTrigger = document.getElementById('navLinkMore');
+    if (moreTrigger) {
+      if (btnElement.classList.contains('nav-dropdown-item')) {
+        moreTrigger.classList.add('active');
+      } else {
+        moreTrigger.classList.remove('active');
+      }
+    }
   }
+
+  closeTeacherNavDropdown();
   
   if (id === "gradesSection") {
     mostrarNotas();
@@ -1358,7 +1473,7 @@ async function loadDashboardStats() {
                             <div class="classroom-icon">🪐</div>
                             <div class="classroom-details">
                                 <h4>${g.name}</h4>
-                                <p>Código: ${g.code || 'N/A'} • ${g.student_count || 0} estudiantes</p>
+                                <p>${g.code && g.code !== 'N/A' ? `Código: ${g.code} • ` : ''}${g.student_count || 0} estudiantes</p>
                             </div>
                         </div>
                         <div class="classroom-arrow">›</div>
@@ -1835,35 +1950,67 @@ async function showStudentProgress(studentId, studentName) {
     }
     
     try {
-        const res = await fetch(`/api/students/${studentId}/attempts`);
-        const data = await res.json();
+        const [perfRes, attRes] = await Promise.all([
+            fetch(`/api/students/${studentId}/performance`),
+            fetch(`/api/students/${studentId}/attempts`)
+        ]);
+        const perfData = await perfRes.json();
+        const attData = await attRes.json();
         
-        if (data.success) {
-            if (data.attempts.length === 0) {
-                content.innerHTML = '<p style="text-align:center; color: var(--text-muted); margin-top: 20px;">Este estudiante aún no ha completado actividades.</p>';
-            } else {
-                let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
-                data.attempts.forEach(a => {
-                    const date = new Date(a.completed_at).toLocaleString();
-                    const icon = a.type === 'Examen' ? '📝' : '🎮';
-                    html += `
-                        <div style="background: var(--bg-card); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--color-primary); display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h4 style="margin: 0;">${icon} ${a.title}</h4>
-                                <span style="font-size: 12px; color: var(--text-muted);">${date}</span>
-                            </div>
-                            <div style="font-weight: bold; color: var(--color-primary);">+${a.score} XP</div>
+        let html = '';
+
+        if (perfData.success && perfData.topics && perfData.topics.length > 0) {
+            html += `
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--color-border); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+                        📊 Avance por tema
+                    </h4>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+            `;
+            perfData.topics.forEach(t => {
+                html += `
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+                            <span>${t.icon} ${t.name}</span>
+                            <span style="font-weight: 700; color: ${t.color};">${t.percentage}%</span>
                         </div>
-                    `;
-                });
-                html += '</div>';
-                content.innerHTML = html;
-            }
-        } else {
-            content.innerHTML = '<p>Error cargando historial.</p>';
+                        <div style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;">
+                            <div style="width: ${t.percentage}%; height: 100%; background: ${t.color}; border-radius: 10px; transition: width 0.4s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `
+                    </div>
+                </div>
+            `;
         }
+
+        html += '<h4 style="margin: 0 0 10px 0; font-size: 0.9rem; color: var(--text-secondary);">🕒 Historial de Actividades</h4>';
+        if (attData.success && attData.attempts && attData.attempts.length > 0) {
+            html += '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            attData.attempts.forEach(a => {
+                const date = new Date(a.completed_at).toLocaleString();
+                const icon = a.type === 'Examen' ? '📝' : '🎮';
+                html += `
+                    <div style="background: var(--bg-card); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--color-primary); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0; font-size: 0.95rem;">${icon} ${a.title}</h4>
+                            <span style="font-size: 12px; color: var(--text-muted);">${date}</span>
+                        </div>
+                        <div style="font-weight: bold; color: var(--color-primary);">+${a.score} XP</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        } else {
+            html += '<p style="text-align:center; color: var(--text-muted); margin-top: 10px;">Este estudiante aún no ha completado actividades.</p>';
+        }
+
+        content.innerHTML = html;
     } catch (err) {
-        content.innerHTML = '<p>Error de conexión.</p>';
+        console.error(err);
+        content.innerHTML = '<p style="color: var(--color-danger);">Error de conexión al cargar progreso.</p>';
     }
 }
 

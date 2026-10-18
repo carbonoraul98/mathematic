@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { Student, Group, Attempt, Activity } = require('../models/database');
+const { Student, Group, Attempt, Activity, Question } = require('../models/database');
 const router = express.Router();
 
 async function findStudentById(id) {
