@@ -133,6 +133,7 @@ function showAppLoading(message = 'Cargando aventura espacial...') {
   if (textEl && message) textEl.textContent = message;
   if (preloader) {
     preloader.classList.remove('hidden');
+    preloader.style.display = 'flex';
   }
 }
 
@@ -140,21 +141,14 @@ function hideAppLoading() {
   const preloader = document.getElementById('appPreloader');
   if (preloader) {
     preloader.classList.add('hidden');
+    preloader.style.display = 'none';
   }
 }
 
-// Ocultar preloader inicial cuando el DOM y recursos estén listos
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    hideAppLoading();
-  }, 350);
-});
-
-if (document.readyState === 'complete') {
-  setTimeout(() => {
-    hideAppLoading();
-  }, 350);
-}
+// Ocultar preloader inicial de forma inmediata y segura
+document.addEventListener('DOMContentLoaded', hideAppLoading);
+window.addEventListener('load', hideAppLoading);
+hideAppLoading();
 
 // Componente helper para skeleton loading (evita saltos bruscos de layout)
 function renderSkeletonLoader(count = 3) {
@@ -358,34 +352,25 @@ function updateStudentDisplayNameUI() {
   }
 }
 
-async function enterAsRole(role) {
+function enterAsRole(role) {
   if (role !== authenticatedRole) {
     showAlert('❌ Esta cuenta no tiene acceso como ' + (role === 'profesor' ? 'Profesor' : 'Estudiante'));
     return;
   }
 
-  showAppLoading(role === 'profesor' ? 'Preparando panel del profesor...' : 'Cargando tu aventura espacial...');
+  hideAppLoading();
 
-  try {
-    if (role === 'profesor') {
-      showScreen("teacherPanel");
-      await Promise.all([loadStudents(), loadDashboardStats()]);
-    } else {
-      showScreen("studentPanel");
-      updateStudentDisplayNameUI();
-      switchStudentTab('home');
-      await Promise.all([
-        updateStudentLevelUI(estudianteActual),
-        mostrarPendientes(),
-        loadStudentPerformance()
-      ]);
-    }
-  } catch (err) {
-    console.error('Error al inicializar panel:', err);
-  } finally {
-    setTimeout(() => {
-      hideAppLoading();
-    }, 320);
+  if (role === 'profesor') {
+    showScreen("teacherPanel");
+    loadStudents();
+    loadDashboardStats();
+  } else {
+    showScreen("studentPanel");
+    updateStudentDisplayNameUI();
+    updateStudentLevelUI(estudianteActual);
+    switchStudentTab('home');
+    mostrarPendientes();
+    loadStudentPerformance();
   }
 }
 
