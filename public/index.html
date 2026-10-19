@@ -7,7 +7,7 @@
 
   <title>Mathematic's Adventure</title>
 
-  <link rel="stylesheet" href="styles/style.css?v=7" />
+  <link rel="stylesheet" href="styles/style.css?v=8" />
 </head>
 
 <body>
@@ -215,16 +215,16 @@
           <button class="btn btn--secondary btn--sm" onclick="showTeacherSection('viewActivitiesSection', document.getElementById('navLinkActivities'))">⬅️ Ver Actividades y Talleres</button>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
-          <div>
-            <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">🪐 Aula Principal Destino:</label>
+        <div class="teacher-selects-row">
+          <div class="teacher-select-col">
+            <label for="activityTargetGroup">🪐 Aula Principal Destino:</label>
             <select id="activityTargetGroup" onchange="onActivityTargetGroupChange()">
               <option value="">Todas las aulas (General)</option>
               <!-- Las aulas (4A, 4B, 5A, etc.) se cargarán dinámicamente -->
             </select>
           </div>
-          <div>
-            <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">📚 Grado Referencia:</label>
+          <div class="teacher-select-col">
+            <label for="activityTargetGrade">📚 Grado Referencia:</label>
             <select id="activityTargetGrade">
               <option value="4">Grado 4</option>
               <option value="5">Grado 5</option>
@@ -307,24 +307,24 @@
           </button>
         </div>
 
-        <!-- SUBIR DESDE WORD (.DOCX) -->
-        <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl);">
+        <!-- SUBIR DESDE WORD (.DOCX), PDF O GOOGLE DOCS -->
+        <div style="margin-top: var(--space-2xl); border-top: 1px solid var(--color-border); padding-top: var(--space-xl); padding-bottom: 40px;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: var(--space-xs);">
             <span style="font-size: 28px;">📄</span>
             <div>
-              <h3 style="margin: 0;">Subir Actividad o Evaluación desde Word (.docx)</h3>
-              <p style="margin: 2px 0 0 0; color: var(--text-secondary); font-size: var(--text-sm);">Sube tu documento con preguntas y respuestas tipo A, B, C, D para crearlas al instante sin escribirlas a mano.</p>
+              <h3 style="margin: 0;">Subir Actividad o Evaluación desde Word, PDF o Google Docs</h3>
+              <p style="margin: 2px 0 0 0; color: var(--text-secondary); font-size: var(--text-sm);">Crea evaluaciones automáticamente a partir de documentos con preguntas tipo A, B, C, D sin escribirlas a mano.</p>
             </div>
           </div>
 
           <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--color-primary); border-radius: var(--radius-lg); padding: var(--space-xl); margin-top: var(--space-md);">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
-              <div>
-                <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Título de la actividad / evaluación:</label>
+            <div class="teacher-selects-row" style="margin-bottom: var(--space-md);">
+              <div class="teacher-select-col">
+                <label for="docxExamTitle">Título de la actividad / evaluación:</label>
                 <input type="text" id="docxExamTitle" placeholder="Ej: Evaluación Bimestral de Matemáticas" />
               </div>
-              <div>
-                <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Tipo de contenido:</label>
+              <div class="teacher-select-col">
+                <label for="docxExamType">Tipo de contenido:</label>
                 <select id="docxExamType">
                   <option value="Examen">📝 Examen / Evaluación</option>
                   <option value="Taller">🛠️ Taller</option>
@@ -334,7 +334,7 @@
               </div>
             </div>
 
-            <!-- INCLUIR EN LA RUTA DE ESTUDIO (DOCX) -->
+            <!-- INCLUIR EN LA RUTA DE ESTUDIO (DOCX/PDF) -->
             <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: var(--space-md);">
               <label style="display: flex; align-items: center; gap: 10px; font-size: var(--text-md); color: var(--text-primary); cursor: pointer; font-weight: 600;">
                 <input type="checkbox" id="chkDocxTrainingLevel" onchange="toggleDocxTrainingOptions()" style="width: 18px; height: 18px; accent-color: var(--color-primary); margin: 0;" />
@@ -361,16 +361,39 @@
               </div>
             </div>
 
-            <div style="margin-bottom: var(--space-lg);">
-              <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Archivo de Word (.docx):</label>
-              <input type="file" id="docxFileInput" accept=".docx" style="padding: 10px; background: var(--bg-input); border: 1px solid var(--color-border); border-radius: var(--radius-md); width: 100%; color: var(--text-primary);" />
+            <!-- SELECTOR DE FUENTE: ARCHIVO O GOOGLE DOCS -->
+            <div style="margin-bottom: var(--space-md);">
+              <label style="display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: var(--text-sm);">Origen del contenido:</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button type="button" class="btn btn--sm active" id="tabImportFile" onclick="selectImportSourceMode('file')" style="justify-content: center;">
+                  📁 Archivo (.docx / .pdf)
+                </button>
+                <button type="button" class="btn btn--outline btn--sm" id="tabImportGDocs" onclick="selectImportSourceMode('gdocs')" style="justify-content: center;">
+                  🌐 Google Docs (Enlace)
+                </button>
+              </div>
+            </div>
+
+            <!-- ÁREA 1: ARCHIVO LOCAL (.DOCX O .PDF) -->
+            <div id="importFileArea" style="margin-bottom: var(--space-lg);">
+              <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Selecciona archivo Word (.docx) o PDF (.pdf):</label>
+              <input type="file" id="docxFileInput" accept=".docx,.pdf,.odt,.txt" style="padding: 10px; background: var(--bg-input); border: 1px solid var(--color-border); border-radius: var(--radius-md); width: 100%; color: var(--text-primary); cursor: pointer;" />
               <small style="display: block; margin-top: 6px; color: var(--text-muted); font-size: 12px;">
-                💡 Formato aceptado: preguntas numeradas (1., 2.), opciones (A), B), C), D)) y respuesta (Respuesta: B).
+                💡 Formato aceptado: preguntas numeradas (1., 2.), opciones (A), B), C), D)) y respuesta correcta (Respuesta: B).
               </small>
             </div>
 
-            <button class="btn" onclick="uploadDocxExam()" id="importDocxBtn" style="width: 100%; justify-content: center;">
-              <span id="importDocxBtnText">📤 SUBIR Y PROCESAR ARCHIVO WORD (.DOCX)</span>
+            <!-- ÁREA 2: ENLACE GOOGLE DOCS -->
+            <div id="importGDocsArea" style="display: none; margin-bottom: var(--space-lg);">
+              <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Enlace público de Google Docs:</label>
+              <input type="url" id="googleDocsUrlInput" placeholder="https://docs.google.com/document/d/.../edit" style="padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--color-border); border-radius: var(--radius-md); width: 100%; color: var(--text-primary); margin-top: 0 !important;" />
+              <small style="display: block; margin-top: 6px; color: var(--text-muted); font-size: 12px;">
+                💡 En tu Google Docs haz clic en <b>Compartir</b>, selecciona <b>"Cualquier persona con el enlace puede leer"</b> y pega aquí el link.
+              </small>
+            </div>
+
+            <button class="btn" onclick="uploadDocxExam()" id="importDocxBtn" style="width: 100%; justify-content: center; height: 50px; font-weight: 700;">
+              <span id="importDocxBtnText">📥 SUBIR Y PROCESAR EVALUACIÓN</span>
               <div class="spinner" id="importDocxSpinner" style="display: none;"></div>
             </button>
           </div>
@@ -567,13 +590,17 @@
       <input type="text" id="editOptionB" class="input" style="width: 100%; margin-bottom: var(--space-sm);" placeholder="Texto de la opción B" />
 
       <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Opción C:</label>
-      <input type="text" id="editOptionC" class="input" style="width: 100%; margin-bottom: var(--space-md);" placeholder="Texto de la opción C" />
+      <input type="text" id="editOptionC" class="input" style="width: 100%; margin-bottom: var(--space-sm);" placeholder="Texto de la opción C" />
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Opción D:</label>
+      <input type="text" id="editOptionD" class="input" style="width: 100%; margin-bottom: var(--space-md);" placeholder="Texto de la opción D" />
 
       <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Respuesta Correcta:</label>
       <select id="editCorrectOption" style="width: 100%; margin-bottom: var(--space-xl);">
         <option value="A">Opción A</option>
         <option value="B">Opción B</option>
         <option value="C">Opción C</option>
+        <option value="D">Opción D</option>
       </select>
 
       <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">

@@ -1,9 +1,11 @@
 const express = require('express');
 const multer = require('multer');
 const mammoth = require('mammoth');
+const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
 const { Activity, Question } = require('../models/database');
+const { generateFourthOption } = require('../scripts/migrateQuestionsToFourOptions');
 const router = express.Router();
 
 const uploadDir = path.join(__dirname, '../uploads');
@@ -76,32 +78,81 @@ function parseQuestionsFromText(text) {
             }
         }
         
+        if (rawOptions.length < 4 && rawOptions.length > 0) {
+            while (rawOptions.length < 4) {
+                rawOptions.push(generateFourthOption(q.question_text, rawOptions, correctText));
+            }
+        }
+        
         return {
             question_text: q.question_text,
-            options: rawOptions,
+            options: rawOptions.slice(0, 4),
             correct_answer: correctText
         };
     });
 }
 
-// Subir examen o actividad en formato Word (.docx)
-router.post('/docx', upload.single('exam'), async (req, res) => {
+// Subir examen o actividad en formato Word (.docx), PDF (.pdf) o Google Docs
+const handleImportExam = async (req, res) => {
     let filePath = null;
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No se proporcionó ningún archivo de Word (.docx)' });
+        let text = '';
+        let inferredTitle = '';
+
+        if (req.file) {
+            filePath = req.file.path;
+            const originalName = (req.file.originalname || '').toLowerCase();
+            const mimetype = (req.file.mimetype || '').toLowerCase();
+            inferredTitle = (req.file.originalname || '').replace(/\.[^/.]+$/, "");
+
+            if (originalName.endsWith('.pdf') || mimetype.includes('pdf')) {
+                const dataBuffer = fs.readFileSync(filePath);
+                const pdfData = await pdfParse(dataBuffer);
+                text = pdfData.text || '';
+            } else if (originalName.endsWith('.txt') || mimetype.includes('text/plain')) {
+                text = fs.readFileSync(filePath, 'utf-8');
+            } else {
+                // Word (.docx) default
+                const result = await mammoth.extractRawText({ path: filePath });
+                text = result.value || '';
+            }
+        } else if (req.body.google_docs_url) {
+            const gUrl = req.body.google_docs_url.trim();
+            const docIdMatch = gUrl.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
+            if (!docIdMatch) {
+                return res.status(400).json({ 
+                    error: 'El enlace de Google Docs no es válido. Formato esperado: https://docs.google.com/document/d/ID_DEL_DOCUMENTO/edit' 
+                });
+            }
+            const docId = docIdMatch[1];
+            inferredTitle = 'Evaluación importada de Google Docs';
+            const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
+            
+            try {
+                const gRes = await fetch(exportUrl);
+                if (!gRes.ok) {
+                    return res.status(400).json({ 
+                        error: 'No se pudo acceder al documento de Google Docs. Asegúrate de que el documento esté compartido como "Cualquier persona con el enlace puede leer", o descárgalo como .docx o .pdf y súbelo directamente.' 
+                    });
+                }
+                text = await gRes.text();
+            } catch (fetchErr) {
+                return res.status(400).json({ 
+                    error: 'Error conectando con Google Docs. Verifica tu conexión o descarga el archivo como Word/PDF para subirlo.' 
+                });
+            }
+        } else {
+            return res.status(400).json({ error: 'No se proporcionó ningún archivo (.docx, .pdf) ni enlace de Google Docs' });
         }
-        filePath = req.file.path;
-        
-        const result = await mammoth.extractRawText({ path: filePath });
-        const text = result.value;
         
         const questions = parseQuestionsFromText(text);
         if (questions.length === 0) {
-            return res.status(400).json({ error: 'No se encontraron preguntas con opciones en el documento de Word' });
+            return res.status(400).json({ 
+                error: 'No se encontraron preguntas con opciones en el documento. Asegúrate de numerar las preguntas (1., 2.) con opciones A), B), C), D) y especificar la respuesta (Respuesta: B).' 
+            });
         }
         
-        const title = (req.body.title || '').trim() || 'Evaluación importada de Word';
+        const title = (req.body.title || '').trim() || inferredTitle || 'Evaluación importada';
         const type = (req.body.type || '').trim() || 'Examen';
         const grade = (req.body.grade || '').trim() || 'General';
         const group_id = req.body.group_id;
@@ -177,7 +228,10 @@ router.post('/docx', upload.single('exam'), async (req, res) => {
             try { fs.unlinkSync(filePath); } catch (e) {}
         }
     }
-});
+};
+
+router.post('/docx', upload.single('exam'), handleImportExam);
+router.post('/import', upload.single('exam'), handleImportExam);
 
 // Listar todas las actividades/exámenes
 router.get('/', async (req, res) => {
@@ -216,4 +270,5 @@ router.get('/:activityId/questions', async (req, res) => {
     }
 });
 
+router.parseQuestionsFromText = parseQuestionsFromText;
 module.exports = router;

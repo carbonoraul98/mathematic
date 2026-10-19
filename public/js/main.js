@@ -1163,9 +1163,38 @@ function toggleEditTrainingOptions() {
   }
 }
 
-// Subir examen o actividad en formato Word (.docx)
+let currentImportSourceMode = 'file';
+
+function selectImportSourceMode(mode) {
+  currentImportSourceMode = mode;
+  const fileTab = document.getElementById('tabImportFile');
+  const gdocsTab = document.getElementById('tabImportGDocs');
+  const fileArea = document.getElementById('importFileArea');
+  const gdocsArea = document.getElementById('importGDocsArea');
+
+  if (fileTab && gdocsTab && fileArea && gdocsArea) {
+    if (mode === 'file') {
+      fileTab.classList.add('active');
+      fileTab.classList.remove('btn--outline');
+      gdocsTab.classList.remove('active');
+      gdocsTab.classList.add('btn--outline');
+      fileArea.style.display = 'block';
+      gdocsArea.style.display = 'none';
+    } else {
+      gdocsTab.classList.add('active');
+      gdocsTab.classList.remove('btn--outline');
+      fileTab.classList.remove('active');
+      fileTab.classList.add('btn--outline');
+      gdocsArea.style.display = 'block';
+      fileArea.style.display = 'none';
+    }
+  }
+}
+
+// Subir examen o actividad en formato Word (.docx), PDF (.pdf) o Google Docs
 async function uploadDocxExam() {
   const fileInput = document.getElementById('docxFileInput');
+  const gdocsUrlInput = document.getElementById('googleDocsUrlInput');
   const titleInput = document.getElementById('docxExamTitle');
   const typeSelect = document.getElementById('docxExamType');
   const targetGroupEl = document.getElementById('activityTargetGroup');
@@ -1179,18 +1208,36 @@ async function uploadDocxExam() {
   const btnText = document.getElementById('importDocxBtnText');
   const spinner = document.getElementById('importDocxSpinner');
 
-  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-    showAlert('❌ Selecciona un archivo de Word (.docx)');
-    return;
+  const isGDocs = currentImportSourceMode === 'gdocs';
+  const gdocsUrl = gdocsUrlInput ? gdocsUrlInput.value.trim() : '';
+
+  let file = null;
+  if (isGDocs) {
+    if (!gdocsUrl) {
+      showAlert('❌ Pega el enlace de tu documento de Google Docs.');
+      return;
+    }
+    if (!gdocsUrl.includes('/document/d/')) {
+      showAlert('❌ El enlace debe ser de Google Docs (ejemplo: https://docs.google.com/document/d/ID/edit).');
+      return;
+    }
+  } else {
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      showAlert('❌ Selecciona un archivo de Word (.docx) o PDF (.pdf).');
+      return;
+    }
+
+    file = fileInput.files[0];
+    const fileName = file.name.toLowerCase();
+    const validExts = ['.docx', '.pdf', '.txt', '.odt'];
+    if (!validExts.some(ext => fileName.endsWith(ext))) {
+      showAlert('❌ Formato no soportado. Debe ser un archivo de Word (.docx) o PDF (.pdf).');
+      return;
+    }
   }
 
-  const file = fileInput.files[0];
-  if (!file.name.toLowerCase().endsWith('.docx')) {
-    showAlert('❌ El archivo debe tener extensión .docx');
-    return;
-  }
-
-  const title = titleInput.value.trim() || file.name.replace(/\.[^/.]+$/, "");
+  const defaultTitle = file ? file.name.replace(/\.[^/.]+$/, "") : (isGDocs ? 'Evaluación Google Docs' : 'Nueva Evaluación');
+  const title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : defaultTitle;
   const type = typeSelect ? typeSelect.value : 'Examen';
   const grade = targetGradeEl ? targetGradeEl.value : '4';
   const primaryGroupId = targetGroupEl ? targetGroupEl.value : '';
@@ -1212,12 +1259,16 @@ async function uploadDocxExam() {
   const trainingIcon = isTrainingLevel ? (trainingIconEl ? trainingIconEl.value : '📝') : '📝';
 
   uploadBtn.disabled = true;
-  btnText.textContent = 'PROCESANDO DOCUMENTO...';
+  btnText.textContent = isGDocs ? 'DESCARGANDO Y PROCESANDO GOOGLE DOCS...' : 'PROCESANDO ARCHIVO...';
   spinner.style.display = 'inline-block';
 
   try {
     const formData = new FormData();
-    formData.append('exam', file);
+    if (isGDocs) {
+      formData.append('google_docs_url', gdocsUrl);
+    } else {
+      formData.append('exam', file);
+    }
     formData.append('title', title);
     formData.append('type', type);
     formData.append('grade', grade);
@@ -1227,7 +1278,7 @@ async function uploadDocxExam() {
     formData.append('training_grade', trainingGrade);
     formData.append('map_icon', trainingIcon);
 
-    const res = await fetch('/api/exams/docx', {
+    const res = await fetch('/api/exams/import', {
       method: 'POST',
       body: formData
     });
@@ -1235,13 +1286,15 @@ async function uploadDocxExam() {
     const result = await res.json();
 
     uploadBtn.disabled = false;
-    btnText.textContent = '📤 SUBIR Y PROCESAR ARCHIVO WORD (.DOCX)';
+    btnText.textContent = '📥 SUBIR Y PROCESAR EVALUACIÓN';
     spinner.style.display = 'none';
 
     if (result.success) {
-      showAlert(`✅ "${result.title}" creado con ${result.questions_count} preguntas desde Word`);
-      fileInput.value = '';
-      titleInput.value = '';
+      const sourceLabel = isGDocs ? 'Google Docs' : (file.name.toLowerCase().endsWith('.pdf') ? 'PDF' : 'Word');
+      showAlert(`✅ "${result.title}" creada con ${result.questions_count} preguntas desde ${sourceLabel}.`);
+      if (fileInput) fileInput.value = '';
+      if (gdocsUrlInput) gdocsUrlInput.value = '';
+      if (titleInput) titleInput.value = '';
       if (chkDocxTraining) {
         chkDocxTraining.checked = false;
         toggleDocxTrainingOptions();
@@ -2133,7 +2186,8 @@ async function openReviewActivityModal(id) {
                     const opts = [
                         { label: 'A', text: q.a },
                         { label: 'B', text: q.b },
-                        { label: 'C', text: q.c }
+                        { label: 'C', text: q.c },
+                        { label: 'D', text: q.d }
                     ];
                     qHtml += '<div style="display: flex; flex-direction: column; gap: 6px;">';
                     opts.forEach(opt => {
@@ -2266,18 +2320,22 @@ function openEditQuestionModal(index) {
     document.getElementById('editOptionA').value = q.a || '';
     document.getElementById('editOptionB').value = q.b || '';
     document.getElementById('editOptionC').value = q.c || '';
+    document.getElementById('editOptionD').value = q.d || '';
 
     // Determinar opción correcta seleccionada
     const correctVal = String(q.correcta || '').trim().toLowerCase();
     const optA = String(q.a || '').trim().toLowerCase();
     const optB = String(q.b || '').trim().toLowerCase();
     const optC = String(q.c || '').trim().toLowerCase();
+    const optD = String(q.d || '').trim().toLowerCase();
 
     let selectVal = 'A';
     if (correctVal === 'b' || (optB && correctVal === optB)) {
         selectVal = 'B';
     } else if (correctVal === 'c' || (optC && correctVal === optC)) {
         selectVal = 'C';
+    } else if (correctVal === 'd' || (optD && correctVal === optD)) {
+        selectVal = 'D';
     } else if (correctVal === 'a' || (optA && correctVal === optA)) {
         selectVal = 'A';
     }
@@ -2299,6 +2357,7 @@ function openAddQuestionModal() {
     document.getElementById('editOptionA').value = '';
     document.getElementById('editOptionB').value = '';
     document.getElementById('editOptionC').value = '';
+    document.getElementById('editOptionD').value = '';
     document.getElementById('editCorrectOption').value = 'A';
 
     modal.classList.add('active');
@@ -2320,20 +2379,22 @@ async function saveQuestionModal() {
     const a = document.getElementById('editOptionA').value.trim();
     const b = document.getElementById('editOptionB').value.trim();
     const c = document.getElementById('editOptionC').value.trim();
+    const d = document.getElementById('editOptionD').value.trim();
     const selectedLetter = document.getElementById('editCorrectOption').value;
 
     if (!pregunta) {
         showAlert('⚠️ Por favor ingresa el enunciado de la pregunta.');
         return;
     }
-    if (!a || !b || !c) {
-        showAlert('⚠️ Por favor completa las 3 opciones (A, B y C).');
+    if (!a || !b || !c || !d) {
+        showAlert('⚠️ Por favor completa las 4 opciones (A, B, C y D).');
         return;
     }
 
     let correcta = a;
     if (selectedLetter === 'B') correcta = b;
     if (selectedLetter === 'C') correcta = c;
+    if (selectedLetter === 'D') correcta = d;
 
     const payload = {
         pregunta,
@@ -2341,6 +2402,7 @@ async function saveQuestionModal() {
         a,
         b,
         c,
+        d,
         correcta
     };
 

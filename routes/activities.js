@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
         if (questions && Array.isArray(questions) && questions.length > 0) {
             let order = 0;
             for (let q of questions) {
-                const options = JSON.stringify([q.a || "", q.b || "", q.c || ""]);
+                const options = JSON.stringify([q.a || "", q.b || "", q.c || "", q.d || ""]);
                 await Question.create({
                     activity_id: activity.id,
                     question_text: q.pregunta || q.question || '',
@@ -96,6 +96,7 @@ router.get('/', async (req, res) => {
                     a: options[0] || "",
                     b: options[1] || "",
                     c: options[2] || "",
+                    d: options[3] || "",
                     correcta: q.correct_answer
                 };
             });
@@ -139,6 +140,7 @@ router.get('/:id', async (req, res) => {
                 a: options[0] || "",
                 b: options[1] || "",
                 c: options[2] || "",
+                d: options[3] || "",
                 correcta: q.correct_answer
             };
         });
@@ -272,9 +274,9 @@ router.delete('/:id', async (req, res) => {
 router.put('/:id/questions/:questionId', async (req, res) => {
     try {
         const { id, questionId } = req.params;
-        const { pregunta, tipo, a, b, c, correcta } = req.body;
+        const { pregunta, tipo, a, b, c, d, correcta } = req.body;
         
-        const options = JSON.stringify([a || "", b || "", c || ""]);
+        const options = JSON.stringify([a || "", b || "", c || "", d || ""]);
         const result = await Question.updateOne(
             { id: Number(questionId), activity_id: Number(id) },
             {
@@ -302,10 +304,10 @@ router.put('/:id/questions/:questionId', async (req, res) => {
 router.post('/:id/questions', async (req, res) => {
     try {
         const { id } = req.params;
-        const { pregunta, tipo, a, b, c, correcta } = req.body;
+        const { pregunta, tipo, a, b, c, d, correcta } = req.body;
         
         const count = await Question.countDocuments({ activity_id: Number(id) });
-        const options = JSON.stringify([a || "", b || "", c || ""]);
+        const options = JSON.stringify([a || "", b || "", c || "", d || ""]);
         const newQ = await Question.create({
             activity_id: Number(id),
             question_text: pregunta || 'Nueva pregunta',

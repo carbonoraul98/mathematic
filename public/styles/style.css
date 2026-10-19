@@ -877,7 +877,7 @@ textarea {
   max-width: 1200px;
   margin: 0 auto;
   gap: 10px;
-  padding: 14px 14px !important;
+  padding: 14px 14px 200px !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
@@ -888,6 +888,55 @@ textarea {
 
 .dashboard-main .section {
   max-width: 100%;
+}
+
+/* Filas de selectores simétricos */
+.teacher-selects-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: var(--space-md);
+  width: 100%;
+}
+
+.teacher-select-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.teacher-select-col label {
+  display: flex;
+  align-items: flex-end;
+  min-height: 40px;
+  margin-bottom: 6px !important;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.teacher-select-col select,
+.teacher-select-col input {
+  margin-top: 0 !important;
+  width: 100% !important;
+  height: 48px !important;
+  padding: 10px 14px !important;
+  box-sizing: border-box !important;
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 480px) {
+  .teacher-selects-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .teacher-select-col label {
+    font-size: 0.78rem;
+    min-height: 36px;
+  }
 }
 
 /* MENÚ INFERIOR PROFESOR (3 OPCIONES) */

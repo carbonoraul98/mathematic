@@ -24,6 +24,7 @@ class QuestionModal extends HTMLElement {
             <input type="text" id="qModalA" placeholder="Opción A" style="margin: 0;" />
             <input type="text" id="qModalB" placeholder="Opción B" style="margin: 0;" />
             <input type="text" id="qModalC" placeholder="Opción C" style="margin: 0;" />
+            <input type="text" id="qModalD" placeholder="Opción D" style="margin: 0;" />
           </div>
 
           <input type="text" id="qModalCorrect" placeholder="Respuesta Correcta (exacta)" style="margin-bottom: var(--space-xl);" />
@@ -64,6 +65,7 @@ class QuestionModal extends HTMLElement {
     this.querySelector('#qModalA').value = "";
     this.querySelector('#qModalB').value = "";
     this.querySelector('#qModalC').value = "";
+    this.querySelector('#qModalD').value = "";
     this.querySelector('#qModalCorrect').value = "";
     
     this.callback = callback;
@@ -94,12 +96,13 @@ class QuestionModal extends HTMLElement {
       let a = this.querySelector('#qModalA').value.trim();
       let b = this.querySelector('#qModalB').value.trim();
       let c = this.querySelector('#qModalC').value.trim();
+      let d = this.querySelector('#qModalD').value.trim();
       
-      if (!a || !b || !c) {
+      if (!a || !b || !c || !d) {
         if (window.showAlert) {
-          window.showAlert("❌ Por favor, completa todas las opciones (A, B, C).");
+          window.showAlert("❌ Por favor, completa todas las opciones (A, B, C, D).");
         } else {
-          alert("❌ Por favor, completa todas las opciones (A, B, C).");
+          alert("❌ Por favor, completa todas las opciones (A, B, C, D).");
         }
         return;
       }
@@ -107,6 +110,7 @@ class QuestionModal extends HTMLElement {
       nuevaPregunta.a = a;
       nuevaPregunta.b = b;
       nuevaPregunta.c = c;
+      nuevaPregunta.d = d;
     }
     
     if (this.callback) {
