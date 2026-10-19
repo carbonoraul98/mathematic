@@ -1466,10 +1466,10 @@ async function loadActivities() {
                             </p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
-                        <button class="btn btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(99, 102, 241, 0.25); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
-                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
-                        <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                    <div class="activity-actions-row">
+                        <button class="btn btn-activity-action btn-review" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
+                        <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
+                        <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
                     </div>
                 </div>
             `;
@@ -2001,10 +2001,10 @@ async function loadClassroomActivities(groupName, groupId) {
                             </p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
-                        <button class="btn btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(99, 102, 241, 0.25); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
-                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
-                        <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                    <div class="activity-actions-row">
+                        <button class="btn btn-activity-action btn-review" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
+                        <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
+                        <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
                     </div>
                 </div>
             `;

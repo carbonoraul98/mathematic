@@ -2818,3 +2818,82 @@ textarea {
   color: #fff;
   transform: scale(1.1);
 }
+
+/* ===================================================
+   BOTONES DE ACTIVIDAD ALINEADOS (REVISAR, EDITAR, ELIMINAR)
+   =================================================== */
+.activity-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-activity-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 38px !important;
+  padding: 0 14px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-md) !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-review {
+  background: rgba(99, 102, 241, 0.22) !important;
+  color: #818cf8 !important;
+  border: 1px solid rgba(99, 102, 241, 0.45) !important;
+}
+
+.btn-review:hover {
+  background: rgba(99, 102, 241, 0.35) !important;
+  color: #a5b4fc !important;
+  transform: translateY(-1px);
+}
+
+.btn-edit {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.btn-edit:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.3) !important;
+  border-color: #ef4444 !important;
+  color: #fca5a5 !important;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .activity-actions-row {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    width: 100% !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+  }
+
+  .btn-activity-action {
+    width: 100% !important;
+    height: 38px !important;
+    padding: 0 4px !important;
+    font-size: 0.76rem !important;
+  }
+}
