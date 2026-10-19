@@ -7,10 +7,27 @@
 
   <title>Mathematic's Adventure</title>
 
-  <link rel="stylesheet" href="styles/style.css?v=18" />
+  <link rel="stylesheet" href="styles/style.css?v=19" />
 </head>
 
 <body>
+  <!-- COMPONENTE DE LOADING / PRECARGA (CERO SALTOS) -->
+  <div id="appPreloader" class="app-preloader" aria-live="polite">
+    <div class="preloader-content">
+      <div class="preloader-orbit-wrapper">
+        <div class="preloader-orbit"></div>
+        <div class="preloader-orbit-ring-secondary"></div>
+        <div class="preloader-planet-node">🪐</div>
+        <img src="images/astronaut-hero.png" alt="Mathematic's Adventure" class="preloader-avatar" />
+      </div>
+      <h3 class="preloader-brand">Mathematic's Adventure</h3>
+      <p class="preloader-text" id="appPreloaderText">Cargando aventura espacial...</p>
+      <div class="preloader-progress-track">
+        <div class="preloader-progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="space"></div>
   <div class="fog"></div>
 
@@ -931,6 +948,6 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=18"></script>
+  <script src="js/main.js?v=19"></script>
 </body>
 </html>
