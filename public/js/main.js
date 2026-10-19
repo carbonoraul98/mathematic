@@ -847,7 +847,7 @@ function mostrarEstudiantes() {
   for (let grupo in grupos) {
     let studentCount = grupos[grupo].length;
     html += `
-      <div class="classroom-item" onclick="openClassroomDetail('${grupo}')" style="cursor: pointer;">
+      <div class="classroom-item" onclick="openClassroomDetail('${grupo}')" style="cursor: pointer; margin-bottom: 14px;">
           <div class="classroom-item-info">
               <div class="classroom-icon">🪐</div>
               <div class="classroom-details">
@@ -1771,10 +1771,10 @@ async function loadDashboardStats() {
             if (groups.length === 0) {
                 list.innerHTML = '<p style="color: var(--text-muted); padding: 20px 0;">Aún no tienes aulas creadas.</p>';
             } else {
-                let html = '<div class="fade-in-content">';
+                let html = '<div class="classrooms-list fade-in-content" style="gap: 14px;">';
                 groups.forEach(g => {
                     html += `
-                    <div class="classroom-item" onclick="openClassroomDetail('${g.name}')" style="cursor: pointer;">
+                    <div class="classroom-item" onclick="openClassroomDetail('${g.name}')" style="cursor: pointer; margin-bottom: 14px;">
                         <div class="classroom-item-info">
                             <div class="classroom-icon">🪐</div>
                             <div class="classroom-details">

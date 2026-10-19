@@ -158,6 +158,7 @@ body {
   min-height: 100dvh;
   padding: var(--space-md) var(--space-lg);
   overflow-y: auto;
+  background: transparent !important;
 }
 
 .screen.active {
@@ -823,7 +824,7 @@ textarea {
   inset: 0 !important;
   padding: 0 !important;
   z-index: 100;
-  background: var(--bg-space);
+  background: transparent !important;
 }
 
 .dashboard-layout.active {
@@ -933,6 +934,7 @@ textarea {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
+
   .teacher-select-col label {
     font-size: 0.78rem;
     min-height: 36px;
@@ -1320,11 +1322,19 @@ textarea {
 }
 
 .classrooms-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
   margin-bottom: 60px;
   padding-bottom: 30px;
+}
+
+.classrooms-list .fade-in-content,
+.classrooms-list.fade-in-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  width: 100%;
 }
 
 .classroom-item {
@@ -1338,6 +1348,11 @@ textarea {
   cursor: pointer;
   transition: var(--transition-fast);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  margin-bottom: 14px !important;
+}
+
+.classroom-item:last-child {
+  margin-bottom: 0 !important;
 }
 
 .classroom-item:hover {
@@ -2523,6 +2538,7 @@ textarea {
   overscroll-behavior-y: contain !important;
   box-sizing: border-box !important;
   z-index: 20;
+  background: transparent !important;
 }
 
 #studentPanel.active {
@@ -2974,7 +2990,7 @@ textarea {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
   overflow: hidden;
 }
 
@@ -3095,37 +3111,91 @@ textarea {
 }
 
 @keyframes floatSaturn {
-  0% { transform: translateY(0px) rotate(0deg); }
-  100% { transform: translateY(-22px) rotate(4deg); }
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  100% {
+    transform: translateY(-22px) rotate(4deg);
+  }
 }
 
 @keyframes floatIceGiant {
-  0% { transform: translateY(0px) rotate(0deg); }
-  100% { transform: translateY(20px) rotate(-6deg); }
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  100% {
+    transform: translateY(20px) rotate(-6deg);
+  }
 }
 
 @keyframes floatMars {
-  0% { transform: translateY(0px) scale(1); }
-  100% { transform: translateY(-16px) scale(1.04); }
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+
+  100% {
+    transform: translateY(-16px) scale(1.04);
+  }
 }
 
 @keyframes floatMystic {
-  0% { transform: translateY(0px) scale(1); }
-  100% { transform: translateY(18px) scale(0.97); }
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+
+  100% {
+    transform: translateY(18px) scale(0.97);
+  }
 }
 
 @keyframes shootStar1 {
-  0%, 85% { opacity: 0; transform: translate(0, 0) rotate(-35deg); }
-  88% { opacity: 1; }
-  92% { opacity: 0.8; transform: translate(80vw, 55vh) rotate(-35deg); }
-  93%, 100% { opacity: 0; transform: translate(85vw, 60vh) rotate(-35deg); }
+
+  0%,
+  85% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-35deg);
+  }
+
+  88% {
+    opacity: 1;
+  }
+
+  92% {
+    opacity: 0.8;
+    transform: translate(80vw, 55vh) rotate(-35deg);
+  }
+
+  93%,
+  100% {
+    opacity: 0;
+    transform: translate(85vw, 60vh) rotate(-35deg);
+  }
 }
 
 @keyframes shootStar2 {
-  0%, 82% { opacity: 0; transform: translate(0, 0) rotate(-145deg); }
-  86% { opacity: 1; }
-  90% { opacity: 0.8; transform: translate(-70vw, 45vh) rotate(-145deg); }
-  91%, 100% { opacity: 0; transform: translate(-75vw, 50vh) rotate(-145deg); }
+
+  0%,
+  82% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-145deg);
+  }
+
+  86% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 0.8;
+    transform: translate(-70vw, 45vh) rotate(-145deg);
+  }
+
+  91%,
+  100% {
+    opacity: 0;
+    transform: translate(-75vw, 50vh) rotate(-145deg);
+  }
 }
 
 @media (max-width: 768px) {
@@ -3135,18 +3205,21 @@ textarea {
     transform: scale(0.65);
     opacity: 0.55;
   }
+
   .planet-ice-giant {
     bottom: 5%;
     left: 1%;
     transform: scale(0.6);
     opacity: 0.5;
   }
+
   .planet-mars {
     top: 55%;
     right: 2%;
     transform: scale(0.65);
     opacity: 0.45;
   }
+
   .planet-mystic {
     top: 20%;
     left: 2%;
@@ -3208,7 +3281,8 @@ textarea {
   font-size: 0.84rem !important;
   padding: 0 16px !important;
   height: 38px !important;
-  border-radius: 8px !important; /* Estilo Card Rectangular */
+  border-radius: 8px !important;
+  /* Estilo Card Rectangular */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
   cursor: pointer !important;
@@ -3309,12 +3383,10 @@ textarea {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%);
   animation: shimmerAnim 1.6s infinite ease-in-out;
 }
 
@@ -3333,6 +3405,7 @@ textarea {
     opacity: 0;
     transform: translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -3378,6 +3451,7 @@ textarea {
     transform: scale(0.92);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -3430,19 +3504,32 @@ textarea {
 }
 
 @keyframes orbitSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes orbitSpinReverse {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
 }
 
 @keyframes astronautHover {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-6px) scale(1.03);
   }
@@ -3489,9 +3576,11 @@ textarea {
     transform: translateX(-120%);
     width: 30%;
   }
+
   50% {
     width: 65%;
   }
+
   100% {
     transform: translateX(250%);
     width: 30%;
