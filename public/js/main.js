@@ -792,11 +792,12 @@ function mostrarPreguntas() {
 }
 
 async function crearActividad() {
-  let gradoBase = document.getElementById("activityTargetGrade").value;
-  let targetGroupEl = document.getElementById("activityTargetGroup");
-  let primaryGroupId = targetGroupEl ? targetGroupEl.value : "";
-  let tipo = document.getElementById("activityType").value;
-  let tema = document.getElementById("activityTheme").value.trim();
+  const gradeSelect = document.getElementById("activityTargetGrade");
+  const gradoBase = gradeSelect ? gradeSelect.value : "4";
+  const targetGroupEl = document.getElementById("activityTargetGroup");
+  const selectedGroupVal = targetGroupEl ? targetGroupEl.value : "ALL_GRADE";
+  const tipo = document.getElementById("activityType").value;
+  const tema = document.getElementById("activityTheme").value.trim();
   
   if (!tema) {
     showAlert('❌ Escribe un tema para la actividad');
@@ -805,19 +806,26 @@ async function crearActividad() {
 
   // Recolectar aulas destino
   let targetGroups = [];
-  if (primaryGroupId) {
-    targetGroups.push(Number(primaryGroupId));
-  }
+  let primaryGroupId = null;
 
-  const chkReplicate = document.getElementById("chkReplicateActivity");
-  if (chkReplicate && chkReplicate.checked) {
-    const checkBoxes = document.querySelectorAll('.replicate-group-chk:checked');
-    checkBoxes.forEach(cb => {
-      const val = Number(cb.value);
-      if (!targetGroups.includes(val)) {
-        targetGroups.push(val);
-      }
-    });
+  if (selectedGroupVal === "ALL_GRADE" || !selectedGroupVal) {
+    const gradeGroups = (window.todasLasAulas || []).filter(g => String(g.name).startsWith(gradoBase));
+    targetGroups = gradeGroups.map(g => g.id);
+    primaryGroupId = targetGroups[0] || null;
+  } else {
+    primaryGroupId = Number(selectedGroupVal);
+    targetGroups.push(primaryGroupId);
+
+    const chkReplicate = document.getElementById("chkReplicateActivity");
+    if (chkReplicate && chkReplicate.checked) {
+      const checkBoxes = document.querySelectorAll('.replicate-group-chk:checked');
+      checkBoxes.forEach(cb => {
+        const val = Number(cb.value);
+        if (!targetGroups.includes(val)) {
+          targetGroups.push(val);
+        }
+      });
+    }
   }
   
   const chkManualTraining = document.getElementById("chkManualTrainingLevel");
@@ -1191,6 +1199,96 @@ function selectImportSourceMode(mode) {
   }
 }
 
+function triggerFileInputClick() {
+  const fileInput = document.getElementById('docxFileInput');
+  if (fileInput) fileInput.click();
+}
+
+function onCustomFileSelected(input) {
+  if (!input || !input.files || input.files.length === 0) {
+    clearCustomFile();
+    return;
+  }
+  const file = input.files[0];
+  displaySelectedFile(file);
+}
+
+function displaySelectedFile(file) {
+  const emptyState = document.getElementById('dropzoneEmptyState');
+  const selectedState = document.getElementById('dropzoneSelectedState');
+  const fileNameEl = document.getElementById('dropzoneFileName');
+  const fileMetaEl = document.getElementById('dropzoneFileMeta');
+  const fileIconEl = document.getElementById('dropzoneFileIcon');
+  const titleInput = document.getElementById('docxExamTitle');
+
+  if (!emptyState || !selectedState) return;
+
+  const fileName = file.name;
+  const isPdf = fileName.toLowerCase().endsWith('.pdf');
+  const isWord = fileName.toLowerCase().endsWith('.docx') || fileName.toLowerCase().endsWith('.doc');
+
+  if (fileIconEl) {
+    fileIconEl.textContent = isPdf ? '📕' : (isWord ? '📘' : '📄');
+  }
+  if (fileNameEl) {
+    fileNameEl.textContent = fileName;
+  }
+  if (fileMetaEl) {
+    const sizeKb = Math.round(file.size / 1024);
+    const sizeStr = sizeKb > 1024 ? (sizeKb / 1024).toFixed(1) + ' MB' : sizeKb + ' KB';
+    fileMetaEl.textContent = `${sizeStr} • Listo para procesar`;
+  }
+
+  if (titleInput && !titleInput.value.trim()) {
+    titleInput.value = fileName.replace(/\.[^/.]+$/, "");
+  }
+
+  emptyState.style.display = 'none';
+  selectedState.style.display = 'flex';
+}
+
+function clearCustomFile() {
+  const fileInput = document.getElementById('docxFileInput');
+  if (fileInput) fileInput.value = '';
+
+  const emptyState = document.getElementById('dropzoneEmptyState');
+  const selectedState = document.getElementById('dropzoneSelectedState');
+  if (emptyState && selectedState) {
+    emptyState.style.display = 'flex';
+    selectedState.style.display = 'none';
+  }
+}
+
+function onFileDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dropzone = document.getElementById('fileDropzone');
+  if (dropzone) dropzone.classList.add('dragover');
+}
+
+function onFileDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dropzone = document.getElementById('fileDropzone');
+  if (dropzone) dropzone.classList.remove('dragover');
+}
+
+function onFileDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dropzone = document.getElementById('fileDropzone');
+  if (dropzone) dropzone.classList.remove('dragover');
+
+  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    const file = e.dataTransfer.files[0];
+    const fileInput = document.getElementById('docxFileInput');
+    if (fileInput) {
+      fileInput.files = e.dataTransfer.files;
+      displaySelectedFile(file);
+    }
+  }
+}
+
 // Subir examen o actividad en formato Word (.docx), PDF (.pdf) o Google Docs
 async function uploadDocxExam() {
   const fileInput = document.getElementById('docxFileInput');
@@ -1240,18 +1338,26 @@ async function uploadDocxExam() {
   const title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : defaultTitle;
   const type = typeSelect ? typeSelect.value : 'Examen';
   const grade = targetGradeEl ? targetGradeEl.value : '4';
-  const primaryGroupId = targetGroupEl ? targetGroupEl.value : '';
+  const selectedGroupVal = targetGroupEl ? targetGroupEl.value : 'ALL_GRADE';
 
   let targetGroups = [];
-  if (primaryGroupId) {
-    targetGroups.push(Number(primaryGroupId));
-  }
-  if (chkReplicate && chkReplicate.checked) {
-    const checkBoxes = document.querySelectorAll('.replicate-group-chk:checked');
-    checkBoxes.forEach(cb => {
-      const val = Number(cb.value);
-      if (!targetGroups.includes(val)) targetGroups.push(val);
-    });
+  let primaryGroupId = null;
+
+  if (selectedGroupVal === 'ALL_GRADE' || !selectedGroupVal) {
+    const gradeGroups = (window.todasLasAulas || []).filter(g => String(g.name).startsWith(grade));
+    targetGroups = gradeGroups.map(g => g.id);
+    primaryGroupId = targetGroups[0] || null;
+  } else {
+    primaryGroupId = Number(selectedGroupVal);
+    targetGroups.push(primaryGroupId);
+
+    if (chkReplicate && chkReplicate.checked) {
+      const checkBoxes = document.querySelectorAll('.replicate-group-chk:checked');
+      checkBoxes.forEach(cb => {
+        const val = Number(cb.value);
+        if (!targetGroups.includes(val)) targetGroups.push(val);
+      });
+    }
   }
 
   const isTrainingLevel = chkDocxTraining ? chkDocxTraining.checked : false;
@@ -1292,7 +1398,7 @@ async function uploadDocxExam() {
     if (result.success) {
       const sourceLabel = isGDocs ? 'Google Docs' : (file.name.toLowerCase().endsWith('.pdf') ? 'PDF' : 'Word');
       showAlert(`✅ "${result.title}" creada con ${result.questions_count} preguntas desde ${sourceLabel}.`);
-      if (fileInput) fileInput.value = '';
+      clearCustomFile();
       if (gdocsUrlInput) gdocsUrlInput.value = '';
       if (titleInput) titleInput.value = '';
       if (chkDocxTraining) {
@@ -1618,9 +1724,26 @@ function openEditActivityModal(id, title, type, theme, groupId, isTrainingLevel,
     document.getElementById('editActivityType').value = type;
     document.getElementById('editActivityTheme').value = theme;
     
+    // Detectar grado de la actividad (desde aula, theme o trainingGrade)
+    let detectedGrade = '4';
+    if (groupId && window.todasLasAulas) {
+        const gObj = window.todasLasAulas.find(g => String(g.id) === String(groupId));
+        if (gObj && gObj.name && gObj.name.startsWith('5')) detectedGrade = '5';
+    } else if (theme && theme.includes('5')) {
+        detectedGrade = '5';
+    } else if (trainingGrade && String(trainingGrade).includes('5')) {
+        detectedGrade = '5';
+    }
+    
+    const editGradeSelect = document.getElementById('editActivityGrade');
+    if (editGradeSelect) {
+        editGradeSelect.value = detectedGrade;
+    }
+    updateEditTargetGroupOptions();
+
     const groupSelect = document.getElementById('editActivityTargetGroup');
     if (groupSelect) {
-        groupSelect.value = (groupId !== undefined && groupId !== null) ? groupId : '';
+        groupSelect.value = (groupId !== undefined && groupId !== null) ? String(groupId) : 'ALL_GRADE';
     }
 
     const chkTraining = document.getElementById('editIsTrainingLevel');
@@ -1651,14 +1774,29 @@ async function submitEditActivity() {
     const title = document.getElementById('editActivityTitle').value.trim();
     const type = document.getElementById('editActivityType').value;
     const theme = document.getElementById('editActivityTheme').value;
+    
+    const editGradeSelect = document.getElementById('editActivityGrade');
+    const selectedGrade = editGradeSelect ? editGradeSelect.value : '4';
     const groupSelect = document.getElementById('editActivityTargetGroup');
-    const groupId = groupSelect ? groupSelect.value : null;
+    const selectedGroupVal = groupSelect ? groupSelect.value : 'ALL_GRADE';
+
+    let targetGroups = [];
+    let groupId = null;
+
+    if (selectedGroupVal === 'ALL_GRADE' || !selectedGroupVal) {
+        const gradeGroups = (window.todasLasAulas || []).filter(g => String(g.name).startsWith(selectedGrade));
+        targetGroups = gradeGroups.map(g => g.id);
+        groupId = targetGroups[0] || null;
+    } else {
+        groupId = Number(selectedGroupVal);
+        targetGroups = [groupId];
+    }
 
     const chkTraining = document.getElementById('editIsTrainingLevel');
     const isTrainingLevel = chkTraining ? chkTraining.checked : false;
     const gradeSelect = document.getElementById('editTrainingGrade');
     const iconSelect = document.getElementById('editTrainingIcon');
-    const trainingGrade = isTrainingLevel ? (gradeSelect ? gradeSelect.value : '') : '';
+    const trainingGrade = isTrainingLevel ? (gradeSelect ? gradeSelect.value : selectedGrade) : selectedGrade;
     const mapIcon = isTrainingLevel ? (iconSelect ? iconSelect.value : '🏆') : '🏆';
     
     if (!title) {
@@ -1673,8 +1811,8 @@ async function submitEditActivity() {
             title, 
             type, 
             theme,
-            group_id: groupId ? Number(groupId) : null,
-            target_groups: groupId ? [Number(groupId)] : [],
+            group_id: groupId,
+            target_groups: targetGroups,
             is_training_level: isTrainingLevel,
             training_grade: trainingGrade,
             map_icon: mapIcon
@@ -1883,9 +2021,16 @@ function createActivityForGroup(groupId, groupName) {
     const link = document.getElementById('navLinkCreateActivity') || Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.textContent.includes('Crear'));
     showTeacherSection('activitiesSection', link);
     
+    const gradeLetter = groupName ? String(groupName).charAt(0) : '4';
+    const gradeSelect = document.getElementById('activityTargetGrade');
+    if (gradeSelect) {
+        gradeSelect.value = (gradeLetter === '5') ? '5' : '4';
+    }
+    updateTargetGroupOptions();
+    
     const select = document.getElementById('activityTargetGroup');
-    if (select) {
-        select.value = groupId;
+    if (select && groupId) {
+        select.value = String(groupId);
         onActivityTargetGroupChange();
     }
     
@@ -1898,32 +2043,58 @@ function createActivityForGroup(groupId, groupName) {
     showAlert(`📍 Asignando actividad para Aula ${groupName}`);
 }
 
+function updateTargetGroupOptions() {
+    const gradeSelect = document.getElementById('activityTargetGrade');
+    const groupSelect = document.getElementById('activityTargetGroup');
+    if (!groupSelect) return;
+
+    const selectedGrade = gradeSelect ? gradeSelect.value : '4';
+    const allGroups = window.todasLasAulas || [];
+    const gradeGroups = allGroups.filter(g => String(g.name).startsWith(selectedGrade));
+
+    let html = `<option value="ALL_GRADE">Todas las aulas de ${selectedGrade}° (General${gradeGroups.length ? ': ' + gradeGroups.map(g => g.name).join(', ') : ''})</option>`;
+    gradeGroups.forEach(g => {
+        html += `<option value="${g.id}">Solo Aula ${g.name}</option>`;
+    });
+
+    groupSelect.innerHTML = html;
+    onActivityTargetGroupChange();
+}
+
+function onActivityTargetGradeChange() {
+    updateTargetGroupOptions();
+}
+
+function updateEditTargetGroupOptions() {
+    const gradeSelect = document.getElementById('editActivityGrade');
+    const groupSelect = document.getElementById('editActivityTargetGroup');
+    if (!groupSelect) return;
+
+    const selectedGrade = gradeSelect ? gradeSelect.value : '4';
+    const allGroups = window.todasLasAulas || [];
+    const gradeGroups = allGroups.filter(g => String(g.name).startsWith(selectedGrade));
+
+    let html = `<option value="ALL_GRADE">Todas las aulas de ${selectedGrade}° (General${gradeGroups.length ? ': ' + gradeGroups.map(g => g.name).join(', ') : ''})</option>`;
+    gradeGroups.forEach(g => {
+        html += `<option value="${g.id}">Solo Aula ${g.name}</option>`;
+    });
+
+    groupSelect.innerHTML = html;
+}
+
+function onEditActivityGradeChange() {
+    updateEditTargetGroupOptions();
+}
+
 function populateGroupSelectors(groups) {
     if (!groups || !Array.isArray(groups)) return;
+    window.todasLasAulas = groups;
     
     // 1. Selector en formulario de creación
-    const targetGroupSelect = document.getElementById('activityTargetGroup');
-    if (targetGroupSelect) {
-        const currentVal = targetGroupSelect.value;
-        let html = '<option value="">Todas las aulas (General)</option>';
-        groups.forEach(g => {
-            html += `<option value="${g.id}">Aula ${g.name}</option>`;
-        });
-        targetGroupSelect.innerHTML = html;
-        if (currentVal) targetGroupSelect.value = currentVal;
-    }
+    updateTargetGroupOptions();
 
     // 2. Selector en modal de edición
-    const editGroupSelect = document.getElementById('editActivityTargetGroup');
-    if (editGroupSelect) {
-        const currentVal = editGroupSelect.value;
-        let html = '<option value="">Todas las aulas (General)</option>';
-        groups.forEach(g => {
-            html += `<option value="${g.id}">Aula ${g.name}</option>`;
-        });
-        editGroupSelect.innerHTML = html;
-        if (currentVal) editGroupSelect.value = currentVal;
-    }
+    updateEditTargetGroupOptions();
 
     // 3. Checkboxes para replicar a otros cursos
     const repList = document.getElementById('replicateGroupsList');
@@ -1943,18 +2114,11 @@ function populateGroupSelectors(groups) {
 
 function onActivityTargetGroupChange() {
     const select = document.getElementById('activityTargetGroup');
-    const selectedGroupId = select ? select.value : "";
+    const selectedVal = select ? select.value : "ALL_GRADE";
     const repSection = document.getElementById('activityReplicateSection');
     
-    if (selectedGroupId && window.todasLasAulas) {
-        const groupObj = window.todasLasAulas.find(g => String(g.id) === String(selectedGroupId));
-        if (groupObj) {
-            const gradeLetter = groupObj.name.charAt(0);
-            const gradeSelect = document.getElementById('activityTargetGrade');
-            if (gradeSelect && (gradeLetter === '4' || gradeLetter === '5')) {
-                gradeSelect.value = gradeLetter;
-            }
-        }
+    // Solo mostrar opción de replicar si seleccionó un aula puntual
+    if (selectedVal && selectedVal !== "ALL_GRADE") {
         if (repSection) repSection.style.display = 'block';
     } else {
         if (repSection) repSection.style.display = 'none';
@@ -1967,7 +2131,7 @@ function onActivityTargetGroupChange() {
         window.todasLasAulas.forEach(g => {
             const item = document.getElementById(`repItem_${g.id}`);
             if (item) {
-                if (String(g.id) === String(selectedGroupId)) {
+                if (String(g.id) === String(selectedVal)) {
                     item.style.display = 'none';
                     const chk = item.querySelector('input');
                     if (chk) chk.checked = false;

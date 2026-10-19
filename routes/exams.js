@@ -4,7 +4,7 @@ const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
-const { Activity, Question } = require('../models/database');
+const { Activity, Question, Group } = require('../models/database');
 const { generateFourthOption } = require('../scripts/migrateQuestionsToFourOptions');
 const router = express.Router();
 
@@ -176,6 +176,14 @@ const handleImportExam = async (req, res) => {
             }
         } else if (group_id) {
             targets = [Number(group_id)];
+        }
+        
+        if (targets.length === 0 && grade) {
+            const cleanGrade = grade.includes('5') ? '5' : (grade.includes('4') ? '4' : '');
+            if (cleanGrade) {
+                const gradeGroups = await Group.find({ name: { $regex: new RegExp(`^${cleanGrade}`) } });
+                targets = gradeGroups.map(g => g.id);
+            }
         }
         
         const primaryGroupId = group_id ? Number(group_id) : (targets[0] || null);

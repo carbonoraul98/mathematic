@@ -2644,3 +2644,177 @@ textarea {
     font-size: 1.15rem !important;
   }
 }
+
+/* ===================================================
+   ZONA DE SUBIDA DE ARCHIVOS MEJORADA (WORD / PDF)
+   =================================================== */
+.custom-file-dropzone {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(99, 102, 241, 0.45);
+  border-radius: var(--radius-lg);
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  user-select: none;
+}
+
+.custom-file-dropzone:hover {
+  background: rgba(99, 102, 241, 0.07);
+  border-color: #6366f1;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.2);
+}
+
+.custom-file-dropzone.dragover {
+  background: rgba(99, 102, 241, 0.16) !important;
+  border-color: #818cf8 !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
+  transform: scale(1.01);
+}
+
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone-icon-badge {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.25));
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+}
+
+.dropzone-main-icon {
+  font-size: 28px;
+}
+
+.dropzone-plus-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: #6366f1;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-card);
+}
+
+.dropzone-title {
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.dropzone-subtitle {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  margin-bottom: 12px;
+}
+
+.dropzone-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.dropzone-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.word-pill {
+  background: rgba(37, 99, 235, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+}
+
+.pdf-pill {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+/* Estado de archivo seleccionado */
+.dropzone-file-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.dropzone-file-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.dropzone-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dropzone-file-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.dropzone-file-meta {
+  color: #a5b4fc;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dropzone-change-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.dropzone-change-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #fff;
+  transform: scale(1.1);
+}

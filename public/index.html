@@ -7,7 +7,7 @@
 
   <title>Mathematic's Adventure</title>
 
-  <link rel="stylesheet" href="styles/style.css?v=8" />
+  <link rel="stylesheet" href="styles/style.css?v=9" />
 </head>
 
 <body>
@@ -217,17 +217,16 @@
 
         <div class="teacher-selects-row">
           <div class="teacher-select-col">
-            <label for="activityTargetGroup">🪐 Aula Principal Destino:</label>
-            <select id="activityTargetGroup" onchange="onActivityTargetGroupChange()">
-              <option value="">Todas las aulas (General)</option>
-              <!-- Las aulas (4A, 4B, 5A, etc.) se cargarán dinámicamente -->
+            <label for="activityTargetGrade">📚 Grado:</label>
+            <select id="activityTargetGrade" onchange="onActivityTargetGradeChange()">
+              <option value="4">4° Grado</option>
+              <option value="5">5° Grado</option>
             </select>
           </div>
           <div class="teacher-select-col">
-            <label for="activityTargetGrade">📚 Grado Referencia:</label>
-            <select id="activityTargetGrade">
-              <option value="4">Grado 4</option>
-              <option value="5">Grado 5</option>
+            <label for="activityTargetGroup">🪐 Aula Destino:</label>
+            <select id="activityTargetGroup" onchange="onActivityTargetGroupChange()">
+              <!-- Las aulas (4A, 4B o 5A, 5B, 5C) se cargarán según el grado -->
             </select>
           </div>
         </div>
@@ -376,9 +375,38 @@
 
             <!-- ÁREA 1: ARCHIVO LOCAL (.DOCX O .PDF) -->
             <div id="importFileArea" style="margin-bottom: var(--space-lg);">
-              <label style="display: block; margin-bottom: var(--space-xs); color: var(--text-secondary); font-size: var(--text-sm);">Selecciona archivo Word (.docx) o PDF (.pdf):</label>
-              <input type="file" id="docxFileInput" accept=".docx,.pdf,.odt,.txt" style="padding: 10px; background: var(--bg-input); border: 1px solid var(--color-border); border-radius: var(--radius-md); width: 100%; color: var(--text-primary); cursor: pointer;" />
-              <small style="display: block; margin-top: 6px; color: var(--text-muted); font-size: 12px;">
+              <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: var(--text-sm); font-weight: 600;">Documento de evaluación (Word o PDF):</label>
+              
+              <!-- Custom Dropzone -->
+              <div class="custom-file-dropzone" id="fileDropzone" onclick="triggerFileInputClick()" ondragover="onFileDragOver(event)" ondragleave="onFileDragLeave(event)" ondrop="onFileDrop(event)">
+                <input type="file" id="docxFileInput" accept=".docx,.pdf,.odt,.txt" onchange="onCustomFileSelected(this)" style="display: none;" />
+                
+                <div id="dropzoneEmptyState" class="dropzone-content">
+                  <div class="dropzone-icon-badge">
+                    <span class="dropzone-main-icon">📄</span>
+                    <span class="dropzone-plus-badge">➕</span>
+                  </div>
+                  <div class="dropzone-title">Toca aquí para seleccionar tu archivo</div>
+                  <div class="dropzone-subtitle">o arrástralo y suéltalo en esta zona</div>
+                  <div class="dropzone-pills">
+                    <span class="dropzone-pill word-pill">📘 Word (.docx)</span>
+                    <span class="dropzone-pill pdf-pill">📕 PDF (.pdf)</span>
+                  </div>
+                </div>
+
+                <div id="dropzoneSelectedState" class="dropzone-file-card" style="display: none;">
+                  <div class="dropzone-file-icon" id="dropzoneFileIcon">📘</div>
+                  <div class="dropzone-file-info">
+                    <div class="dropzone-file-name" id="dropzoneFileName">archivo.docx</div>
+                    <div class="dropzone-file-meta" id="dropzoneFileMeta">Listo para procesar</div>
+                  </div>
+                  <button type="button" class="dropzone-change-btn" onclick="event.stopPropagation(); clearCustomFile();" title="Cambiar archivo">
+                    ✖
+                  </button>
+                </div>
+              </div>
+
+              <small style="display: block; margin-top: 8px; color: var(--text-muted); font-size: 12px; line-height: 1.4;">
                 💡 Formato aceptado: preguntas numeradas (1., 2.), opciones (A), B), C), D)) y respuesta correcta (Respuesta: B).
               </small>
             </div>
@@ -494,10 +522,21 @@
         <option value="Práctica">Práctica</option>
       </select>
 
-      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Aula Principal Asignada:</label>
-      <select id="editActivityTargetGroup" style="margin-bottom: var(--space-md); width: 100%;">
-        <option value="">Todas las aulas (General)</option>
-      </select>
+      <div class="teacher-selects-row" style="margin-bottom: var(--space-md);">
+        <div class="teacher-select-col">
+          <label for="editActivityGrade">📚 Grado:</label>
+          <select id="editActivityGrade" onchange="onEditActivityGradeChange()">
+            <option value="4">4° Grado</option>
+            <option value="5">5° Grado</option>
+          </select>
+        </div>
+        <div class="teacher-select-col">
+          <label for="editActivityTargetGroup">🪐 Aula Asignada:</label>
+          <select id="editActivityTargetGroup">
+            <!-- Dinámico según grado -->
+          </select>
+        </div>
+      </div>
 
       <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Tema / Grado:</label>
       <input type="text" id="editActivityTheme" placeholder="Ej: Grado 4 o Multiplicación" class="input" style="margin-bottom: var(--space-md); width: 100%;" />
@@ -657,17 +696,6 @@
         </div>
       </div>
 
-      <!-- AVANCE POR TEMAS EN INICIO -->
-      <div class="student-performance-section" style="margin-bottom: var(--space-xl);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <h3 class="student-performance-title" style="margin: 0; font-size: 0.95rem;">📊 Tu avance por tema</h3>
-          <button type="button" class="btn btn--outline btn--sm" style="border-radius: 14px; font-size: 0.75rem; padding: 2px 10px;" onclick="switchStudentTab('profile')">Ver perfil ›</button>
-        </div>
-        <div class="student-performance-card" id="studentHomeTopicsList">
-          <!-- Renderizado dinámicamente con barras de progreso animadas -->
-        </div>
-      </div>
-
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="font-size: 1.1rem; margin: 0; text-align: left;">📚 Tus Evaluaciones y Talleres</h2>
       </div>
@@ -811,6 +839,6 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=14"></script>
+  <script src="js/main.js?v=15"></script>
 </body>
 </html>

@@ -16,6 +16,9 @@ router.post('/', async (req, res) => {
             targets = target_groups.map(Number);
         } else if (group_id) {
             targets = [Number(group_id)];
+        } else if (grade && (String(grade) === '4' || String(grade) === '5')) {
+            const gradeGroups = await Group.find({ name: { $regex: new RegExp(`^${grade}`) } });
+            targets = gradeGroups.map(g => g.id);
         }
         
         const primaryGroupId = group_id ? Number(group_id) : (targets[0] || null);
@@ -67,14 +70,31 @@ router.get('/', async (req, res) => {
         let queryFilter = {};
         if (groupId) {
             const gid = Number(groupId);
+            const studentGroup = await Group.findOne({ id: gid });
+            const studentGrade = studentGroup && studentGroup.name ? studentGroup.name.charAt(0) : null;
+
             queryFilter = {
                 $or: [
                     { group_id: gid },
-                    { target_groups: gid },
-                    { group_id: null },
-                    { group_id: { $exists: false } }
+                    { target_groups: gid }
                 ]
             };
+
+            if (studentGrade) {
+                // Actividades globales de su grado (si no tienen aulas explícitas)
+                queryFilter.$or.push({
+                    $and: [
+                        { $or: [{ target_groups: { $size: 0 } }, { target_groups: { $exists: false } }] },
+                        { $or: [{ group_id: null }, { group_id: { $exists: false } }] },
+                        { $or: [
+                            { theme: { $regex: new RegExp(`Grado\\s*${studentGrade}`, 'i') } },
+                            { training_grade: studentGrade }
+                        ]}
+                    ]
+                });
+            } else {
+                queryFilter.$or.push({ group_id: null }, { group_id: { $exists: false } });
+            }
         }
 
         const activities = await Activity.find(queryFilter).sort({ created_at: -1 });
