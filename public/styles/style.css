@@ -3138,3 +3138,172 @@ textarea {
     opacity: 0.45;
   }
 }
+
+/* ===================================================
+   ENCABEZADO SIMÉTRICO: ESTUDIANTES Y VOLVER
+   =================================================== */
+.teacher-students-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.teacher-students-title-box {
+  flex: 1;
+  min-width: 180px;
+}
+
+.btn-create-student-sym {
+  height: 42px !important;
+  padding: 0 18px !important;
+  font-weight: 700 !important;
+  font-size: 0.82rem !important;
+  letter-spacing: 0.5px !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--gradient-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.btn-create-student-sym:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+}
+
+.header-back-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: #c7d2fe !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+  padding: 6px 14px !important;
+  border-radius: var(--radius-full) !important;
+  transition: all 0.2s ease !important;
+}
+
+.header-back-btn:hover {
+  background: rgba(99, 102, 241, 0.25) !important;
+  border-color: #818cf8 !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+
+/* ===================================================
+   COMPONENTE DE LOADING / SKELETON (SIN SALTOS)
+   =================================================== */
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.skeleton-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  min-height: 72px;
+  box-sizing: border-box;
+}
+
+.skeleton-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.skeleton-avatar {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.skeleton-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  max-width: 220px;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.skeleton-title {
+  width: 70%;
+  height: 16px;
+}
+
+.skeleton-subtitle {
+  width: 45%;
+  height: 12px;
+}
+
+.skeleton-badge {
+  width: 50px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  animation: shimmerAnim 1.6s infinite ease-in-out;
+}
+
+@keyframes shimmerAnim {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.fade-in-content {
+  animation: fadeInSmooth 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInSmooth {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

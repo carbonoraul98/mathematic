@@ -124,14 +124,40 @@ let preguntasTemp = [];
 let preguntasPracticaTemp = [];
 let estudianteActual = null;
 
+// Componente helper para skeleton loading (evita saltos bruscos de layout)
+function renderSkeletonLoader(count = 3) {
+  let html = '<div class="skeleton-container">';
+  for (let i = 0; i < count; i++) {
+    html += `
+      <div class="skeleton-card">
+        <div class="skeleton-left">
+          <div class="skeleton-avatar shimmer"></div>
+          <div class="skeleton-text-group">
+            <div class="skeleton-line skeleton-title shimmer"></div>
+            <div class="skeleton-line skeleton-subtitle shimmer"></div>
+          </div>
+        </div>
+        <div class="skeleton-badge shimmer"></div>
+      </div>`;
+  }
+  return html + '</div>';
+}
+
 // Cargar estudiantes desde el servidor
 async function loadStudents() {
+    const listEl = document.getElementById("studentsList");
+    if (listEl) {
+        listEl.innerHTML = renderSkeletonLoader(4);
+    }
     try {
         const res = await fetch('/api/students');
         estudiantes = await res.json();
         mostrarEstudiantes();
     } catch (error) {
         console.error('Error cargando estudiantes:', error);
+        if (listEl) {
+            listEl.innerHTML = '<p style="color: var(--text-muted);">Error al cargar los estudiantes.</p>';
+        }
     }
 }
 
@@ -742,7 +768,7 @@ function mostrarEstudiantes() {
     grupos[grupoKey].push(e);
   });
   
-  let html = '<div class="classrooms-list">';
+  let html = '<div class="classrooms-list fade-in-content">';
   for (let grupo in grupos) {
     let studentCount = grupos[grupo].length;
     html += `
@@ -1082,6 +1108,11 @@ function showTeacherSection(id, btnElement) {
     target.classList.add("show");
     target.style.display = "block";
   }
+
+  const backBtn = document.getElementById('teacherHeaderBackBtn');
+  if (backBtn) {
+    backBtn.style.display = (id === 'dashboardHome') ? 'none' : 'inline-flex';
+  }
   
   if (btnElement) {
     document.querySelectorAll(".sidebar-link, .nav-dropdown-item").forEach(btn => btn.classList.remove("active"));
@@ -1106,6 +1137,11 @@ function showTeacherSection(id, btnElement) {
   } else if (id === "dashboardHome") {
     loadDashboardStats();
   }
+}
+
+function goTeacherBack() {
+  const homeBtn = document.getElementById('navLinkHome');
+  showTeacherSection('dashboardHome', homeBtn);
 }
 
 function mostrarNotas() {
@@ -1429,7 +1465,9 @@ async function uploadDocxExam() {
 
 async function loadActivities() {
     const container = document.getElementById('activitiesList');
-    container.innerHTML = '<p>Cargando actividades...</p>';
+    if (container) {
+        container.innerHTML = renderSkeletonLoader(3);
+    }
     
     try {
         const res = await fetch('/api/activities');
@@ -1440,7 +1478,7 @@ async function loadActivities() {
             return;
         }
         
-        let html = '';
+        let html = '<div class="fade-in-content">';
         activities.forEach(act => {
             const icono = act.map_icon || (act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩')));
             const qCount = act.preguntas ? act.preguntas.length : 0;
@@ -1478,7 +1516,7 @@ async function loadActivities() {
                 </div>
             `;
         });
-        
+        html += '</div>';
         container.innerHTML = html;
     } catch (error) {
         console.error('Error cargando actividades:', error);
@@ -1879,6 +1917,11 @@ async function openClassroomDetail(groupName) {
     document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
     document.getElementById('classroomDetailSection').style.display = 'block';
     document.getElementById('classroomDetailSection').classList.add('show');
+    
+    const backBtn = document.getElementById('teacherHeaderBackBtn');
+    if (backBtn) {
+        backBtn.style.display = 'inline-flex';
+    }
     
     // Remove active class from sidebar
     document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));

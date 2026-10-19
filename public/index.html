@@ -31,7 +31,7 @@
   <!-- PORTADA + LOGIN -->
 
   <div class="screen active" id="home">
-    <img src="images/astronaut-hero.png" class="logo logo--minimal" alt="Astronauta Mathematic's Adventure" />
+    <img src="images/astronaut-hero.png" class="logo logo--minimal" alt="Astronauta Mathematic's Adventure" loading="lazy" decoding="async" />
 
     <div class="brand-title">
       <span class="brand-title__primary">MATHEMATIC'S</span>
@@ -74,7 +74,7 @@
 
     <!-- Imagen institucional (COTEDIBA) centrada y animada -->
     <div style="margin-top: 18px; display: flex; justify-content: center; align-items: center; width: 100%;">
-      <img src="images/cotediba-logo.png" alt="COTEDIBA" class="institutional-logo" />
+      <img src="images/cotediba-logo.png" alt="COTEDIBA" class="institutional-logo" loading="lazy" decoding="async" />
     </div>
   </div>
 
@@ -89,7 +89,7 @@
     <div class="panel panel--sm panel--minimal">
       <button type="button" class="role-card role-card--featured" onclick="enterAsRole('profesor')">
         <span class="role-card__icon role-card__icon--image">
-          <img src="images/teacher-illustration.png" alt="Profesor" />
+          <img src="images/teacher-illustration.png" alt="Profesor" loading="lazy" decoding="async" />
         </span>
         <span class="role-card__text">
           <strong>Profesor</strong>
@@ -99,7 +99,7 @@
 
       <button type="button" class="role-card role-card--featured" onclick="enterAsRole('estudiante')">
         <span class="role-card__icon role-card__icon--image">
-          <img src="images/student-illustration.png" alt="Estudiante" />
+          <img src="images/student-illustration.png" alt="Estudiante" loading="lazy" decoding="async" />
         </span>
         <span class="role-card__text">
           <strong>Estudiante</strong>
@@ -115,7 +115,7 @@
     <!-- CABECERA SUPERIOR CENTRADA (TÍTULO DE LA APLICACIÓN) -->
     <header class="teacher-top-header">
       <div class="sidebar-logo">
-        <img src="images/astronaut-hero.png" alt="Logo" class="sidebar-logo-img" />
+        <img src="images/astronaut-hero.png" alt="Logo" class="sidebar-logo-img" loading="lazy" decoding="async" />
         <span class="sidebar-logo-text">Mathematic's Adventure</span>
       </div>
     </header>
@@ -128,8 +128,9 @@
           <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.85rem; text-align: left;">Aquí puedes gestionar tus aulas y actividades.</p>
         </div>
         <div class="header-profile-badge">
+          <button class="btn btn--outline btn--sm header-back-btn" id="teacherHeaderBackBtn" style="display: none;" onclick="goTeacherBack()" title="Volver al inicio">⬅️ Volver</button>
           <button class="btn btn--outline btn--sm header-profile-logout" onclick="logout()" title="Cerrar sesión">Salir</button>
-          <img src="images/teacher-illustration.png" alt="Perfil Profesor" class="header-profile-avatar" />
+          <img src="images/teacher-illustration.png" alt="Perfil Profesor" class="header-profile-avatar" loading="lazy" decoding="async" />
         </div>
       </div>
 
@@ -208,12 +209,16 @@
 
       <!-- ESTUDIANTES -->
       <div class="section" id="studentsSection" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
-          <h2 style="margin: 0;">👥 Estudiantes</h2>
-          <div>
-            <button class="btn btn--secondary btn--sm" onclick="showTeacherSection('dashboardHome', document.querySelectorAll('.sidebar-link')[0])">⬅️ Volver</button>
-            <button class="btn btn--sm" onclick="openCreateStudentModal()" style="border-radius: 25px; margin-left: var(--space-sm);">➕ CREAR ESTUDIANTE</button>
+        <div class="teacher-students-header">
+          <div class="teacher-students-title-box">
+            <h2 style="margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 8px;">
+              <span>👥</span> <span>Estudiantes</span>
+            </h2>
+            <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.82rem;">Aulas registradas y gestión de alumnos</p>
           </div>
+          <button class="btn btn--sm btn-create-student-sym" onclick="openCreateStudentModal()">
+            <span>➕</span> <span>CREAR ESTUDIANTE</span>
+          </button>
         </div>
 
         <div id="studentsList"></div>
@@ -680,7 +685,7 @@
         </div>
         <div class="header-profile-badge">
           <button class="btn btn--outline btn--sm header-profile-logout" onclick="logout()" title="Cerrar sesión">Salir</button>
-          <img src="images/student-illustration.png" alt="Perfil Estudiante" class="header-profile-avatar" onclick="switchStudentTab('profile')" style="cursor: pointer;" title="Ver mi perfil" />
+          <img src="images/student-illustration.png" alt="Perfil Estudiante" class="header-profile-avatar" onclick="switchStudentTab('profile')" style="cursor: pointer;" title="Ver mi perfil" loading="lazy" decoding="async" />
         </div>
       </div>
 
@@ -732,7 +737,7 @@
           <span class="student-hero-grade" id="studentProfileGrade">Grado -</span>
         </div>
         <div class="student-hero-avatar-wrapper">
-          <img src="images/student-illustration.png" alt="Avatar" class="student-hero-avatar" id="studentHeroAvatar" />
+          <img src="images/student-illustration.png" alt="Avatar" class="student-hero-avatar" id="studentHeroAvatar" loading="lazy" decoding="async" />
         </div>
       </div>
 
