@@ -1134,12 +1134,16 @@ function mostrarNotas() {
     let usuario = e.username || e.usuario;
     lista.innerHTML += `
       <div class="grade-card">
-        <div>
+        <div class="grade-student-info">
           <h3>👤 ${nombre}</h3>
           <p>📚 Grado: ${grupo} | 🆔 ${usuario}</p>
         </div>
-        <div class="score-badge">
-          ${pts} pts
+        <div class="score-mini-card">
+          <div class="score-mini-card-header">
+            <span class="score-icon">⭐</span>
+            <span class="score-pts-label">PUNTOS</span>
+          </div>
+          <div class="score-mini-card-value">${pts}</div>
         </div>
       </div>
     `;

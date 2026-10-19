@@ -1439,14 +1439,67 @@ textarea {
   font-size: var(--text-sm);
 }
 
+/* Mini-card de puntos en el listado de calificaciones / notas */
+.score-mini-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(139, 92, 246, 0.32));
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.score-mini-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.score-mini-card-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.score-icon {
+  font-size: 11px;
+}
+
+.score-pts-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #c7d2fe;
+  text-transform: uppercase;
+}
+
+.score-mini-card-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(99, 102, 241, 0.6);
+  font-feature-settings: "tnum";
+}
+
 .score-badge {
-  background: var(--gradient-primary);
-  color: var(--text-primary);
-  padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--radius-full);
-  font-weight: 700;
-  font-size: var(--text-md);
-  box-shadow: 0 0 10px rgba(108, 93, 211, 0.5);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(139, 92, 246, 0.32));
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  border-radius: 12px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
 /* -----------------------------------------------------------
@@ -2895,5 +2948,193 @@ textarea {
     height: 38px !important;
     padding: 0 4px !important;
     font-size: 0.76rem !important;
+  }
+}
+
+/* ===================================================
+   FONDO CÓSMICO CON PLANETAS ANIMADOS
+   =================================================== */
+.cosmic-planets-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Saturno con Anillos */
+.planet-saturn {
+  position: absolute;
+  top: 7%;
+  right: 6%;
+  width: 140px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: floatSaturn 10s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.3));
+  opacity: 0.85;
+}
+
+.saturn-body {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fef08a 0%, #f59e0b 45%, #b45309 75%, #451a03 100%);
+  box-shadow: inset -6px -6px 14px rgba(0, 0, 0, 0.7), 0 0 20px rgba(245, 158, 11, 0.25);
+  z-index: 2;
+}
+
+.saturn-ring-back {
+  position: absolute;
+  width: 130px;
+  height: 38px;
+  border-radius: 50%;
+  border: 7px solid rgba(253, 224, 71, 0.45);
+  border-top-color: rgba(217, 119, 6, 0.65);
+  transform: rotate(-25deg);
+  z-index: 1;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+.saturn-ring-front {
+  position: absolute;
+  width: 130px;
+  height: 38px;
+  border-radius: 50%;
+  border: 7px solid rgba(253, 224, 71, 0.45);
+  border-bottom-color: rgba(217, 119, 6, 0.7);
+  border-top-color: transparent;
+  transform: rotate(-25deg);
+  z-index: 3;
+}
+
+/* Gigante de Hielo (Neptuno radiante) */
+.planet-ice-giant {
+  position: absolute;
+  bottom: 8%;
+  left: 3%;
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #67e8f9 0%, #0284c7 40%, #0369a1 70%, #0c4a6e 90%, #082f49 100%);
+  box-shadow: inset -10px -10px 22px rgba(2, 6, 23, 0.8), 0 0 35px rgba(6, 182, 212, 0.35);
+  animation: floatIceGiant 14s ease-in-out infinite alternate;
+  opacity: 0.8;
+}
+
+/* Planeta Carmesí (Marte) */
+.planet-mars {
+  position: absolute;
+  top: 50%;
+  right: 3%;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fca5a5 0%, #ef4444 45%, #991b1b 80%, #450a0a 100%);
+  box-shadow: inset -6px -6px 16px rgba(0, 0, 0, 0.75), 0 0 22px rgba(239, 68, 68, 0.3);
+  animation: floatMars 11s ease-in-out infinite 2s alternate;
+  opacity: 0.8;
+}
+
+/* Planeta Místico Púrpura */
+.planet-mystic {
+  position: absolute;
+  top: 24%;
+  left: 4%;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #e9d5ff 0%, #a855f7 50%, #6b21a8 80%, #3b0764 100%);
+  box-shadow: inset -5px -5px 14px rgba(0, 0, 0, 0.7), 0 0 20px rgba(168, 85, 247, 0.3);
+  animation: floatMystic 9s ease-in-out infinite 1s alternate;
+  opacity: 0.75;
+}
+
+/* Estrellas Fugaces / Cometas */
+.shooting-star {
+  position: absolute;
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(129, 140, 248, 0.6), transparent);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.star-1 {
+  top: 15%;
+  left: -150px;
+  transform: rotate(-35deg);
+  animation: shootStar1 12s infinite ease-in;
+}
+
+.star-2 {
+  top: 45%;
+  right: -150px;
+  transform: rotate(-145deg);
+  animation: shootStar2 17s infinite ease-in 6s;
+}
+
+@keyframes floatSaturn {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-22px) rotate(4deg); }
+}
+
+@keyframes floatIceGiant {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(20px) rotate(-6deg); }
+}
+
+@keyframes floatMars {
+  0% { transform: translateY(0px) scale(1); }
+  100% { transform: translateY(-16px) scale(1.04); }
+}
+
+@keyframes floatMystic {
+  0% { transform: translateY(0px) scale(1); }
+  100% { transform: translateY(18px) scale(0.97); }
+}
+
+@keyframes shootStar1 {
+  0%, 85% { opacity: 0; transform: translate(0, 0) rotate(-35deg); }
+  88% { opacity: 1; }
+  92% { opacity: 0.8; transform: translate(80vw, 55vh) rotate(-35deg); }
+  93%, 100% { opacity: 0; transform: translate(85vw, 60vh) rotate(-35deg); }
+}
+
+@keyframes shootStar2 {
+  0%, 82% { opacity: 0; transform: translate(0, 0) rotate(-145deg); }
+  86% { opacity: 1; }
+  90% { opacity: 0.8; transform: translate(-70vw, 45vh) rotate(-145deg); }
+  91%, 100% { opacity: 0; transform: translate(-75vw, 50vh) rotate(-145deg); }
+}
+
+@media (max-width: 768px) {
+  .planet-saturn {
+    top: 5%;
+    right: 2%;
+    transform: scale(0.65);
+    opacity: 0.55;
+  }
+  .planet-ice-giant {
+    bottom: 5%;
+    left: 1%;
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  .planet-mars {
+    top: 55%;
+    right: 2%;
+    transform: scale(0.65);
+    opacity: 0.45;
+  }
+  .planet-mystic {
+    top: 20%;
+    left: 2%;
+    transform: scale(0.65);
+    opacity: 0.45;
   }
 }
