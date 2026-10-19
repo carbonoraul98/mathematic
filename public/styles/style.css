@@ -1144,6 +1144,22 @@ textarea {
   margin: 0;
   padding: 0;
   background: transparent;
+  min-height: 480px;
+}
+
+.classroom-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+  min-height: 220px;
+}
+
+#studentActivities {
+  min-height: 120px;
+}
+
+.level-map-container-v2 {
+  min-height: 260px;
 }
 
 /* -----------------------------------------------------------
@@ -3179,25 +3195,40 @@ textarea {
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
 }
 
-.header-back-btn {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  color: #c7d2fe !important;
+.header-back-btn,
+.btn-back-card {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #e0e7ff !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 5px !important;
-  font-weight: 600 !important;
-  font-size: 0.82rem !important;
-  padding: 6px 14px !important;
-  border-radius: var(--radius-full) !important;
-  transition: all 0.2s ease !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  font-weight: 700 !important;
+  font-size: 0.84rem !important;
+  padding: 0 16px !important;
+  height: 38px !important;
+  border-radius: 8px !important; /* Estilo Card Rectangular */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
 }
 
-.header-back-btn:hover {
+.header-back-btn:hover,
+.btn-back-card:hover {
   background: rgba(99, 102, 241, 0.25) !important;
-  border-color: #818cf8 !important;
-  color: #fff !important;
-  transform: translateY(-1px);
+  border-color: rgba(129, 140, 248, 0.6) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-1px) !important;
+}
+
+.header-back-btn:active,
+.btn-back-card:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* ===================================================

@@ -7,7 +7,7 @@
 
   <title>Mathematic's Adventure</title>
 
-  <link rel="stylesheet" href="styles/style.css?v=11" />
+  <link rel="stylesheet" href="styles/style.css?v=18" />
 </head>
 
 <body>
@@ -173,7 +173,28 @@
         </div>
 
         <div class="classrooms-list" id="classroomsList">
-          <!-- Aulas cargadas dinámicamente aquí -->
+          <div class="skeleton-container">
+            <div class="skeleton-card">
+              <div class="skeleton-left">
+                <div class="skeleton-avatar shimmer"></div>
+                <div class="skeleton-text-group">
+                  <div class="skeleton-line skeleton-title shimmer"></div>
+                  <div class="skeleton-line skeleton-subtitle shimmer"></div>
+                </div>
+              </div>
+              <div class="skeleton-badge shimmer"></div>
+            </div>
+            <div class="skeleton-card">
+              <div class="skeleton-left">
+                <div class="skeleton-avatar shimmer"></div>
+                <div class="skeleton-text-group">
+                  <div class="skeleton-line skeleton-title shimmer"></div>
+                  <div class="skeleton-line skeleton-subtitle shimmer"></div>
+                </div>
+              </div>
+              <div class="skeleton-badge shimmer"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -221,7 +242,20 @@
           </button>
         </div>
 
-        <div id="studentsList"></div>
+        <div id="studentsList">
+          <div class="skeleton-container">
+            <div class="skeleton-card">
+              <div class="skeleton-left">
+                <div class="skeleton-avatar shimmer"></div>
+                <div class="skeleton-text-group">
+                  <div class="skeleton-line skeleton-title shimmer"></div>
+                  <div class="skeleton-line skeleton-subtitle shimmer"></div>
+                </div>
+              </div>
+              <div class="skeleton-badge shimmer"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ACTIVIDADES -->
@@ -456,14 +490,40 @@
           </div>
           <button class="btn btn--sm" onclick="showTeacherSection('activitiesSection', document.getElementById('navLinkCreateActivity'))">➕ Crear Actividad / Taller</button>
         </div>
-        <div id="activitiesList"></div>
+        <div id="activitiesList">
+          <div class="skeleton-container">
+            <div class="skeleton-card">
+              <div class="skeleton-left">
+                <div class="skeleton-avatar shimmer"></div>
+                <div class="skeleton-text-group">
+                  <div class="skeleton-line skeleton-title shimmer"></div>
+                  <div class="skeleton-line skeleton-subtitle shimmer"></div>
+                </div>
+              </div>
+              <div class="skeleton-badge shimmer"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- NOTAS -->
       <div class="section" id="gradesSection" style="display: none;">
         <h2>Reportes y Notas</h2>
         <button class="btn" onclick="downloadGrades()" style="margin-bottom: var(--space-xl);">📊 DESCARGAR CALIFICACIONES</button>
-        <div id="gradesList"></div>
+        <div id="gradesList">
+          <div class="skeleton-container">
+            <div class="skeleton-card">
+              <div class="skeleton-left">
+                <div class="skeleton-avatar shimmer"></div>
+                <div class="skeleton-text-group">
+                  <div class="skeleton-line skeleton-title shimmer"></div>
+                  <div class="skeleton-line skeleton-subtitle shimmer"></div>
+                </div>
+              </div>
+              <div class="skeleton-badge shimmer"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -718,7 +778,20 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="font-size: 1.1rem; margin: 0; text-align: left;">📚 Tus Evaluaciones y Talleres</h2>
       </div>
-      <div id="studentActivities"></div>
+      <div id="studentActivities">
+        <div class="skeleton-container">
+          <div class="skeleton-card">
+            <div class="skeleton-left">
+              <div class="skeleton-avatar shimmer"></div>
+              <div class="skeleton-text-group">
+                <div class="skeleton-line skeleton-title shimmer"></div>
+                <div class="skeleton-line skeleton-subtitle shimmer"></div>
+              </div>
+            </div>
+            <div class="skeleton-badge shimmer"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- VISTA PERFIL: MI PROGRESO (DISEÑO MOCKUP) -->
@@ -858,6 +931,6 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=17"></script>
+  <script src="js/main.js?v=18"></script>
 </body>
 </html>

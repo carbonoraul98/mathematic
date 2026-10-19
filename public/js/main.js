@@ -143,6 +143,25 @@ function renderSkeletonLoader(count = 3) {
   return html + '</div>';
 }
 
+function renderSkeletonCardsGrid(count = 3) {
+  let html = '<div class="skeleton-container classroom-detail-grid">';
+  for (let i = 0; i < count; i++) {
+    html += `
+      <div class="skeleton-card" style="flex-direction: column; align-items: flex-start; gap: 12px; min-height: 140px; padding: 18px;">
+        <div class="skeleton-left" style="width: 100%;">
+          <div class="skeleton-avatar shimmer" style="width: 38px; height: 38px;"></div>
+          <div class="skeleton-text-group" style="flex: 1;">
+            <div class="skeleton-line skeleton-title shimmer" style="width: 75%;"></div>
+            <div class="skeleton-line skeleton-subtitle shimmer" style="width: 45%;"></div>
+          </div>
+        </div>
+        <div class="skeleton-line shimmer" style="width: 100%; height: 16px; border-radius: 6px;"></div>
+        <div class="skeleton-badge shimmer" style="width: 110px; height: 28px; border-radius: 8px;"></div>
+      </div>`;
+  }
+  return html + '</div>';
+}
+
 // Cargar estudiantes desde el servidor
 async function loadStudents() {
     const listEl = document.getElementById("studentsList");
@@ -607,6 +626,21 @@ async function loadStudentPerformance() {
   if (nameEl) nameEl.innerText = getStudentDisplayName(estudianteActual);
   if (gradeEl) gradeEl.innerText = estudianteActual.group_name ? `${estudianteActual.group_name}` : 'Grado General';
 
+  const listContainers = [
+    document.getElementById('studentTopicsList'),
+    document.getElementById('studentHomeTopicsList')
+  ].filter(Boolean);
+
+  listContainers.forEach(c => {
+    if (!c.children.length) {
+      c.innerHTML = `
+        <div class="skeleton-container" style="gap: 8px;">
+          <div class="skeleton-card" style="min-height: 40px; padding: 8px 12px;"><div class="skeleton-line shimmer" style="width: 100%; height: 12px;"></div></div>
+          <div class="skeleton-card" style="min-height: 40px; padding: 8px 12px;"><div class="skeleton-line shimmer" style="width: 100%; height: 12px;"></div></div>
+        </div>`;
+    }
+  });
+
   try {
     const res = await fetch(`/api/students/${estudianteActual.id}/performance`);
     const data = await res.json();
@@ -622,14 +656,11 @@ async function loadStudentPerformance() {
         document.getElementById('profileStreakVal').innerText = data.streakDays + (data.streakDays === 1 ? ' día' : ' días');
       }
 
-      const listContainers = [
-        document.getElementById('studentTopicsList'),
-        document.getElementById('studentHomeTopicsList')
-      ].filter(Boolean);
-
       if (listContainers.length > 0 && data.topics) {
         listContainers.forEach(listContainer => {
           listContainer.innerHTML = '';
+          const wrap = document.createElement('div');
+          wrap.className = 'fade-in-content';
           data.topics.forEach(t => {
             const row = document.createElement('div');
             row.className = 'student-topic-row';
@@ -647,8 +678,9 @@ async function loadStudentPerformance() {
                 ${t.percentage}%
               </div>
             `;
-            listContainer.appendChild(row);
+            wrap.appendChild(row);
           });
+          listContainer.appendChild(wrap);
         });
 
         // Animación suave de las barras
@@ -962,7 +994,7 @@ async function resetStudentProgress() {
 async function mostrarPendientes() {
   let contenedor = document.getElementById("studentActivities");
   if (!contenedor) return;
-  contenedor.innerHTML = "<p style='color: var(--text-muted);'>Cargando actividades...</p>";
+  contenedor.innerHTML = renderSkeletonLoader(2);
   
   if (!estudianteActual) return;
   
@@ -1006,8 +1038,9 @@ async function mostrarPendientes() {
       return;
     }
     
+    let html = '<div class="fade-in-content">';
     actividadesFiltradas.forEach((a) => {
-      contenedor.innerHTML += `
+      html += `
         <div class="card" style="background: linear-gradient(145deg, #182252, #10173b); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 18px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; text-align: left;">
           <div>
             <h3 style="margin: 0 0 6px; font-size: 1.05rem; color: #ffffff;">${a.title}</h3>
@@ -1020,6 +1053,8 @@ async function mostrarPendientes() {
         </div>
       `;
     });
+    html += '</div>';
+    contenedor.innerHTML = html;
   } catch (error) {
     console.error('Error cargando actividades:', error);
     contenedor.innerHTML = "<p style='color: var(--color-danger);'>❌ Error al cargar actividades</p>";
@@ -1107,6 +1142,9 @@ function showTeacherSection(id, btnElement) {
   if (target) {
     target.classList.add("show");
     target.style.display = "block";
+    target.classList.remove("fade-in-content");
+    void target.offsetWidth;
+    target.classList.add("fade-in-content");
   }
 
   const backBtn = document.getElementById('teacherHeaderBackBtn');
@@ -1146,29 +1184,48 @@ function goTeacherBack() {
 
 function mostrarNotas() {
   let lista = document.getElementById("gradesList");
-  lista.innerHTML = "";
+  if (!lista) return;
   
-  if (estudiantes.length === 0) {
-    lista.innerHTML = "<p>No hay estudiantes registrados aún.</p>";
+  if (!estudiantes || estudiantes.length === 0) {
+    lista.innerHTML = renderSkeletonLoader(3);
+    fetch('/api/students')
+      .then(res => res.json())
+      .then(data => {
+        estudiantes = data;
+        renderNotasContent(lista);
+      })
+      .catch(() => {
+        lista.innerHTML = "<p style='color: var(--text-muted);'>No hay estudiantes registrados aún.</p>";
+      });
+    return;
+  }
+
+  renderNotasContent(lista);
+}
+
+function renderNotasContent(lista) {
+  if (!estudiantes || estudiantes.length === 0) {
+    lista.innerHTML = "<p style='color: var(--text-muted); padding: 20px 0;'>No hay estudiantes registrados aún.</p>";
     return;
   }
 
   // Ordenar por grupo y luego por puntos descendente
   let estudiantesOrdenados = [...estudiantes].sort((a, b) => {
-    let grupoA = a.group_name || a.grado;
-    let grupoB = b.group_name || b.grado;
+    let grupoA = a.group_name || a.grado || '';
+    let grupoB = b.group_name || b.grado || '';
     if (grupoA === grupoB) {
       return (b.total_score || b.puntos || 0) - (a.total_score || a.puntos || 0);
     }
     return grupoA.localeCompare(grupoB);
   });
 
+  let html = '<div class="fade-in-content">';
   estudiantesOrdenados.forEach((e) => {
     let pts = e.total_score || e.puntos || 0;
     let nombre = e.full_name || e.nombre;
     let grupo = e.group_name || e.grado;
     let usuario = e.username || e.usuario;
-    lista.innerHTML += `
+    html += `
       <div class="grade-card">
         <div class="grade-student-info">
           <h3>👤 ${nombre}</h3>
@@ -1184,6 +1241,8 @@ function mostrarNotas() {
       </div>
     `;
   });
+  html += '</div>';
+  lista.innerHTML = html;
 }
 
 // Toggles para opciones de niveles en la ruta de entrenamiento
@@ -1639,6 +1698,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadDashboardStats() {
+    const list = document.getElementById('classroomsList');
+    if (list && (!list.children.length || list.querySelector('.skeleton-container'))) {
+        list.innerHTML = renderSkeletonLoader(3);
+    }
+
     try {
         const [groupsRes, studentsRes, activitiesRes] = await Promise.all([
             fetch('/api/groups'),
@@ -1660,15 +1724,13 @@ async function loadDashboardStats() {
         document.getElementById('statActivitiesCount').textContent = activities.length;
         document.getElementById('statExamsCount').textContent = exams.length;
         
-        const list = document.getElementById('classroomsList');
         if (list) {
-            list.innerHTML = '';
-            
             if (groups.length === 0) {
-                list.innerHTML = '<p style="color: var(--text-muted);">Aún no tienes aulas creadas.</p>';
+                list.innerHTML = '<p style="color: var(--text-muted); padding: 20px 0;">Aún no tienes aulas creadas.</p>';
             } else {
+                let html = '<div class="fade-in-content">';
                 groups.forEach(g => {
-                    list.innerHTML += `
+                    html += `
                     <div class="classroom-item" onclick="openClassroomDetail('${g.name}')" style="cursor: pointer;">
                         <div class="classroom-item-info">
                             <div class="classroom-icon">🪐</div>
@@ -1681,6 +1743,8 @@ async function loadDashboardStats() {
                     </div>
                     `;
                 });
+                html += '</div>';
+                list.innerHTML = html;
             }
         }
     } catch (error) {
@@ -1906,7 +1970,7 @@ async function openClassroomDetail(groupName) {
             <button class="btn btn--outline btn--sm" style="border-color: rgba(255, 92, 122, 0.4); color: #ff5c7a; border-radius: 20px; font-size: 0.8rem;" onclick="resetGroupProgress('${groupName}')">
                 🔄 Reiniciar Progreso
             </button>
-            <button class="btn btn--secondary btn--sm" style="border-radius: 20px;" onclick="showTeacherSection('dashboardHome', document.getElementById('navLinkHome'))">
+            <button class="btn btn-back-card btn--sm" onclick="showTeacherSection('dashboardHome', document.getElementById('navLinkHome'))">
                 ⬅️ Volver
             </button>
         `;
@@ -1931,6 +1995,9 @@ async function openClassroomDetail(groupName) {
 
     // 1. Renderizar Estudiantes del Aula
     const content = document.getElementById('classroomDetailContent');
+    if (content && (!estudiantes || estudiantes.length === 0)) {
+        content.innerHTML = renderSkeletonCardsGrid(3);
+    }
     const studentsInGroup = (estudiantes || []).filter(e => e.group_name === groupName || e.grado === groupName);
     const countEl = document.getElementById('classroomStudentsCount');
     if (countEl) countEl.innerText = studentsInGroup.length;
@@ -1944,7 +2011,7 @@ async function openClassroomDetail(groupName) {
             </div>
         `;
     } else {
-        let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-md);">';
+        let html = '<div class="classroom-detail-grid fade-in-content">';
         studentsInGroup.forEach(s => {
             let name = s.full_name || s.nombre;
             let user = s.username || s.usuario;
@@ -1994,7 +2061,7 @@ function switchClassroomTab(tab) {
 async function loadClassroomActivities(groupName, groupId) {
     const container = document.getElementById('classroomActivitiesView');
     if (!container) return;
-    container.innerHTML = '<div class="spinner" style="display:block; margin: 30px auto;"></div>';
+    container.innerHTML = renderSkeletonLoader(2);
     
     try {
         const res = await fetch('/api/activities');
@@ -2025,7 +2092,7 @@ async function loadClassroomActivities(groupName, groupId) {
             return;
         }
 
-        let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+        let html = '<div class="fade-in-content" style="display: flex; flex-direction: column; gap: 12px;">';
         classroomActivities.forEach(act => {
             const icono = act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩'));
             const qCount = act.preguntas ? act.preguntas.length : 0;
