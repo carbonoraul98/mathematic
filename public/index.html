@@ -7,7 +7,7 @@
 
   <title>Mathematic's Adventure</title>
 
-  <link rel="stylesheet" href="styles/style.css?v=21" />
+  <link rel="stylesheet" href="styles/style.css?v=22" />
 </head>
 
 <body>
@@ -523,6 +523,40 @@
         </div>
       </div>
 
+      <!-- ACTIVIDAD A PROYECTAR (MODO CLASE) -->
+      <div class="section" id="projectorSection" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+              <span>📽️</span> <span>Actividad a Proyectar</span>
+            </h2>
+            <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: var(--text-sm);">
+              Proyecta en pantalla gigante o proyector para debatir con el curso y verificar las respuestas en vivo.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <label for="projectorGroupFilter" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Filtrar:</label>
+            <select id="projectorGroupFilter" onchange="filterProjectorActivities()" style="padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-input); border: 1px solid var(--color-border); color: var(--text-primary); font-size: var(--text-sm);">
+              <option value="all">Todas las actividades</option>
+            </select>
+          </div>
+        </div>
+        <div id="projectorActivitiesList">
+          <div class="skeleton-container">
+            <div class="skeleton-card">
+              <div class="skeleton-left">
+                <div class="skeleton-avatar shimmer"></div>
+                <div class="skeleton-text-group">
+                  <div class="skeleton-line skeleton-title shimmer"></div>
+                  <div class="skeleton-line skeleton-subtitle shimmer"></div>
+                </div>
+              </div>
+              <div class="skeleton-badge shimmer"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- NOTAS -->
       <div class="section" id="gradesSection" style="display: none;">
         <h2>Reportes y Notas</h2>
@@ -564,6 +598,9 @@
         <div class="nav-dropdown-menu" id="teacherNavDropdown">
           <button class="nav-dropdown-item" id="navLinkActivities" onclick="showTeacherSection('viewActivitiesSection', this)">
             <span class="dropdown-item-icon">📋</span> Actividades y Talleres
+          </button>
+          <button class="nav-dropdown-item" id="navLinkProjector" onclick="showTeacherSection('projectorSection', this)">
+            <span class="dropdown-item-icon">📽️</span> Actividad a Proyectar
           </button>
           <button class="nav-dropdown-item" id="navLinkCreateActivity" onclick="showTeacherSection('activitiesSection', this)">
             <span class="dropdown-item-icon">➕</span> Crear Actividad / Taller
@@ -691,6 +728,7 @@
         <button class="btn btn--sm active" id="tabReviewQuestionsBtn" onclick="switchReviewTab('questions')" style="border-radius: 20px;">📝 Preguntas y Respuestas (<span id="reviewQuestionsCount">0</span>)</button>
         <button class="btn btn--outline btn--sm" id="tabReviewSubmissionsBtn" onclick="switchReviewTab('submissions')" style="border-radius: 20px;">👥 Entregas de Alumnos (<span id="reviewSubmissionsCount">0</span>)</button>
         <button class="btn btn--sm" id="reviewPlayTestBtn" style="margin-left: auto; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 20px;" onclick="testActivityAsTeacher()">🎮 Probar Actividad</button>
+        <button class="btn btn--sm" id="reviewProjectBtn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; border-radius: 20px;" onclick="closeReviewActivityModal(); projectActivity(currentReviewActivity)">📽️ Proyectar en Clase</button>
       </div>
       
       <div id="reviewQuestionsView" style="overflow-y: auto; max-height: calc(85vh - 160px); padding-right: 6px;">
@@ -887,6 +925,7 @@
   <script src="js/components/question-modal.js"></script>
   <script src="js/components/fraction-graphics.js?v=1"></script>
   <script src="js/components/activity-player.js?v=6"></script>
+  <script src="js/components/projector-player.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <!-- MODAL: Crear Estudiante -->
   <div class="modal-overlay" id="createStudentModal">
@@ -948,6 +987,6 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=22"></script>
+  <script src="js/main.js?v=23"></script>
 </body>
 </html>

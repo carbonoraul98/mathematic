@@ -1250,6 +1250,8 @@ function showTeacherSection(id, btnElement) {
     mostrarNotas();
   } else if (id === "viewActivitiesSection") {
     loadActivities();
+  } else if (id === "projectorSection") {
+    loadProjectorActivities();
   } else if (id === "dashboardHome") {
     loadDashboardStats();
   }
@@ -1647,6 +1649,7 @@ async function loadActivities() {
                         </div>
                     </div>
                     <div class="activity-actions-row">
+                        <button class="btn btn-activity-action btn-project" onclick="projectActivityById(${act.id})" title="Proyectar en pantalla para la clase">📽️ Proyectar</button>
                         <button class="btn btn-activity-action btn-review" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
                         <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
                         <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
@@ -2209,6 +2212,7 @@ async function loadClassroomActivities(groupName, groupId) {
                         </div>
                     </div>
                     <div class="activity-actions-row">
+                        <button class="btn btn-activity-action btn-project" onclick="projectActivityById(${act.id})" title="Proyectar en pantalla para la clase">📽️ Proyectar</button>
                         <button class="btn btn-activity-action btn-review" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
                         <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
                         <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
@@ -2834,4 +2838,123 @@ async function deleteQuestionFromActivity(questionId) {
         showAlert('❌ Error de conexión al eliminar pregunta.');
     }
 }
+
+/* ==========================================================================
+   MODO PROYECTOR (ACTIVIDAD A PROYECTAR EN EL AULA)
+   ========================================================================== */
+let allProjectorActivities = [];
+
+async function loadProjectorActivities() {
+    const container = document.getElementById('projectorActivitiesList');
+    if (container) {
+        container.innerHTML = renderSkeletonLoader(3);
+    }
+
+    showAppLoading('Cargando actividades a proyectar...');
+    try {
+        const [resAct, resGroups] = await Promise.all([
+            fetch('/api/activities'),
+            fetch('/api/groups')
+        ]);
+        const activities = await resAct.json();
+        const groups = await resGroups.json();
+
+        allProjectorActivities = activities;
+
+        // Poblar selector de filtro
+        const filterSelect = document.getElementById('projectorGroupFilter');
+        if (filterSelect) {
+            let optionsHtml = '<option value="all">Todas las actividades</option>';
+            if (Array.isArray(groups)) {
+                groups.forEach(g => {
+                    optionsHtml += `<option value="group_${g.id}">Aula: ${g.name}</option>`;
+                });
+            }
+            optionsHtml += '<option value="4">4° Grado</option>';
+            optionsHtml += '<option value="5">5° Grado</option>';
+            optionsHtml += '<option value="training">🗺️ Ruta de Estudio</option>';
+            filterSelect.innerHTML = optionsHtml;
+        }
+
+        renderProjectorActivitiesList(activities);
+    } catch (err) {
+        console.error('Error cargando actividades a proyectar:', err);
+        if (container) container.innerHTML = '<p style="color: var(--color-danger);">❌ Error al cargar actividades para proyectar.</p>';
+    } finally {
+        hideAppLoading();
+    }
+}
+
+function filterProjectorActivities() {
+    const val = document.getElementById('projectorGroupFilter')?.value || 'all';
+    let filtered = [...allProjectorActivities];
+
+    if (val === 'all') {
+        filtered = allProjectorActivities;
+    } else if (val.startsWith('group_')) {
+        const gid = parseInt(val.replace('group_', ''), 10);
+        filtered = allProjectorActivities.filter(a => a.group_id === gid || (Array.isArray(a.target_groups) && a.target_groups.includes(gid)));
+    } else if (val === '4' || val === '5') {
+        filtered = allProjectorActivities.filter(a => String(a.training_grade) === val || (a.theme && a.theme.includes(val)));
+    } else if (val === 'training') {
+        filtered = allProjectorActivities.filter(a => Boolean(a.is_training_level));
+    }
+
+    renderProjectorActivitiesList(filtered);
+}
+
+function renderProjectorActivitiesList(activities) {
+    const container = document.getElementById('projectorActivitiesList');
+    if (!container) return;
+
+    if (!activities || activities.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 12px;">📽️</div>
+                <h3 style="color: var(--text-primary); margin: 0 0 8px 0;">No se encontraron actividades</h3>
+                <p style="margin: 0; font-size: 0.95rem;">Crea una nueva actividad o selecciona otro filtro para proyectar.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="fade-in-content" style="display: flex; flex-direction: column; gap: 14px;">';
+    activities.forEach(act => {
+        const icono = act.map_icon || (act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩')));
+        const qCount = act.preguntas ? act.preguntas.length : 0;
+        const aulaBadge = act.target_group_names && act.target_group_names.length > 0 
+            ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.target_group_names.join(', ')}</span>`
+            : (act.primary_group_name 
+                ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.primary_group_name}</span>`
+                : `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 8px; font-weight: 500;">🪐 Todas las aulas</span>`);
+
+        html += `
+            <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 14px; background: rgba(22, 27, 54, 0.85); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 18px 20px;">
+                <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
+                    <div class="classroom-icon" style="font-size: 2rem;">${icono}</div>
+                    <div class="classroom-details">
+                        <h4 style="margin: 0 0 6px 0; color: #ffffff; font-size: 1.15rem; font-weight: 700;">${act.title}</h4>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: rgba(99, 102, 241, 0.25); color: #a5b4fc; padding: 2px 8px; border-radius: 8px; font-weight: 600;">${act.type || 'Actividad'}</span>
+                            ${aulaBadge}
+                            <span>• ❓ <b>${qCount}</b> pregunta${qCount === 1 ? '' : 's'}</span>
+                            <span>• 📚 ${act.theme || 'General'}</span>
+                        </p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-projector-launch" onclick="projectActivityById(${act.id})" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; font-weight: 700; padding: 10px 20px; border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <span>📽️</span> <span>INICIAR PROYECCIÓN</span>
+                    </button>
+                    <button class="btn btn--secondary btn--sm" onclick="openReviewActivityModal(${act.id})" title="Ver detalles y preguntas" style="border-radius: 10px;">
+                        👁️ Revisar
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
 
