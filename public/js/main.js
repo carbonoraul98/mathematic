@@ -1254,6 +1254,8 @@ function showTeacherSection(id, btnElement) {
     loadProjectorActivities();
   } else if (id === "dashboardHome") {
     loadDashboardStats();
+  } else if (id === "studentsSection") {
+    loadStudents();
   }
 }
 
@@ -1262,21 +1264,23 @@ function goTeacherBack() {
   showTeacherSection('dashboardHome', homeBtn);
 }
 
-function mostrarNotas() {
+async function mostrarNotas() {
   let lista = document.getElementById("gradesList");
   if (!lista) return;
-  
+
   if (!estudiantes || estudiantes.length === 0) {
     lista.innerHTML = renderSkeletonLoader(3);
-    fetch('/api/students')
-      .then(res => res.json())
-      .then(data => {
-        estudiantes = data;
-        renderNotasContent(lista);
-      })
-      .catch(() => {
-        lista.innerHTML = "<p style='color: var(--text-muted);'>No hay estudiantes registrados aún.</p>";
-      });
+    showAppLoading('Cargando calificaciones...');
+    try {
+      const res = await fetch('/api/students');
+      estudiantes = await res.json();
+      renderNotasContent(lista);
+    } catch (error) {
+      console.error('Error cargando calificaciones:', error);
+      lista.innerHTML = "<p style='color: var(--text-muted);'>No hay estudiantes registrados aún.</p>";
+    } finally {
+      hideAppLoading();
+    }
     return;
   }
 

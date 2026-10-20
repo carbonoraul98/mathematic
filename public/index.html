@@ -7,7 +7,7 @@
 
   <title>Mathematic's Adventure</title>
 
-  <link rel="stylesheet" href="styles/style.css?v=22" />
+  <link rel="stylesheet" href="styles/style.css?v=23" />
 </head>
 
 <body>
@@ -505,7 +505,10 @@
             <h2 style="margin: 0;">📋 Gestión de Actividades y Talleres</h2>
             <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: var(--text-sm);">Revisa preguntas, respuestas correctas, entregas de estudiantes y edita tus contenidos.</p>
           </div>
-          <button class="btn btn--sm" onclick="showTeacherSection('activitiesSection', document.getElementById('navLinkCreateActivity'))">➕ Crear Actividad / Taller</button>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button class="btn btn--sm" onclick="showTeacherSection('projectorSection', document.getElementById('navLinkProjectorDirect'))" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; font-weight: 700; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);">📽️ Actividad a Proyectar</button>
+            <button class="btn btn--sm" onclick="showTeacherSection('activitiesSection', document.getElementById('navLinkCreateActivity'))">➕ Crear Actividad / Taller</button>
+          </div>
         </div>
         <div id="activitiesList">
           <div class="skeleton-container">
@@ -579,7 +582,7 @@
 
     </main>
 
-    <!-- MENÚ DE NAVEGACIÓN INFERIOR (3 OPCIONES CON DROPDOWN) -->
+    <!-- MENÚ DE NAVEGACIÓN INFERIOR (4 OPCIONES DIRECTAS + DROPDOWN) -->
     <nav class="teacher-bottom-nav" id="teacherSidebarNav">
       <button class="sidebar-link active" id="navLinkHome" onclick="showTeacherSection('dashboardHome', this)">
         <span class="sidebar-link-icon">🏠</span>
@@ -588,6 +591,10 @@
       <button class="sidebar-link" id="navLinkStudents" onclick="showTeacherSection('studentsSection', this)">
         <span class="sidebar-link-icon">👥</span>
         <span class="sidebar-link-text">Estudiantes</span>
+      </button>
+      <button class="sidebar-link" id="navLinkProjectorDirect" onclick="showTeacherSection('projectorSection', this)">
+        <span class="sidebar-link-icon">📽️</span>
+        <span class="sidebar-link-text">Proyectar</span>
       </button>
       <div class="nav-dropdown-wrapper" id="teacherMoreMenuWrapper">
         <button type="button" class="sidebar-link nav-dropdown-trigger" id="navLinkMore" onclick="toggleTeacherNavDropdown(event)">
@@ -599,7 +606,7 @@
           <button class="nav-dropdown-item" id="navLinkActivities" onclick="showTeacherSection('viewActivitiesSection', this)">
             <span class="dropdown-item-icon">📋</span> Actividades y Talleres
           </button>
-          <button class="nav-dropdown-item" id="navLinkProjector" onclick="showTeacherSection('projectorSection', this)">
+          <button class="nav-dropdown-item" id="navLinkProjector" onclick="showTeacherSection('projectorSection', document.getElementById('navLinkProjectorDirect'))">
             <span class="dropdown-item-icon">📽️</span> Actividad a Proyectar
           </button>
           <button class="nav-dropdown-item" id="navLinkCreateActivity" onclick="showTeacherSection('activitiesSection', this)">
@@ -987,6 +994,6 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=23"></script>
+  <script src="js/main.js?v=24"></script>
 </body>
 </html>
