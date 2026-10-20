@@ -60,8 +60,10 @@ function parseQuestionsFromText(text) {
     const questions = [];
     let currentQuestion = null;
 
+    // Requiere ':' o '=' tras la palabra clave para evitar falsos positivos
+    // (ej: "convertir la", "numerador y" NO son respuestas). "R/" exige la barra.
     const isAnswerLine = (l) => {
-        return /(?:Respuesta(?:\s+correcta)?|Rta\.?|R\/?|Resp\.?|Soluci[oó]n|Clave|Opci[oó]n\s+correcta|Answer)[:\s=]+/i.test(l);
+        return /(?:Respuesta(?:\s+correcta)?|Rta|R\/|Resp|Soluci[oó]n|Clave|Opci[oó]n\s+correcta|Answer)\s*[:=]/i.test(l);
     };
 
     for (let i = 0; i < lines.length; i++) {
@@ -85,9 +87,29 @@ function parseQuestionsFromText(text) {
             continue;
         }
 
-        // 2. Detectar Declaración de Respuesta Correcta
+        // 1b. Detectar Pregunta SIN número (listas numeradas automáticas de Word
+        // pierden el "1.", "2." al extraer el texto). Heurística: una línea que NO es
+        // opción ni respuesta y cuya SIGUIENTE línea es una opción real (A-D con
+        // delimitador) se trata como el enunciado de una pregunta nueva.
+        const optionDelimRegex = /^(?:[*•✓\-]\s*)?\(?[A-Da-d]\)?[\.:\)\-]\s+\S/;
+        const nextLine = lines[i + 1] || '';
+        if (!optionDelimRegex.test(line) && !isAnswerLine(line) && optionDelimRegex.test(nextLine)) {
+            if (currentQuestion && currentQuestion.options.length > 0) {
+                questions.push(currentQuestion);
+            }
+            currentQuestion = {
+                question_text: line.trim(),
+                options: [],
+                correct_letter: null,
+                correct_answer_text: null
+            };
+            continue;
+        }
+
+        // 2. Detectar Declaración de Respuesta Correcta (línea propia, NO una opción
+        // que lleve la respuesta pegada; esa se maneja dentro del bloque de opción).
         // Soporta: "Respuesta: B", "Rta: (B)", "R/: B", "Respuesta correcta: 42", "Clave: C", etc.
-        if (isAnswerLine(line) && currentQuestion) {
+        if (isAnswerLine(line) && currentQuestion && !optionDelimRegex.test(line)) {
             const letterMatch = line.match(/(?:Respuesta(?:\s+correcta)?|Rta\.?|R\/?|Resp\.?|Soluci[oó]n|Clave|Opci[oó]n\s+correcta|Answer)[:\s=\/esla]*\(?([A-Da-d])\)?/i);
             if (letterMatch) {
                 currentQuestion.correct_letter = letterMatch[1].toUpperCase();
@@ -116,6 +138,14 @@ function parseQuestionsFromText(text) {
             if (/\((?:correcta|respuesta\s*correcta|x|v)\)$/i.test(optText)) {
                 isMarkedCorrect = true;
                 optText = optText.replace(/\((?:correcta|respuesta\s*correcta|x|v)\)$/i, '').trim();
+            }
+
+            // La declaración de respuesta puede venir PEGADA al final de la opción
+            // (ej: "...lo que sobra.* Respuesta correcta: B"). La separamos del texto.
+            const inlineAns = optText.match(/(?:\*\s*)?(?:Respuesta(?:\s+correcta)?|Rta|R\/|Resp|Clave|Opci[oó]n\s+correcta|Answer)\s*[:=]\s*\(?([A-Da-d])\)?.*$/i);
+            if (inlineAns) {
+                currentQuestion.correct_letter = inlineAns[1].toUpperCase();
+                optText = optText.slice(0, inlineAns.index).replace(/[*\s]+$/, '').trim();
             }
 
             if (isMarkedCorrect) {
