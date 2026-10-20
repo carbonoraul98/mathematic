@@ -127,7 +127,12 @@ let estudianteActual = null;
 // ============================================================
 // COMPONENTE DE PRECARGA / APP PRELOADER (CERO SALTOS)
 // ============================================================
+// Contador de referencias: el loader se muestra mientras haya >=1 carga activa
+// y recién se esconde cuando TODAS terminan (evita parpadeos con cargas en paralelo).
+let appLoadingCount = 0;
+
 function showAppLoading(message = 'Cargando aventura espacial...') {
+  appLoadingCount++;
   const preloader = document.getElementById('appPreloader');
   const textEl = document.getElementById('appPreloaderText');
   if (textEl && message) textEl.textContent = message;
@@ -138,6 +143,8 @@ function showAppLoading(message = 'Cargando aventura espacial...') {
 }
 
 function hideAppLoading() {
+  appLoadingCount = Math.max(0, appLoadingCount - 1);
+  if (appLoadingCount > 0) return; // todavía hay cargas en curso
   const preloader = document.getElementById('appPreloader');
   if (preloader) {
     preloader.classList.add('hidden');
@@ -145,10 +152,30 @@ function hideAppLoading() {
   }
 }
 
+// Fuerza el cierre del loader sin importar el contador (arranque / logout)
+function forceHideAppLoading() {
+  appLoadingCount = 0;
+  const preloader = document.getElementById('appPreloader');
+  if (preloader) {
+    preloader.classList.add('hidden');
+    preloader.style.display = 'none';
+  }
+}
+
+// Helper: muestra el loader, ejecuta la tarea async y lo esconde al terminar (pase lo que pase)
+async function withAppLoading(task, message) {
+  showAppLoading(message);
+  try {
+    return await task();
+  } finally {
+    hideAppLoading();
+  }
+}
+
 // Ocultar preloader inicial de forma inmediata y segura
-document.addEventListener('DOMContentLoaded', hideAppLoading);
-window.addEventListener('load', hideAppLoading);
-hideAppLoading();
+document.addEventListener('DOMContentLoaded', forceHideAppLoading);
+window.addEventListener('load', forceHideAppLoading);
+forceHideAppLoading();
 
 // Componente helper para skeleton loading (evita saltos bruscos de layout)
 function renderSkeletonLoader(count = 3) {
@@ -194,6 +221,7 @@ async function loadStudents() {
     if (listEl) {
         listEl.innerHTML = renderSkeletonLoader(4);
     }
+    showAppLoading('Cargando estudiantes...');
     try {
         const res = await fetch('/api/students');
         estudiantes = await res.json();
@@ -203,6 +231,8 @@ async function loadStudents() {
         if (listEl) {
             listEl.innerHTML = '<p style="color: var(--text-muted);">Error al cargar los estudiantes.</p>';
         }
+    } finally {
+        hideAppLoading();
     }
 }
 
@@ -252,7 +282,8 @@ async function loginAs(endpoint, user, pass) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: user, password: pass })
   });
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  return { status: res.status, ok: res.ok, data };
 }
 
 let authenticatedRole = null;
@@ -263,26 +294,40 @@ async function unifiedLogin() {
   let resultDiv = document.getElementById("loginResult");
   resultDiv.innerHTML = "";
 
+  if (!user || !pass) {
+    resultDiv.innerHTML = "<br>❌ Ingresá usuario y contraseña";
+    return;
+  }
+
+  showAppLoading('Verificando acceso...');
   try {
     const teacherResult = await loginAs('/api/teachers/login', user, pass);
-    if (teacherResult.success) {
+    if (teacherResult.data.success) {
       authenticatedRole = 'profesor';
       enterAsRole('profesor');
       return;
     }
 
     const studentResult = await loginAs('/api/students/login', user, pass);
-    if (studentResult.success) {
+    if (studentResult.data.success) {
       authenticatedRole = 'estudiante';
-      estudianteActual = studentResult.student;
+      estudianteActual = studentResult.data.student;
       enterAsRole('estudiante');
       return;
     }
 
-    resultDiv.innerHTML = "<br>❌ Usuario o contraseña incorrecta";
+    // Distinguir un error del servidor/DB (HTTP 5xx) de credenciales inválidas
+    const serverDown = teacherResult.status >= 500 || studentResult.status >= 500;
+    if (serverDown) {
+      resultDiv.innerHTML = "<br>⚠️ El servidor no está disponible ahora mismo. Probá de nuevo en unos minutos.";
+    } else {
+      resultDiv.innerHTML = "<br>❌ Usuario o contraseña incorrecta";
+    }
   } catch (error) {
     console.error('Error en login:', error);
-    resultDiv.innerHTML = "<br>❌ Error de conexión";
+    resultDiv.innerHTML = "<br>❌ Error de conexión. Revisá tu internet.";
+  } finally {
+    hideAppLoading();
   }
 }
 
@@ -352,25 +397,24 @@ function updateStudentDisplayNameUI() {
   }
 }
 
-function enterAsRole(role) {
+async function enterAsRole(role) {
   if (role !== authenticatedRole) {
     showAlert('❌ Esta cuenta no tiene acceso como ' + (role === 'profesor' ? 'Profesor' : 'Estudiante'));
     return;
   }
 
-  hideAppLoading();
-
   if (role === 'profesor') {
     showScreen("teacherPanel");
-    loadStudents();
-    loadDashboardStats();
+    await Promise.all([loadStudents(), loadDashboardStats()]);
   } else {
     showScreen("studentPanel");
     updateStudentDisplayNameUI();
-    updateStudentLevelUI(estudianteActual);
     switchStudentTab('home');
-    mostrarPendientes();
-    loadStudentPerformance();
+    await Promise.all([
+      updateStudentLevelUI(estudianteActual),
+      mostrarPendientes(),
+      loadStudentPerformance()
+    ]);
   }
 }
 
@@ -669,6 +713,7 @@ async function loadStudentPerformance() {
     }
   });
 
+  showAppLoading('Cargando tu perfil...');
   try {
     const res = await fetch(`/api/students/${estudianteActual.id}/performance`);
     const data = await res.json();
@@ -721,6 +766,8 @@ async function loadStudentPerformance() {
     }
   } catch (err) {
     console.error('Error cargando rendimiento del estudiante:', err);
+  } finally {
+    hideAppLoading();
   }
 }
 
@@ -1027,7 +1074,8 @@ async function mostrarPendientes() {
   if (!estudianteActual) return;
   
   let gradoAlumnoBase = estudianteActual.group_name ? estudianteActual.group_name.charAt(0) : "4";
-  
+
+  showAppLoading('Cargando actividades...');
   try {
     const res = await fetch('/api/activities');
     const todasActividades = await res.json();
@@ -1086,6 +1134,8 @@ async function mostrarPendientes() {
   } catch (error) {
     console.error('Error cargando actividades:', error);
     contenedor.innerHTML = "<p style='color: var(--color-danger);'>❌ Error al cargar actividades</p>";
+  } finally {
+    hideAppLoading();
   }
 }
 
@@ -1555,11 +1605,12 @@ async function loadActivities() {
     if (container) {
         container.innerHTML = renderSkeletonLoader(3);
     }
-    
+
+    showAppLoading('Cargando actividades...');
     try {
         const res = await fetch('/api/activities');
         const activities = await res.json();
-        
+
         if (activities.length === 0) {
             container.innerHTML = '<p>No hay actividades cargadas aún.</p>';
             return;
@@ -1608,6 +1659,8 @@ async function loadActivities() {
     } catch (error) {
         console.error('Error cargando actividades:', error);
         container.innerHTML = '<p>❌ Error al cargar actividades</p>';
+    } finally {
+        hideAppLoading();
     }
 }
 
@@ -1679,11 +1732,12 @@ async function crearPractica() {
 async function loadPractices() {
     const container = document.getElementById('practicesList');
     container.innerHTML = '<p>Cargando prácticas...</p>';
-    
+
+    showAppLoading('Cargando actividades...');
     try {
         const res = await fetch('/api/activities');
         const activities = await res.json();
-        
+
         const practicas = activities.filter(a => a.type === 'Práctica');
         
         if (practicas.length === 0) {
@@ -1714,6 +1768,8 @@ async function loadPractices() {
     } catch (error) {
         console.error('Error cargando prácticas:', error);
         container.innerHTML = '<p>❌ Error al cargar prácticas</p>';
+    } finally {
+        hideAppLoading();
     }
 }
 
@@ -1731,6 +1787,7 @@ async function loadDashboardStats() {
         list.innerHTML = renderSkeletonLoader(3);
     }
 
+    showAppLoading('Cargando panel...');
     try {
         const [groupsRes, studentsRes, activitiesRes] = await Promise.all([
             fetch('/api/groups'),
@@ -1777,6 +1834,8 @@ async function loadDashboardStats() {
         }
     } catch (error) {
         console.error('Error cargando estadísticas:', error);
+    } finally {
+        hideAppLoading();
     }
 }
 
@@ -1980,6 +2039,8 @@ async function submitEditActivity() {
 let currentClassroomGroupName = null;
 
 async function openClassroomDetail(groupName) {
+    showAppLoading('Cargando aula...');
+    try {
     currentClassroomGroupName = groupName;
     const groupObj = (window.todasLasAulas || []).find(g => g.name === groupName);
     const groupId = groupObj ? groupObj.id : null;
@@ -2065,6 +2126,9 @@ async function openClassroomDetail(groupName) {
 
     // 2. Cargar Actividades específicas de esta aula
     await loadClassroomActivities(groupName, groupId);
+    } finally {
+        hideAppLoading();
+    }
 }
 
 function switchClassroomTab(tab) {
@@ -2090,7 +2154,8 @@ async function loadClassroomActivities(groupName, groupId) {
     const container = document.getElementById('classroomActivitiesView');
     if (!container) return;
     container.innerHTML = renderSkeletonLoader(2);
-    
+
+    showAppLoading('Cargando aula...');
     try {
         const res = await fetch('/api/activities');
         const allActivities = await res.json();
@@ -2156,6 +2221,8 @@ async function loadClassroomActivities(groupName, groupId) {
     } catch(err) {
         console.error('Error cargando actividades del aula:', err);
         container.innerHTML = '<p style="color: var(--color-danger);">❌ Error al cargar actividades del aula.</p>';
+    } finally {
+        hideAppLoading();
     }
 }
 
@@ -2307,7 +2374,8 @@ async function showStudentProgress(studentId, studentName) {
             </button>
         `;
     }
-    
+
+    showAppLoading('Cargando progreso...');
     try {
         const [perfRes, attRes] = await Promise.all([
             fetch(`/api/students/${studentId}/performance`),
@@ -2370,6 +2438,8 @@ async function showStudentProgress(studentId, studentName) {
     } catch (err) {
         console.error(err);
         content.innerHTML = '<p style="color: var(--color-danger);">Error de conexión al cargar progreso.</p>';
+    } finally {
+        hideAppLoading();
     }
 }
 
