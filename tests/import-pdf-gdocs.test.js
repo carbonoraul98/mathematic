@@ -56,6 +56,42 @@ test('parseQuestionsFromText - converts 3 options to 4 options (A-D)', () => {
     assert.equal(parsed[1].correct_answer, 'Bogotá');
 });
 
+test('parseQuestionsFromText - handles parenthesized options, R/: prefix, and inline options', () => {
+    const rawText = `
+    1. En la fracción 3/8, ¿qué número representa el denominador?
+    (A) El 3, parte tomada
+    (B) El 8, partes iguales
+    (C) El 11, suma
+    (D) El 5, diferencia
+    R/: B
+
+    2. ¿Cuánto es 10 + 20?
+    A) 15   B) 25   C) 30   D) 40
+    Respuesta correcta: C
+
+    3. ¿Cuál es un número primo?
+    A) 4
+    * B) 7
+    C) 9
+    D) 12
+    `;
+
+    const parsed = parseQuestionsFromText(rawText);
+    assert.equal(parsed.length, 3);
+
+    // Question 1: (A), (B), (C), (D) and R/:
+    assert.equal(parsed[0].options.length, 4);
+    assert.equal(parsed[0].correct_answer, 'El 8, partes iguales');
+
+    // Question 2: inline options
+    assert.equal(parsed[1].options.length, 4);
+    assert.equal(parsed[1].correct_answer, '30');
+
+    // Question 3: asterisk mark on option
+    assert.equal(parsed[2].options.length, 4);
+    assert.equal(parsed[2].correct_answer, '7');
+});
+
 test('POST /api/exams/import - rejects invalid Google Docs link gracefully', async () => {
     const res = await fetch(`${baseUrl}/api/exams/import`, {
         method: 'POST',

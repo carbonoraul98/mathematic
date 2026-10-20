@@ -15,75 +15,154 @@ if (!fs.existsSync(uploadDir)) {
 
 const upload = multer({ dest: uploadDir });
 
-// Función para parsear texto de DOCX y extraer preguntas y respuestas
+// Función para parsear texto de DOCX, PDF y Google Docs con máxima tolerancia a formatos
 function parseQuestionsFromText(text) {
+    if (!text || typeof text !== 'string') return [];
+
+    // 1. Decodificar entidades HTML y limpiar tags si proviene de Google Docs web / HTML
+    let clean = text
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<\/li>/gi, '\n')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&#39;/g, "'")
+        .replace(/&quot;/g, '"');
+
+    // 2. Normalizar saltos de línea y desglosar opciones pegadas en una sola línea
+    const rawLines = clean.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    const lines = [];
+
+    for (let r of rawLines) {
+        let trimmed = r.trim();
+        if (!trimmed) continue;
+
+        // Si la línea contiene múltiples opciones pegadas (Ej: "A) 12  B) 24  C) 36  D) 48")
+        const inlineOptRegex = /(?:^|\s+)((?:[*✓•\-]\s*)?\(?[A-Da-d]\)?[\.:\)-]\s*)/g;
+        const matches = [...trimmed.matchAll(inlineOptRegex)];
+        if (matches.length > 1 && /^\(?\s*[*✓•\-]?\s*[A-Da-d]\s*[\.:\)-]/.test(trimmed)) {
+            let lastIdx = 0;
+            for (let m = 1; m < matches.length; m++) {
+                const splitPos = matches[m].index;
+                lines.push(trimmed.slice(lastIdx, splitPos).trim());
+                lastIdx = splitPos;
+            }
+            lines.push(trimmed.slice(lastIdx).trim());
+        } else {
+            lines.push(trimmed);
+        }
+    }
+
     const questions = [];
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    
     let currentQuestion = null;
-    
+
+    const isAnswerLine = (l) => {
+        return /(?:Respuesta(?:\s+correcta)?|Rta\.?|R\/?|Resp\.?|Soluci[oó]n|Clave|Opci[oó]n\s+correcta|Answer)[:\s=]+/i.test(l);
+    };
+
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        
-        // Detectar pregunta: Ej: "1. ¿Cuánto es...?", "1) ...", "Pregunta 1: ...", "1 - ..."
-        const questionMatch = line.match(/^(?:Pregunta\s*)?(\d+)[:.\)-]\s*(.+)/i);
-        if (questionMatch) {
+
+        // 1. Detectar Pregunta
+        // Soporta: "1. Texto", "1) Texto", "1.- Texto", "(1) Texto", "Pregunta 1: Texto", "P1: Texto", "1 Texto"
+        const qMatch = line.match(/^(?:Pregunta|Problema|Ejercicio|Item|Ítem|P)?\s*\(?(\d+)[\.:\)\-\º\°]+\s*(.+)/i) ||
+                       line.match(/^\(?(\d+)\)\s+(.+)/);
+
+        if (qMatch) {
             if (currentQuestion && currentQuestion.options.length > 0) {
                 questions.push(currentQuestion);
             }
             currentQuestion = {
-                question_text: questionMatch[2].trim(),
+                question_text: qMatch[2].trim(),
                 options: [],
                 correct_letter: null,
-                correct_answer: null,
-                question_type: 'multiple_choice'
+                correct_answer_text: null
             };
             continue;
         }
-        
-        // Detectar opciones: Ej: "A) 12", "a. 12", "B - 24", "C. 30"
-        const optionMatch = line.match(/^([A-Da-d])[:.\)-]\s*(.+)/);
-        if (optionMatch && currentQuestion) {
-            const letter = optionMatch[1].toUpperCase();
-            const optionText = optionMatch[2].trim();
-            currentQuestion.options.push({ letter, text: optionText });
-            continue;
-        }
-        
-        // Detectar respuesta correcta: Ej: "Respuesta: B", "Respuesta correcta: A", "Solución: C", "Correcta: B", "Rta: D", "R: A"
-        const answerMatch = line.match(/(?:Respuesta(?:\s+correcta)?|Answer|Correcta|Soluci[oó]n|Rta|R)[:\s]*([A-Da-d])/i);
-        if (answerMatch && currentQuestion) {
-            currentQuestion.correct_letter = answerMatch[1].toUpperCase();
+
+        // 2. Detectar Declaración de Respuesta Correcta
+        // Soporta: "Respuesta: B", "Rta: (B)", "R/: B", "Respuesta correcta: 42", "Clave: C", etc.
+        if (isAnswerLine(line) && currentQuestion) {
+            const letterMatch = line.match(/(?:Respuesta(?:\s+correcta)?|Rta\.?|R\/?|Resp\.?|Soluci[oó]n|Clave|Opci[oó]n\s+correcta|Answer)[:\s=\/esla]*\(?([A-Da-d])\)?/i);
+            if (letterMatch) {
+                currentQuestion.correct_letter = letterMatch[1].toUpperCase();
+            } else {
+                const textAns = line.replace(/(?:Respuesta(?:\s+correcta)?|Rta\.?|R\/?|Resp\.?|Soluci[oó]n|Clave|Opci[oó]n\s+correcta|Answer)[:\s=\/]+/i, '').trim();
+                if (textAns) {
+                    currentQuestion.correct_answer_text = textAns;
+                }
+            }
             continue;
         }
 
-        // Si es una línea que complementa el texto de la pregunta previa
-        if (currentQuestion && currentQuestion.options.length === 0) {
-            currentQuestion.question_text += ' ' + line;
+        // 3. Detectar Opción
+        // Soporta: "A) Texto", "(A) Texto", "[A] Texto", "A. Texto", "A - Texto", "* A) Texto", "A) Texto *", "A) Texto (correcta)"
+        const optMatch = line.match(/^([*•\-✓]?)\s*\(?([A-Da-d])\)?[\.:\)\-]?\s*(.+)/);
+        if (optMatch && currentQuestion) {
+            const prefixMarker = optMatch[1];
+            const letter = optMatch[2].toUpperCase();
+            let optText = optMatch[3].trim();
+
+            let isMarkedCorrect = prefixMarker.includes('*') || prefixMarker.includes('✓');
+            if (/\*$/.test(optText)) {
+                isMarkedCorrect = true;
+                optText = optText.replace(/\*+$/, '').trim();
+            }
+            if (/\((?:correcta|respuesta\s*correcta|x|v)\)$/i.test(optText)) {
+                isMarkedCorrect = true;
+                optText = optText.replace(/\((?:correcta|respuesta\s*correcta|x|v)\)$/i, '').trim();
+            }
+
+            if (isMarkedCorrect) {
+                currentQuestion.correct_letter = letter;
+            }
+
+            currentQuestion.options.push({ letter, text: optText });
+            continue;
+        }
+
+        // 4. Complemento multilínea
+        if (currentQuestion) {
+            if (currentQuestion.options.length > 0) {
+                const lastOpt = currentQuestion.options[currentQuestion.options.length - 1];
+                lastOpt.text += ' ' + line;
+            } else {
+                currentQuestion.question_text += ' ' + line;
+            }
         }
     }
-    
+
     if (currentQuestion && currentQuestion.options.length > 0) {
         questions.push(currentQuestion);
     }
-    
+
     return questions.map(q => {
         const rawOptions = q.options.map(opt => opt.text);
         let correctText = rawOptions[0] || '';
-        
+
         if (q.correct_letter) {
             const found = q.options.find(opt => opt.letter === q.correct_letter);
             if (found) {
                 correctText = found.text;
             }
+        } else if (q.correct_answer_text) {
+            const found = q.options.find(opt => opt.text.trim().toLowerCase() === q.correct_answer_text.trim().toLowerCase());
+            if (found) {
+                correctText = found.text;
+            }
         }
-        
+
         if (rawOptions.length < 4 && rawOptions.length > 0) {
             while (rawOptions.length < 4) {
                 rawOptions.push(generateFourthOption(q.question_text, rawOptions, correctText));
             }
         }
-        
+
         return {
             question_text: q.question_text,
             options: rawOptions.slice(0, 4),
@@ -118,24 +197,47 @@ const handleImportExam = async (req, res) => {
             }
         } else if (req.body.google_docs_url) {
             const gUrl = req.body.google_docs_url.trim();
-            const docIdMatch = gUrl.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
-            if (!docIdMatch) {
-                return res.status(400).json({ 
-                    error: 'El enlace de Google Docs no es válido. Formato esperado: https://docs.google.com/document/d/ID_DEL_DOCUMENTO/edit' 
-                });
+            const isPub = gUrl.includes('/document/d/e/');
+            let docId = null;
+            let exportUrl = null;
+
+            if (isPub) {
+                const pubMatch = gUrl.match(/\/document\/d\/e\/([a-zA-Z0-9-_]+)/);
+                if (!pubMatch) {
+                    return res.status(400).json({ error: 'El enlace de Google Docs publicado no es válido.' });
+                }
+                exportUrl = `https://docs.google.com/document/d/e/${pubMatch[1]}/pub`;
+            } else {
+                const docIdMatch = gUrl.match(/\/document\/(?:u\/\d+\/)?d\/([a-zA-Z0-9-_]+)/);
+                if (!docIdMatch) {
+                    return res.status(400).json({ 
+                        error: 'El enlace de Google Docs no es válido. Formato esperado: https://docs.google.com/document/d/ID_DEL_DOCUMENTO/edit' 
+                    });
+                }
+                docId = docIdMatch[1];
+                exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
             }
-            const docId = docIdMatch[1];
+
             inferredTitle = 'Evaluación importada de Google Docs';
-            const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
-            
+
             try {
-                const gRes = await fetch(exportUrl);
+                const gRes = await fetch(exportUrl, {
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+                    redirect: 'follow'
+                });
                 if (!gRes.ok) {
                     return res.status(400).json({ 
                         error: 'No se pudo acceder al documento de Google Docs. Asegúrate de que el documento esté compartido como "Cualquier persona con el enlace puede leer", o descárgalo como .docx o .pdf y súbelo directamente.' 
                     });
                 }
                 text = await gRes.text();
+
+                // Si Google redirigió a pantalla de login
+                if (text.includes('ServiceLogin') || text.includes('accounts.google.com') || (text.includes('<!DOCTYPE html>') && text.includes('Iniciar sesión'))) {
+                    return res.status(400).json({
+                        error: 'El documento de Google Docs está privado o requiere inicio de sesión. Por favor haz clic en "Compartir" en Google Docs y selecciona "Cualquier persona con el enlace" como Lector, o descárgalo como Word (.docx) o PDF para subirlo directamente.'
+                    });
+                }
             } catch (fetchErr) {
                 return res.status(400).json({ 
                     error: 'Error conectando con Google Docs. Verifica tu conexión o descarga el archivo como Word/PDF para subirlo.' 
@@ -144,11 +246,11 @@ const handleImportExam = async (req, res) => {
         } else {
             return res.status(400).json({ error: 'No se proporcionó ningún archivo (.docx, .pdf) ni enlace de Google Docs' });
         }
-        
+
         const questions = parseQuestionsFromText(text);
         if (questions.length === 0) {
             return res.status(400).json({ 
-                error: 'No se encontraron preguntas con opciones en el documento. Asegúrate de numerar las preguntas (1., 2.) con opciones A), B), C), D) y especificar la respuesta (Respuesta: B).' 
+                error: 'No se detectaron preguntas en el documento. Asegúrate de enumerar las preguntas (ej. 1., 2.), incluir opciones (A, B, C, D) y la respuesta (ej. Respuesta: B).' 
             });
         }
         
