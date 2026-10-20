@@ -590,9 +590,32 @@ class ProjectorPlayer extends HTMLElement {
 
   buildFourOptions(q) {
     const correctText = this.resolveCorrectText(q);
-    let rawList = [q.a, q.b, q.c, q.d]
-      .filter(t => t !== undefined && t !== null && String(t).trim() !== "")
-      .map(t => String(t).trim());
+    let rawList = [];
+
+    // 1. Extraer de q.options si viene como array o JSON string
+    if (Array.isArray(q.options) && q.options.length > 0) {
+      rawList = q.options.map(o => (typeof o === 'object' && o !== null && o.text) ? o.text : String(o || '')).filter(t => t.trim() !== "");
+    } else if (typeof q.options === 'string') {
+      try {
+        const parsed = JSON.parse(q.options);
+        if (Array.isArray(parsed)) {
+          rawList = parsed.map(o => (typeof o === 'object' && o !== null && o.text) ? o.text : String(o || '')).filter(t => t.trim() !== "");
+        }
+      } catch (_) {}
+    }
+
+    // 2. Si no vinieron en q.options, extraer de q.a, q.b, q.c, q.d
+    if (rawList.length === 0) {
+      rawList = [q.a, q.b, q.c, q.d]
+        .filter(t => t !== undefined && t !== null && String(t).trim() !== "")
+        .map(t => String(t).trim());
+    }
+
+    // Si ya tiene 4 opciones y la correcta coincide con una letra (A, B, C, D) o con un texto, preservarlas en su orden
+    if (rawList.length >= 4) {
+      const letters = ['A', 'B', 'C', 'D'];
+      return rawList.slice(0, 4).map((text, i) => ({ letter: letters[i], text }));
+    }
 
     if (correctText && !rawList.some(item => item.toLowerCase() === correctText.toLowerCase())) {
       rawList.unshift(correctText);
