@@ -43,12 +43,8 @@ router.post('/login', async (req, res) => {
 
             if (!userMatches) return false;
 
-            // Verificación de contraseña: exacta, o tolerar 1234 / 123 para administrador
-            const passMatches = 
-                t.password === rawPass ||
-                (t.is_admin && (rawPass === '1234' || rawPass === '123'));
-
-            return passMatches;
+            // Verificación de contraseña exacta (sin fallback 123/1234)
+            return t.password === rawPass;
         });
 
         if (matchedTeacher) {

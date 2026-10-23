@@ -153,12 +153,8 @@ router.post('/login', async (req, res) => {
 
                 if (!userMatches) return false;
 
-                const passMatches = 
-                    s.password === rawPass ||
-                    rawPass === '123' ||
-                    rawPass === '1234';
-
-                return passMatches;
+                // Contraseña exacta (sin aceptar "123"/"1234" universales)
+                return s.password === rawPass;
             });
         }
 
