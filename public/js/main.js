@@ -1293,37 +1293,53 @@ function renderNotasContent(lista) {
     return;
   }
 
-  // Ordenar por grupo y luego por puntos descendente
-  let estudiantesOrdenados = [...estudiantes].sort((a, b) => {
-    let grupoA = a.group_name || a.grado || '';
-    let grupoB = b.group_name || b.grado || '';
-    if (grupoA === grupoB) {
-      return (b.total_score || b.puntos || 0) - (a.total_score || a.puntos || 0);
-    }
-    return grupoA.localeCompare(grupoB);
+  // Agrupar por grado/curso (group_name)
+  const grupos = {};
+  estudiantes.forEach((e) => {
+    const grupo = e.group_name || e.grado || 'Sin grado';
+    if (!grupos[grupo]) grupos[grupo] = [];
+    grupos[grupo].push(e);
+  });
+
+  // Orden de los grados (4A, 4B, 5A, 5B, 5C, ... y "Sin grado" al final)
+  const nombresGrupos = Object.keys(grupos).sort((a, b) => {
+    if (a === 'Sin grado') return 1;
+    if (b === 'Sin grado') return -1;
+    return a.localeCompare(b, 'es', { numeric: true });
   });
 
   let html = '<div class="fade-in-content">';
-  estudiantesOrdenados.forEach((e) => {
-    let pts = e.total_score || e.puntos || 0;
-    let nombre = e.full_name || e.nombre;
-    let grupo = e.group_name || e.grado;
-    let usuario = e.username || e.usuario;
+  nombresGrupos.forEach((grupo) => {
+    // Dentro de cada grado, ordenar por puntaje descendente
+    const alumnos = grupos[grupo].sort((a, b) => (b.total_score || b.puntos || 0) - (a.total_score || a.puntos || 0));
+
     html += `
-      <div class="grade-card">
-        <div class="grade-student-info">
-          <h3>👤 ${nombre}</h3>
-          <p>📚 Grado: ${grupo} | 🆔 ${usuario}</p>
-        </div>
-        <div class="score-mini-card">
-          <div class="score-mini-card-header">
-            <span class="score-icon">⭐</span>
-            <span class="score-pts-label">PUNTOS</span>
-          </div>
-          <div class="score-mini-card-value">${pts}</div>
-        </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--color-border);">
+        <h3 style="margin:0; color: var(--text-primary); font-size: 1.15rem;">📚 Grado ${grupo}</h3>
+        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight:600;">${alumnos.length} estudiante${alumnos.length === 1 ? '' : 's'}</span>
       </div>
     `;
+
+    alumnos.forEach((e) => {
+      const pts = e.total_score || e.puntos || 0;
+      const nombre = e.full_name || e.nombre;
+      const usuario = e.username || e.usuario;
+      html += `
+        <div class="grade-card">
+          <div class="grade-student-info">
+            <h3>👤 ${nombre}</h3>
+            <p>🆔 ${usuario}</p>
+          </div>
+          <div class="score-mini-card">
+            <div class="score-mini-card-header">
+              <span class="score-icon">⭐</span>
+              <span class="score-pts-label">PUNTOS</span>
+            </div>
+            <div class="score-mini-card-value">${pts}</div>
+          </div>
+        </div>
+      `;
+    });
   });
   html += '</div>';
   lista.innerHTML = html;
@@ -1653,7 +1669,6 @@ async function loadActivities() {
                         </div>
                     </div>
                     <div class="activity-actions-row">
-                        <button class="btn btn-activity-action btn-project" onclick="projectActivityById(${act.id})" title="Proyectar en pantalla para la clase">📽️ Proyectar</button>
                         <button class="btn btn-activity-action btn-review" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
                         <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
                         <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
@@ -2216,7 +2231,6 @@ async function loadClassroomActivities(groupName, groupId) {
                         </div>
                     </div>
                     <div class="activity-actions-row">
-                        <button class="btn btn-activity-action btn-project" onclick="projectActivityById(${act.id})" title="Proyectar en pantalla para la clase">📽️ Proyectar</button>
                         <button class="btn btn-activity-action btn-review" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
                         <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
                         <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
