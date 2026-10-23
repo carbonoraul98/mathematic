@@ -238,9 +238,44 @@ async function loadStudents() {
 
 
 
-// Descargar calificaciones
-function downloadGrades() {
-    window.location.href = '/api/grades/export';
+// Descargar calificaciones: abre un modal para elegir todos o un grado específico
+async function downloadGrades() {
+    const modal = document.getElementById('downloadGradesModal');
+    const select = document.getElementById('downloadGradeSelect');
+    if (!modal || !select) { window.location.href = '/api/grades/export'; return; }
+
+    // Poblar el select con los grupos/grados disponibles
+    select.innerHTML = '<option value="">Todos los estudiantes</option>';
+    try {
+        const res = await fetch('/api/groups');
+        const groups = await res.json();
+        if (Array.isArray(groups)) {
+            groups
+                .sort((a, b) => String(a.name).localeCompare(String(b.name), 'es', { numeric: true }))
+                .forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.id;
+                    opt.textContent = `Grado ${g.name}`;
+                    select.appendChild(opt);
+                });
+        }
+    } catch (error) {
+        console.error('Error cargando grupos para descarga:', error);
+    }
+    modal.style.display = 'flex';
+}
+
+function closeDownloadGradesModal() {
+    const modal = document.getElementById('downloadGradesModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function confirmDownloadGrades() {
+    const select = document.getElementById('downloadGradeSelect');
+    const groupId = select ? select.value : '';
+    const url = '/api/grades/export' + (groupId ? ('?groupId=' + encodeURIComponent(groupId)) : '');
+    window.location.href = url;
+    closeDownloadGradesModal();
 }
 
 function showScreen(id) {

@@ -1,6 +1,6 @@
 const express = require('express');
 const xlsx = require('xlsx');
-const { Student, Attempt } = require('../models/database');
+const { Student, Attempt, Group } = require('../models/database');
 const router = express.Router();
 
 router.get('/export', async (req, res) => {
@@ -34,8 +34,15 @@ router.get('/export', async (req, res) => {
 
         const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
+        // Nombre de archivo según el grado seleccionado (o "todos")
+        let fileLabel = 'todos';
+        if (groupId) {
+            const grp = await Group.findOne({ id: Number(groupId) });
+            if (grp && grp.name) fileLabel = String(grp.name).replace(/[^a-zA-Z0-9]/g, '');
+        }
+
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', 'attachment; filename=calificaciones.xlsx');
+        res.setHeader('Content-Disposition', `attachment; filename=calificaciones-${fileLabel}.xlsx`);
         res.send(buffer);
     } catch (error) {
         console.error(error);

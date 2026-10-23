@@ -641,6 +641,24 @@
     </div>
   </div>
 
+  <!-- MODAL DESCARGAR CALIFICACIONES -->
+  <div class="modal-overlay" id="downloadGradesModal">
+    <div class="modal-content" style="max-width: 420px; padding: var(--space-3xl); text-align: left;">
+      <h2 style="margin-bottom: var(--space-md); text-align: left;">📊 Descargar calificaciones</h2>
+      <p style="color: var(--text-secondary); text-align: left; margin-bottom: var(--space-lg);">Elegí qué estudiantes incluir en el archivo Excel.</p>
+
+      <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Grupo:</label>
+      <select id="downloadGradeSelect" class="input" style="margin-bottom: var(--space-2xl); width: 100%;">
+        <option value="">Todos los estudiantes</option>
+      </select>
+
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+        <button class="btn btn--secondary btn--sm" onclick="closeDownloadGradesModal()">Cancelar</button>
+        <button class="btn btn--sm" onclick="confirmDownloadGrades()">📊 Descargar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL EDITAR ACTIVIDAD -->
   <div class="modal-overlay" id="editActivityModal">
     <div class="modal-content" style="max-width: 480px; padding: var(--space-3xl); text-align: left;">
@@ -996,6 +1014,6 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=25"></script>
+  <script src="js/main.js?v=26"></script>
 </body>
 </html>
