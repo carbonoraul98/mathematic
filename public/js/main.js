@@ -290,6 +290,7 @@ const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 
 function logout() {
   authenticatedRole = null;
+  window.currentTeacher = null;
   estudianteActual = null;
   activeMapGrade = '4';
   if(document.getElementById("loginUser")) document.getElementById("loginUser").value = "";
@@ -338,6 +339,7 @@ async function unifiedLogin() {
   try {
     const teacherResult = await loginAs('/api/teachers/login', user, pass);
     if (teacherResult.data.success) {
+      window.currentTeacher = teacherResult.data.teacher;
       authenticatedRole = 'profesor';
       enterAsRole('profesor');
       return;
@@ -440,6 +442,7 @@ async function enterAsRole(role) {
 
   if (role === 'profesor') {
     showScreen("teacherPanel");
+    setupTeacherRoleUI();
     await Promise.all([loadStudents(), loadDashboardStats()]);
   } else {
     showScreen("studentPanel");
@@ -1291,6 +1294,8 @@ function showTeacherSection(id, btnElement) {
     loadDashboardStats();
   } else if (id === "studentsSection") {
     loadStudents();
+  } else if (id === "superAdminSection") {
+    loadSuperAdminData();
   }
 }
 
@@ -3009,5 +3014,507 @@ function renderProjectorActivitiesList(activities) {
     html += '</div>';
     container.innerHTML = html;
 }
+
+/* ============================================================
+   SUPER ADMIN MANAGEMENT MODULE
+   ============================================================ */
+
+function setupTeacherRoleUI() {
+    const isSuper = window.currentTeacher && (
+        window.currentTeacher.role === 'superadmin' || 
+        (window.currentTeacher.username && window.currentTeacher.username.toLowerCase() === 'superu')
+    );
+
+    const superBanner = document.getElementById('superAdminHomeBanner');
+    if (superBanner) {
+        superBanner.style.display = isSuper ? 'flex' : 'none';
+    }
+
+    const superNavLink = document.getElementById('navLinkSuperAdmin');
+    if (superNavLink) {
+        superNavLink.style.display = isSuper ? 'flex' : 'none';
+    }
+
+    const headerGreeting = document.querySelector('.dashboard-header h1');
+    if (headerGreeting) {
+        headerGreeting.textContent = isSuper 
+            ? '👋 Hola, Super Administrador' 
+            : `👋 Hola, ${window.currentTeacher ? window.currentTeacher.full_name : 'Profe'}`;
+    }
+}
+
+function switchSuperTab(tabName) {
+    const tabs = ['docentes', 'cursos', 'materias', 'asignaciones'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`superTab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
+        const content = document.getElementById(`superTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tabName) {
+            if (btn) {
+                btn.classList.remove('btn--secondary');
+                btn.style.background = 'var(--color-primary)';
+                btn.style.color = '#ffffff';
+            }
+            if (content) content.style.display = 'block';
+        } else {
+            if (btn) {
+                btn.classList.add('btn--secondary');
+                btn.style.background = '';
+                btn.style.color = '';
+            }
+            if (content) content.style.display = 'none';
+        }
+    });
+
+    if (tabName === 'docentes') loadSuperTeachers();
+    else if (tabName === 'cursos') loadSuperCourses();
+    else if (tabName === 'materias') loadSuperSubjects();
+    else if (tabName === 'asignaciones') {
+        loadSuperAssignments();
+        populateSuperAssignmentSelectors();
+    }
+}
+
+async function loadSuperAdminData() {
+    showAppLoading('Cargando datos del Super Admin...');
+    try {
+        await Promise.all([
+            loadSuperTeachers(),
+            loadSuperCourses(),
+            loadSuperSubjects(),
+            loadSuperAssignments(),
+            populateSuperAssignmentSelectors()
+        ]);
+    } catch (err) {
+        console.error('Error al cargar datos del super admin:', err);
+    } finally {
+        hideAppLoading();
+    }
+}
+
+// 1. GESTIÓN DE DOCENTES
+async function loadSuperTeachers() {
+    const container = document.getElementById('superTeachersListContainer');
+    if (!container) return;
+    try {
+        const res = await fetch('/api/teachers');
+        const teachers = await res.json();
+
+        if (!Array.isArray(teachers) || teachers.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); padding: 15px 0;">No hay docentes registrados.</p>';
+            return;
+        }
+
+        let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+        teachers.forEach(t => {
+            const isSuper = t.role === 'superadmin' || (t.username && t.username.toLowerCase() === 'superu');
+            const roleBadge = isSuper
+                ? '<span style="background: rgba(168, 85, 247, 0.25); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); padding: 3px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78rem;">⚡ Super Admin</span>'
+                : '<span style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 3px 10px; border-radius: 8px; font-weight: 600; font-size: 0.78rem;">👨‍🏫 Docente</span>';
+
+            const isCurrent = window.currentTeacher && window.currentTeacher.id === t.id;
+            const isMainSuper = t.username && t.username.toLowerCase() === 'superu';
+            const deleteBtn = (isCurrent || isMainSuper)
+                ? ''
+                : `<button class="btn btn--secondary btn--sm" style="color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3);" onclick="deleteTeacher(${t.id}, '${t.full_name.replace(/'/g, "\\'")}')" title="Eliminar docente">🗑️ Eliminar</button>`;
+
+            html += `
+                <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 18px;">
+                    <div class="classroom-item-info" style="min-width: 200px; flex: 1;">
+                        <div class="classroom-icon">${isSuper ? '⚡' : '👨‍🏫'}</div>
+                        <div class="classroom-details">
+                            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: 1rem;">${t.full_name}</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span>Usuario: <b>${t.username}</b></span>
+                                ${roleBadge}
+                            </p>
+                        </div>
+                    </div>
+                    <div>${deleteBtn}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('Error cargando docentes:', err);
+        container.innerHTML = '<p style="color: #ff5c7a;">Error al cargar la lista de docentes.</p>';
+    }
+}
+
+function openCreateTeacherModal() {
+    document.getElementById('newTeacherFullName').value = '';
+    document.getElementById('newTeacherUsername').value = '';
+    document.getElementById('newTeacherPassword').value = '';
+    document.getElementById('newTeacherRole').value = 'docente';
+    document.getElementById('createTeacherModal').classList.add('active');
+    document.getElementById('newTeacherFullName').focus();
+}
+
+function closeCreateTeacherModal() {
+    document.getElementById('createTeacherModal').classList.remove('active');
+}
+
+async function submitCreateTeacher() {
+    const full_name = document.getElementById('newTeacherFullName').value.trim();
+    const username = document.getElementById('newTeacherUsername').value.trim();
+    const password = document.getElementById('newTeacherPassword').value.trim();
+    const role = document.getElementById('newTeacherRole').value;
+
+    if (!full_name || !username || !password) {
+        showAlert('❌ Por favor, completa todos los campos del docente.');
+        return;
+    }
+
+    showAppLoading('Creando docente...');
+    try {
+        const res = await fetch('/api/teachers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ full_name, username, password, role })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeCreateTeacherModal();
+            showAlert(`✅ Docente "${data.teacher.full_name}" creado con éxito`);
+            await loadSuperTeachers();
+            await populateSuperAssignmentSelectors();
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo crear el docente'}`);
+        }
+    } catch (err) {
+        console.error('Error al crear docente:', err);
+        showAlert('❌ Error de conexión al crear docente');
+    } finally {
+        hideAppLoading();
+    }
+}
+
+async function deleteTeacher(id, name) {
+    if (!confirm(`⚠️ ¿Estás seguro de que deseas eliminar al docente "${name}"?`)) return;
+
+    showAppLoading('Eliminando docente...');
+    try {
+        const res = await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showAlert(`✅ Docente "${name}" eliminado.`);
+            await loadSuperTeachers();
+            await populateSuperAssignmentSelectors();
+            await loadSuperAssignments();
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo eliminar el docente'}`);
+        }
+    } catch (err) {
+        console.error('Error al eliminar docente:', err);
+        showAlert('❌ Error de conexión');
+    } finally {
+        hideAppLoading();
+    }
+}
+
+// 2. GESTIÓN DE CURSOS / AULAS
+async function loadSuperCourses() {
+    const container = document.getElementById('superCoursesListContainer');
+    if (!container) return;
+    try {
+        const res = await fetch('/api/groups');
+        const groups = await res.json();
+
+        if (!Array.isArray(groups) || groups.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); padding: 15px 0;">No hay aulas creadas.</p>';
+            return;
+        }
+
+        let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+        groups.forEach(g => {
+            html += `
+                <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 18px;">
+                    <div class="classroom-item-info" style="min-width: 200px; flex: 1;">
+                        <div class="classroom-icon">🪐</div>
+                        <div class="classroom-details">
+                            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: 1rem;">${g.name}</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span>Código: <b>${g.code || 'N/A'}</b></span>
+                                <span>• 👥 ${g.student_count || 0} estudiantes</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn--secondary btn--sm" onclick="openClassroomDetail('${g.name}')" title="Ver detalles y estudiantes">👁️ Ver</button>
+                        <button class="btn btn--secondary btn--sm" style="color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3);" onclick="deleteSuperClassroom(${g.id}, '${g.name.replace(/'/g, "\\'")}')" title="Eliminar aula">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('Error cargando cursos:', err);
+        container.innerHTML = '<p style="color: #ff5c7a;">Error al cargar las aulas.</p>';
+    }
+}
+
+async function deleteSuperClassroom(id, name) {
+    if (!confirm(`⚠️ ATENCIÓN: ¿Seguro que deseas eliminar el Aula "${name}"? Se borrarán sus estudiantes y asignaciones.`)) return;
+
+    showAppLoading('Eliminando aula...');
+    try {
+        const res = await fetch(`/api/groups/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showAlert(`✅ ${data.message || 'Aula eliminada con éxito'}`);
+            await Promise.all([loadSuperCourses(), loadStudents(), populateSuperAssignmentSelectors()]);
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo eliminar el aula'}`);
+        }
+    } catch (err) {
+        console.error('Error al eliminar aula:', err);
+        showAlert('❌ Error de conexión al eliminar aula');
+    } finally {
+        hideAppLoading();
+    }
+}
+
+// 3. GESTIÓN DE MATERIAS
+async function loadSuperSubjects() {
+    const container = document.getElementById('superSubjectsListContainer');
+    if (!container) return;
+    try {
+        const res = await fetch('/api/subjects');
+        const subjects = await res.json();
+
+        if (!Array.isArray(subjects) || subjects.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); padding: 15px 0;">No hay materias registradas.</p>';
+            return;
+        }
+
+        let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+        subjects.forEach(s => {
+            html += `
+                <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 18px;">
+                    <div class="classroom-item-info" style="min-width: 200px; flex: 1;">
+                        <div class="classroom-icon">📚</div>
+                        <div class="classroom-details">
+                            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: 1rem;">${s.name}</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem;">
+                                ${s.description ? s.description : 'Sin descripción adicional'}
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn--secondary btn--sm" style="color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3);" onclick="deleteSubject(${s.id}, '${s.name.replace(/'/g, "\\'")}')" title="Eliminar materia">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('Error cargando materias:', err);
+        container.innerHTML = '<p style="color: #ff5c7a;">Error al cargar las materias.</p>';
+    }
+}
+
+function openCreateSubjectModal() {
+    document.getElementById('newSubjectName').value = '';
+    document.getElementById('newSubjectDesc').value = '';
+    document.getElementById('createSubjectModal').classList.add('active');
+    document.getElementById('newSubjectName').focus();
+}
+
+function closeCreateSubjectModal() {
+    document.getElementById('createSubjectModal').classList.remove('active');
+}
+
+async function submitCreateSubject() {
+    const name = document.getElementById('newSubjectName').value.trim();
+    const description = document.getElementById('newSubjectDesc').value.trim();
+
+    if (!name) {
+        showAlert('❌ Por favor, ingresa el nombre de la materia.');
+        return;
+    }
+
+    showAppLoading('Creando materia...');
+    try {
+        const res = await fetch('/api/subjects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeCreateSubjectModal();
+            showAlert(`✅ Materia "${data.subject.name}" creada con éxito`);
+            await loadSuperSubjects();
+            await populateSuperAssignmentSelectors();
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo crear la materia'}`);
+        }
+    } catch (err) {
+        console.error('Error al crear materia:', err);
+        showAlert('❌ Error de conexión al crear materia');
+    } finally {
+        hideAppLoading();
+    }
+}
+
+async function deleteSubject(id, name) {
+    if (!confirm(`⚠️ ¿Deseas eliminar la materia "${name}"? Se borrarán sus asignaciones asociadas.`)) return;
+
+    showAppLoading('Eliminando materia...');
+    try {
+        const res = await fetch(`/api/subjects/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showAlert(`✅ Materia "${name}" eliminada.`);
+            await loadSuperSubjects();
+            await populateSuperAssignmentSelectors();
+            await loadSuperAssignments();
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo eliminar la materia'}`);
+        }
+    } catch (err) {
+        console.error('Error al eliminar materia:', err);
+        showAlert('❌ Error de conexión');
+    } finally {
+        hideAppLoading();
+    }
+}
+
+// 4. GESTIÓN DE ASIGNACIONES (VINCULAR DOCENTE + CURSO + MATERIA)
+async function populateSuperAssignmentSelectors() {
+    const groupSel = document.getElementById('assignGroupSelect');
+    const subjectSel = document.getElementById('assignSubjectSelect');
+    const teacherSel = document.getElementById('assignTeacherSelect');
+
+    if (!groupSel || !subjectSel || !teacherSel) return;
+
+    try {
+        const [groupsRes, subjectsRes, teachersRes] = await Promise.all([
+            fetch('/api/groups'),
+            fetch('/api/subjects'),
+            fetch('/api/teachers')
+        ]);
+
+        const [groups, subjects, teachers] = await Promise.all([
+            groupsRes.json(),
+            subjectsRes.json(),
+            teachersRes.json()
+        ]);
+
+        groupSel.innerHTML = (Array.isArray(groups) && groups.length > 0)
+            ? groups.map(g => `<option value="${g.id}">Aula ${g.name}</option>`).join('')
+            : '<option value="">No hay aulas disponibles</option>';
+
+        subjectSel.innerHTML = (Array.isArray(subjects) && subjects.length > 0)
+            ? subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')
+            : '<option value="">No hay materias creadas</option>';
+
+        teacherSel.innerHTML = (Array.isArray(teachers) && teachers.length > 0)
+            ? teachers.map(t => `<option value="${t.id}">${t.full_name} (${t.username})</option>`).join('')
+            : '<option value="">No hay docentes registrados</option>';
+    } catch (err) {
+        console.error('Error al poblar selectores de asignación:', err);
+    }
+}
+
+async function loadSuperAssignments() {
+    const container = document.getElementById('superAssignmentsListContainer');
+    if (!container) return;
+    try {
+        const res = await fetch('/api/assignments');
+        const assignments = await res.json();
+
+        if (!Array.isArray(assignments) || assignments.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); padding: 15px 0;">No hay asignaciones registradas todavía.</p>';
+            return;
+        }
+
+        let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+        assignments.forEach(a => {
+            html += `
+                <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 18px;">
+                    <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
+                        <div class="classroom-icon">🔗</div>
+                        <div class="classroom-details">
+                            <h4 style="margin: 0 0 6px 0; color: var(--text-primary); font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-size: 0.85rem;">🪐 Aula ${a.group_name}</span>
+                                <span style="color: var(--text-muted);">➔</span>
+                                <span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; padding: 2px 8px; border-radius: 8px; font-size: 0.85rem;">📚 ${a.subject_name}</span>
+                            </h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                                <span>👨‍🏫 Docente a cargo:</span>
+                                <b style="color: #fff;">${a.teacher_name}</b>
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn--secondary btn--sm" style="color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3);" onclick="deleteAssignment(${a.id})" title="Desvincular esta asignación">❌ Desvincular</button>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('Error cargando asignaciones:', err);
+        container.innerHTML = '<p style="color: #ff5c7a;">Error al cargar las asignaciones.</p>';
+    }
+}
+
+async function submitCreateAssignment() {
+    const group_id = document.getElementById('assignGroupSelect').value;
+    const subject_id = document.getElementById('assignSubjectSelect').value;
+    const teacher_id = document.getElementById('assignTeacherSelect').value;
+
+    if (!group_id || !subject_id || !teacher_id) {
+        showAlert('❌ Selecciona el aula, la materia y el docente para crear la vinculación.');
+        return;
+    }
+
+    showAppLoading('Guardando asignación...');
+    try {
+        const res = await fetch('/api/assignments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ group_id, subject_id, teacher_id })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showAlert(`✅ Asignación creada: Docente ${data.assignment.teacher_name} vinculado a ${data.assignment.subject_name} en Aula ${data.assignment.group_name}`);
+            await loadSuperAssignments();
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo crear la asignación'}`);
+        }
+    } catch (err) {
+        console.error('Error al crear asignación:', err);
+        showAlert('❌ Error de conexión al crear asignación');
+    } finally {
+        hideAppLoading();
+    }
+}
+
+async function deleteAssignment(id) {
+    if (!confirm('⚠️ ¿Estás seguro de que deseas desvincular esta asignación?')) return;
+
+    showAppLoading('Eliminando asignación...');
+    try {
+        const res = await fetch(`/api/assignments/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showAlert('✅ Asignación eliminada.');
+            await loadSuperAssignments();
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo eliminar la asignación'}`);
+        }
+    } catch (err) {
+        console.error('Error al eliminar asignación:', err);
+        showAlert('❌ Error de conexión');
+    } finally {
+        hideAppLoading();
+    }
+}
+
 
 

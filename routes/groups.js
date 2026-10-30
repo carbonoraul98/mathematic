@@ -1,5 +1,5 @@
 const express = require('express');
-const { Group, Student, Attempt } = require('../models/database');
+const { Group, Student, Attempt, CourseAssignment } = require('../models/database');
 const router = express.Router();
 
 // Generar código aleatorio de 5 caracteres alfanuméricos
@@ -12,10 +12,19 @@ function generateCode() {
     return result;
 }
 
-// Obtener todas las aulas (con cuenta de estudiantes)
+// Obtener todas las aulas (con cuenta de estudiantes y soporte de filtro por docente)
 router.get('/', async (req, res) => {
     try {
-        const groups = await Group.find().sort({ name: 1 });
+        const { teacher_id } = req.query;
+        let groups;
+        if (teacher_id) {
+            const assignments = await CourseAssignment.find({ teacher_id: Number(teacher_id) });
+            const groupIds = assignments.map(a => a.group_id);
+            groups = await Group.find({ id: { $in: groupIds } }).sort({ name: 1 });
+        } else {
+            groups = await Group.find().sort({ name: 1 });
+        }
+
         const studentCounts = await Student.aggregate([
             { $group: { _id: "$group_id", count: { $sum: 1 } } }
         ]);
@@ -40,7 +49,7 @@ router.get('/', async (req, res) => {
 // Crear una nueva aula
 router.post('/', async (req, res) => {
     try {
-        const { name } = req.body;
+        const { name, teacher_name } = req.body;
         
         if (!name) {
             return res.status(400).json({ error: 'Falta el nombre del aula' });
@@ -50,10 +59,30 @@ router.post('/', async (req, res) => {
         const newGroup = await Group.create({
             name,
             code,
-            teacher_name: 'Jorge Pajon'
+            teacher_name: teacher_name || 'Sin asignar'
         });
         
         res.json({ success: true, group: newGroup });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Eliminar un aula
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const group = isNaN(id) ? await Group.findOne({ name: id }) : await Group.findOne({ id: Number(id) });
+        if (!group) {
+            return res.status(404).json({ error: 'Aula no encontrada' });
+        }
+        
+        await CourseAssignment.deleteMany({ group_id: group.id });
+        await Student.deleteMany({ group_id: group.id });
+        await Group.deleteOne({ id: group.id });
+        
+        res.json({ success: true, message: `Aula ${group.name} eliminada con éxito` });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

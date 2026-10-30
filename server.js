@@ -18,6 +18,8 @@ app.use('/api/activities', require('./routes/activities'));
 app.use('/api/exams', require('./routes/exams'));
 app.use('/api/grades', require('./routes/grades'));
 app.use('/api/groups', require('./routes/groups'));
+app.use('/api/subjects', require('./routes/subjects'));
+app.use('/api/assignments', require('./routes/assignments'));
 
 const seedGrade4Activity = require('./seedGrade4Activity');
 const seedGrade5Activity = require('./seedGrade5Activity');
