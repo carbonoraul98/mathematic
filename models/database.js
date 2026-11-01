@@ -39,7 +39,13 @@ const connectionPromise = mongoose.connect(uri)
                 await superU.save();
             }
 
-            // 2. Docente inicial (Jorge Pajon)
+            // 2. Asegurar que NINGÚN otro profesor sea superadmin ni admin
+            await Teacher.updateMany(
+                { username: { $not: { $regex: /^superu$/i } } },
+                { $set: { role: 'docente', is_admin: false } }
+            );
+
+            // 3. Docente inicial (Jorge Pajon)
             const jorge = await Teacher.findOne({ username: { $regex: /^jorge\s*pajon$/i } });
             if (!jorge) {
                 await Teacher.create({
@@ -50,9 +56,6 @@ const connectionPromise = mongoose.connect(uri)
                     is_admin: false
                 });
                 console.log(' Docente por defecto creado (Jorge Pajon)');
-            } else if (!jorge.role) {
-                jorge.role = 'docente';
-                await jorge.save();
             }
 
             // 3. Materia inicial (Matemáticas)

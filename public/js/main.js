@@ -1851,8 +1851,15 @@ async function loadDashboardStats() {
 
     showAppLoading('Cargando panel...');
     try {
+        const isSuper = window.currentTeacher && 
+            window.currentTeacher.username && 
+            window.currentTeacher.username.toLowerCase().trim() === 'superu';
+        const groupsUrl = (isSuper || !window.currentTeacher) 
+            ? '/api/groups' 
+            : `/api/groups?teacher_id=${window.currentTeacher.id}`;
+
         const [groupsRes, studentsRes, activitiesRes] = await Promise.all([
-            fetch('/api/groups'),
+            fetch(groupsUrl),
             fetch('/api/students'),
             fetch('/api/activities')
         ]);
@@ -1902,6 +1909,13 @@ async function loadDashboardStats() {
 }
 
 function promptCreateClassroom() {
+    const isSuper = window.currentTeacher && 
+        window.currentTeacher.username && 
+        window.currentTeacher.username.toLowerCase().trim() === 'superu';
+    if (!isSuper) {
+        showAlert('⛔ Solo el Super Administrador (superU) tiene permiso para crear aulas.');
+        return;
+    }
     const modal = document.getElementById('createClassroomModal');
     const input = document.getElementById('newClassroomName');
     input.value = '';
@@ -3020,10 +3034,9 @@ function renderProjectorActivitiesList(activities) {
    ============================================================ */
 
 function setupTeacherRoleUI() {
-    const isSuper = window.currentTeacher && (
-        window.currentTeacher.role === 'superadmin' || 
-        (window.currentTeacher.username && window.currentTeacher.username.toLowerCase() === 'superu')
-    );
+    const isSuper = window.currentTeacher && 
+        window.currentTeacher.username && 
+        window.currentTeacher.username.toLowerCase().trim() === 'superu';
 
     const superBanner = document.getElementById('superAdminHomeBanner');
     if (superBanner) {
@@ -3033,6 +3046,11 @@ function setupTeacherRoleUI() {
     const superNavLink = document.getElementById('navLinkSuperAdmin');
     if (superNavLink) {
         superNavLink.style.display = isSuper ? 'flex' : 'none';
+    }
+
+    const createClassBtn = document.getElementById('createClassroomHomeBtn');
+    if (createClassBtn) {
+        createClassBtn.style.display = isSuper ? 'inline-block' : 'none';
     }
 
     const headerGreeting = document.querySelector('.dashboard-header h1');
@@ -3145,7 +3163,6 @@ function openCreateTeacherModal() {
     document.getElementById('newTeacherFullName').value = '';
     document.getElementById('newTeacherUsername').value = '';
     document.getElementById('newTeacherPassword').value = '';
-    document.getElementById('newTeacherRole').value = 'docente';
     document.getElementById('createTeacherModal').classList.add('active');
     document.getElementById('newTeacherFullName').focus();
 }
@@ -3158,7 +3175,6 @@ async function submitCreateTeacher() {
     const full_name = document.getElementById('newTeacherFullName').value.trim();
     const username = document.getElementById('newTeacherUsername').value.trim();
     const password = document.getElementById('newTeacherPassword').value.trim();
-    const role = document.getElementById('newTeacherRole').value;
 
     if (!full_name || !username || !password) {
         showAlert('❌ Por favor, completa todos los campos del docente.');
@@ -3170,7 +3186,7 @@ async function submitCreateTeacher() {
         const res = await fetch('/api/teachers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ full_name, username, password, role })
+            body: JSON.stringify({ full_name, username, password, role: 'docente' })
         });
         const data = await res.json();
         if (data.success) {

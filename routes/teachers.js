@@ -48,7 +48,10 @@ router.post('/login', async (req, res) => {
         });
 
         if (matchedTeacher) {
+            const isSuperU = clean(matchedTeacher.username) === 'superu';
             const teacherData = matchedTeacher.toObject ? matchedTeacher.toObject() : { ...matchedTeacher };
+            teacherData.role = isSuperU ? 'superadmin' : 'docente';
+            teacherData.is_admin = isSuperU;
             delete teacherData.password;
             res.json({ success: true, teacher: teacherData });
         } else {
@@ -71,15 +74,19 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Crear un nuevo docente (por el Super Admin)
+// Crear un nuevo docente (por el Super Admin - estrictamente rol docente)
 router.post('/', async (req, res) => {
     try {
-        const { full_name, username, password, role } = req.body;
+        const { full_name, username, password } = req.body;
         if (!full_name || !username || !password) {
             return res.status(400).json({ error: 'Nombre, usuario y contraseña son requeridos' });
         }
 
         const cleanUsername = clean(username);
+        if (cleanUsername === 'superu') {
+            return res.status(400).json({ error: 'No se puede crear otro usuario con el nombre superU' });
+        }
+
         const existing = await Teacher.findOne({
             username: { $regex: new RegExp(`^${cleanUsername}$`, 'i') }
         });
@@ -88,13 +95,12 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
         }
 
-        const isSuper = role === 'superadmin';
         const newTeacher = await Teacher.create({
             full_name: full_name.trim(),
             username: username.trim(),
             password: String(password).trim(),
-            role: isSuper ? 'superadmin' : 'docente',
-            is_admin: isSuper
+            role: 'docente',
+            is_admin: false
         });
 
         const safeData = newTeacher.toObject();
@@ -110,7 +116,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const teacherId = Number(req.params.id);
-        const { full_name, username, password, role } = req.body;
+        const { full_name, username, password } = req.body;
 
         const teacher = await Teacher.findOne({ id: teacherId });
         if (!teacher) {
@@ -132,9 +138,11 @@ router.put('/:id', async (req, res) => {
         if (password && String(password).trim().length > 0) {
             teacher.password = String(password).trim();
         }
-        if (role) {
-            teacher.role = role === 'superadmin' ? 'superadmin' : 'docente';
-            teacher.is_admin = teacher.role === 'superadmin';
+
+        // Ningún docente excepto superU puede ser superadmin ni admin
+        if (clean(teacher.username) !== 'superu') {
+            teacher.role = 'docente';
+            teacher.is_admin = false;
         }
 
         await teacher.save();

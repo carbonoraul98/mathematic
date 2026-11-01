@@ -206,7 +206,7 @@
 
         <div class="section-header">
           <h2>Mis aulas</h2>
-          <button class="btn btn--sm" onclick="promptCreateClassroom()">+ Crear aula</button>
+          <button class="btn btn--sm" id="createClassroomHomeBtn" onclick="promptCreateClassroom()">+ Crear aula</button>
         </div>
 
         <div class="classrooms-list" id="classroomsList">
@@ -764,12 +764,9 @@
           <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">Contraseña:</label>
           <input type="text" id="newTeacherPassword" placeholder="Contraseña de acceso" class="input" style="width: 100%;" />
         </div>
-        <div>
-          <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">Rol:</label>
-          <select id="newTeacherRole" class="input" style="width: 100%;">
-            <option value="docente" selected>Docente</option>
-            <option value="superadmin">Super Administrador</option>
-          </select>
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+          <span>Rol asignado:</span>
+          <span style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 6px; font-weight: 600;">👨‍🏫 Docente</span>
         </div>
       </div>
       

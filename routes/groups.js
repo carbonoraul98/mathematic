@@ -20,7 +20,14 @@ router.get('/', async (req, res) => {
         if (teacher_id) {
             const assignments = await CourseAssignment.find({ teacher_id: Number(teacher_id) });
             const groupIds = assignments.map(a => a.group_id);
-            groups = await Group.find({ id: { $in: groupIds } }).sort({ name: 1 });
+            const teacher = await Teacher.findOne({ id: Number(teacher_id) });
+            const teacherName = teacher ? teacher.full_name : '';
+            groups = await Group.find({
+                $or: [
+                    { id: { $in: groupIds } },
+                    { teacher_name: teacherName }
+                ]
+            }).sort({ name: 1 });
         } else {
             groups = await Group.find().sort({ name: 1 });
         }
