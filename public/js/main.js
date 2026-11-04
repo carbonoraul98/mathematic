@@ -3502,16 +3502,25 @@ async function populateSuperAssignmentSelectors() {
             teachersRes.json()
         ]);
 
-        groupSel.innerHTML = (Array.isArray(groups) && groups.length > 0)
-            ? groups.map(g => `<option value="${g.id}">Aula ${g.name}</option>`).join('')
-            : '<option value="">No hay aulas disponibles</option>';
+        window.superAllGroups = Array.isArray(groups) ? groups : [];
+        window.superAllSubjects = Array.isArray(subjects) ? subjects : [];
+        window.superAllTeachers = Array.isArray(teachers) ? teachers : [];
 
-        subjectSel.innerHTML = (Array.isArray(subjects) && subjects.length > 0)
-            ? subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')
+        let groupOptions = '';
+        if (window.superAllGroups.length > 0) {
+            groupOptions = `<option value="all" style="font-weight: 700; color: #22d3ee;">🌟 Todas las aulas (asignación masiva)</option>` +
+                window.superAllGroups.map(g => `<option value="${g.id}">Aula ${g.name}</option>`).join('');
+        } else {
+            groupOptions = '<option value="">No hay aulas disponibles</option>';
+        }
+        groupSel.innerHTML = groupOptions;
+
+        subjectSel.innerHTML = (window.superAllSubjects.length > 0)
+            ? window.superAllSubjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')
             : '<option value="">No hay materias creadas</option>';
 
-        teacherSel.innerHTML = (Array.isArray(teachers) && teachers.length > 0)
-            ? teachers.map(t => `<option value="${t.id}">${t.full_name} (${t.username})</option>`).join('')
+        teacherSel.innerHTML = (window.superAllTeachers.length > 0)
+            ? window.superAllTeachers.map(t => `<option value="${t.id}">${t.full_name} (${t.username})</option>`).join('')
             : '<option value="">No hay docentes registrados</option>';
     } catch (err) {
         console.error('Error al poblar selectores de asignación:', err);
@@ -3524,14 +3533,15 @@ async function loadSuperAssignments() {
     try {
         const res = await fetch('/api/assignments');
         const assignments = await res.json();
+        window.superAssignments = Array.isArray(assignments) ? assignments : [];
 
-        if (!Array.isArray(assignments) || assignments.length === 0) {
+        if (window.superAssignments.length === 0) {
             container.innerHTML = '<p style="color: var(--text-muted); padding: 15px 0;">No hay asignaciones registradas todavía.</p>';
             return;
         }
 
         let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
-        assignments.forEach(a => {
+        window.superAssignments.forEach(a => {
             html += `
                 <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 18px;">
                     <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
@@ -3548,7 +3558,8 @@ async function loadSuperAssignments() {
                             </p>
                         </div>
                     </div>
-                    <div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn--secondary btn--sm" onclick="openEditAssignmentModal(${a.id})" title="Modificar esta asignación">✏️ Modificar</button>
                         <button class="btn btn--secondary btn--sm" style="color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3);" onclick="deleteAssignment(${a.id})" title="Desvincular esta asignación">❌ Desvincular</button>
                     </div>
                 </div>
@@ -3581,14 +3592,83 @@ async function submitCreateAssignment() {
         });
         const data = await res.json();
         if (data.success) {
-            showAlert(`✅ Asignación creada: Docente ${data.assignment.teacher_name} vinculado a ${data.assignment.subject_name} en Aula ${data.assignment.group_name}`);
-            await loadSuperAssignments();
+            if (data.is_mass_assignment) {
+                showAlert(`✅ ${data.message}`);
+            } else {
+                showAlert(`✅ Asignación creada: Docente ${data.assignment.teacher_name} vinculado a ${data.assignment.subject_name} en Aula ${data.assignment.group_name}`);
+            }
+            await Promise.all([loadSuperAssignments(), loadSuperTeachers(), loadStudents()]);
         } else {
             showAlert(`❌ ${data.error || 'No se pudo crear la asignación'}`);
         }
     } catch (err) {
         console.error('Error al crear asignación:', err);
         showAlert('❌ Error de conexión al crear asignación');
+    } finally {
+        hideAppLoading();
+    }
+}
+
+function openEditAssignmentModal(id) {
+    const assignment = (window.superAssignments || []).find(a => a.id === id);
+    if (!assignment) {
+        showAlert('❌ No se encontró la asignación seleccionada.');
+        return;
+    }
+
+    const editGroupSel = document.getElementById('editAssignGroupSelect');
+    const editSubjectSel = document.getElementById('editAssignSubjectSelect');
+    const editTeacherSel = document.getElementById('editAssignTeacherSelect');
+
+    const groups = window.superAllGroups || [];
+    const subjects = window.superAllSubjects || [];
+    const teachers = window.superAllTeachers || [];
+
+    editGroupSel.innerHTML = groups.map(g => `<option value="${g.id}">Aula ${g.name}</option>`).join('');
+    editSubjectSel.innerHTML = subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    editTeacherSel.innerHTML = teachers.map(t => `<option value="${t.id}">${t.full_name} (${t.username})</option>`).join('');
+
+    document.getElementById('editAssignmentId').value = id;
+    editGroupSel.value = assignment.group_id;
+    editSubjectSel.value = assignment.subject_id;
+    editTeacherSel.value = assignment.teacher_id;
+
+    document.getElementById('editAssignmentModal').classList.add('active');
+}
+
+function closeEditAssignmentModal() {
+    document.getElementById('editAssignmentModal').classList.remove('active');
+}
+
+async function submitEditAssignment() {
+    const id = document.getElementById('editAssignmentId').value;
+    const group_id = document.getElementById('editAssignGroupSelect').value;
+    const subject_id = document.getElementById('editAssignSubjectSelect').value;
+    const teacher_id = document.getElementById('editAssignTeacherSelect').value;
+
+    if (!group_id || !subject_id || !teacher_id) {
+        showAlert('❌ Completa todos los campos de la asignación.');
+        return;
+    }
+
+    showAppLoading('Actualizando asignación...');
+    try {
+        const res = await fetch(`/api/assignments/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ group_id, subject_id, teacher_id })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeEditAssignmentModal();
+            showAlert(`✅ Asignación actualizada: Aula ${data.assignment.group_name} ➔ ${data.assignment.subject_name} (${data.assignment.teacher_name})`);
+            await Promise.all([loadSuperAssignments(), loadSuperTeachers(), loadStudents()]);
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo actualizar la asignación'}`);
+        }
+    } catch (err) {
+        console.error('Error al actualizar asignación:', err);
+        showAlert('❌ Error de conexión al actualizar asignación');
     } finally {
         hideAppLoading();
     }
@@ -3603,7 +3683,7 @@ async function deleteAssignment(id) {
         const data = await res.json();
         if (data.success) {
             showAlert('✅ Asignación eliminada.');
-            await loadSuperAssignments();
+            await Promise.all([loadSuperAssignments(), loadSuperTeachers(), loadStudents()]);
         } else {
             showAlert(`❌ ${data.error || 'No se pudo eliminar la asignación'}`);
         }

@@ -46,52 +46,147 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Crear una asignación (Asignar Docente + Materia a un Curso)
+// Crear una asignación (Individual o para Todas las Aulas)
 router.post('/', async (req, res) => {
     try {
-        const group_id = Number(req.body.group_id);
-        const subject_id = Number(req.body.subject_id);
-        const teacher_id = Number(req.body.teacher_id);
+        const { group_id, subject_id, teacher_id, all_groups } = req.body;
+        const subId = Number(subject_id);
+        const tchId = Number(teacher_id);
 
-        if (!group_id || !subject_id || !teacher_id) {
-            return res.status(400).json({ error: 'Aula, Materia y Docente son obligatorios' });
+        if (!subId || !tchId) {
+            return res.status(400).json({ error: 'Materia y Docente son obligatorios' });
         }
 
-        const [group, subject, teacher] = await Promise.all([
-            Group.findOne({ id: group_id }),
-            Subject.findOne({ id: subject_id }),
-            Teacher.findOne({ id: teacher_id })
+        const [subject, teacher] = await Promise.all([
+            Subject.findOne({ id: subId }),
+            Teacher.findOne({ id: tchId })
         ]);
 
-        if (!group) return res.status(404).json({ error: 'Aula no encontrada' });
         if (!subject) return res.status(404).json({ error: 'Materia no encontrada' });
         if (!teacher) return res.status(404).json({ error: 'Docente no encontrado' });
 
-        const existing = await CourseAssignment.findOne({ group_id, subject_id, teacher_id });
+        // Caso: Asignar a TODAS las aulas
+        if (group_id === 'all' || all_groups === true) {
+            const allClassrooms = await Group.find({});
+            if (allClassrooms.length === 0) {
+                return res.status(400).json({ error: 'No hay aulas registradas en el sistema' });
+            }
+
+            let createdCount = 0;
+            for (const grp of allClassrooms) {
+                const existing = await CourseAssignment.findOne({ group_id: grp.id, subject_id: subId, teacher_id: tchId });
+                if (!existing) {
+                    await CourseAssignment.create({
+                        group_id: grp.id,
+                        subject_id: subId,
+                        teacher_id: tchId
+                    });
+                    createdCount++;
+                }
+            }
+
+            return res.json({
+                success: true,
+                is_mass_assignment: true,
+                message: `Se asignó la materia "${subject.name}" con el docente "${teacher.full_name}" a ${createdCount} aula(s).`,
+                count: createdCount
+            });
+        }
+
+        // Caso: Asignar a un aula individual
+        const grpId = Number(group_id);
+        if (!grpId) {
+            return res.status(400).json({ error: 'Debes seleccionar un aula válida' });
+        }
+
+        const group = await Group.findOne({ id: grpId });
+        if (!group) return res.status(404).json({ error: 'Aula no encontrada' });
+
+        const existing = await CourseAssignment.findOne({ group_id: grpId, subject_id: subId, teacher_id: tchId });
         if (existing) {
             return res.status(400).json({ error: 'Este docente ya está asignado a esa materia en esta aula' });
         }
 
         const assignment = await CourseAssignment.create({
-            group_id,
-            subject_id,
-            teacher_id
+            group_id: grpId,
+            subject_id: subId,
+            teacher_id: tchId
         });
 
         res.json({
             success: true,
             assignment: {
                 id: assignment.id,
-                group_id,
+                group_id: grpId,
                 group_name: group.name,
-                subject_id,
+                subject_id: subId,
                 subject_name: subject.name,
-                teacher_id,
+                teacher_id: tchId,
                 teacher_name: teacher.full_name
             }
         });
     } catch (error) {
         console.error('Error al crear asignación:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Actualizar / Modificar una asignación
+router.put('/:id', async (req, res) => {
+    try {
+        const assignmentId = Number(req.params.id);
+        const { group_id, subject_id, teacher_id } = req.body;
+
+        const assignment = await CourseAssignment.findOne({ id: assignmentId });
+        if (!assignment) {
+            return res.status(404).json({ error: 'Asignación no encontrada' });
+        }
+
+        const newGroupId = group_id ? Number(group_id) : assignment.group_id;
+        const newSubjectId = subject_id ? Number(subject_id) : assignment.subject_id;
+        const newTeacherId = teacher_id ? Number(teacher_id) : assignment.teacher_id;
+
+        const [group, subject, teacher] = await Promise.all([
+            Group.findOne({ id: newGroupId }),
+            Subject.findOne({ id: newSubjectId }),
+            Teacher.findOne({ id: newTeacherId })
+        ]);
+
+        if (!group) return res.status(404).json({ error: 'Aula no encontrada' });
+        if (!subject) return res.status(404).json({ error: 'Materia no encontrada' });
+        if (!teacher) return res.status(404).json({ error: 'Docente no encontrado' });
+
+        // Verificar colisión con otra asignación existente
+        const conflict = await CourseAssignment.findOne({
+            id: { $ne: assignmentId },
+            group_id: newGroupId,
+            subject_id: newSubjectId,
+            teacher_id: newTeacherId
+        });
+
+        if (conflict) {
+            return res.status(400).json({ error: 'Ya existe una asignación idéntica para esa aula, materia y docente' });
+        }
+
+        assignment.group_id = newGroupId;
+        assignment.subject_id = newSubjectId;
+        assignment.teacher_id = newTeacherId;
+        await assignment.save();
+
+        res.json({
+            success: true,
+            assignment: {
+                id: assignment.id,
+                group_id: newGroupId,
+                group_name: group.name,
+                subject_id: newSubjectId,
+                subject_name: subject.name,
+                teacher_id: newTeacherId,
+                teacher_name: teacher.full_name
+            }
+        });
+    } catch (error) {
+        console.error('Error al actualizar asignación:', error);
         res.status(500).json({ error: error.message });
     }
 });

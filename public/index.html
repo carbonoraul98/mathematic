@@ -826,6 +826,35 @@
     </div>
   </div>
 
+  <!-- MODAL EDITAR ASIGNACIÓN -->
+  <div class="modal-overlay" id="editAssignmentModal">
+    <div class="modal-content" style="max-width: 480px; padding: var(--space-3xl); text-align: left;">
+      <h2 style="margin-bottom: var(--space-md); text-align: left;">✏️ Modificar asignación</h2>
+      <p style="color: var(--text-secondary); text-align: left; margin-bottom: var(--space-xl);">Cambia el aula, la materia o el docente a cargo de esta asignación.</p>
+      
+      <input type="hidden" id="editAssignmentId" />
+      <div style="display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-2xl);">
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">🏫 Aula / Curso:</label>
+          <select id="editAssignGroupSelect" class="input" style="width: 100%;"></select>
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">📚 Materia:</label>
+          <select id="editAssignSubjectSelect" class="input" style="width: 100%;"></select>
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">👨‍🏫 Docente a cargo:</label>
+          <select id="editAssignTeacherSelect" class="input" style="width: 100%;"></select>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+        <button class="btn btn--secondary btn--sm" onclick="closeEditAssignmentModal()">Cancelar</button>
+        <button class="btn btn--sm" onclick="submitEditAssignment()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DESCARGAR CALIFICACIONES -->
   <div class="modal-overlay" id="downloadGradesModal">
     <div class="modal-content" style="max-width: 420px; padding: var(--space-3xl); text-align: left;">
@@ -1199,6 +1228,6 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=28"></script>
+  <script src="js/main.js?v=29"></script>
 </body>
 </html>
