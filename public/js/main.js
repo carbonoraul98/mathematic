@@ -975,6 +975,8 @@ async function crearActividad() {
     return;
   }
 
+  const chkReplicate = document.getElementById("chkReplicateActivity");
+
   // Recolectar aulas destino
   let targetGroups = [];
   let primaryGroupId = null;
@@ -987,7 +989,6 @@ async function crearActividad() {
     primaryGroupId = Number(selectedGroupVal);
     targetGroups.push(primaryGroupId);
 
-    const chkReplicate = document.getElementById("chkReplicateActivity");
     if (chkReplicate && chkReplicate.checked) {
       const checkBoxes = document.querySelectorAll('.replicate-group-chk:checked');
       checkBoxes.forEach(cb => {
@@ -1057,11 +1058,11 @@ async function crearActividad() {
         showTeacherSection('viewActivitiesSection', activitiesLink);
       }
     } else {
-      showAlert('❌ Error al guardar la actividad');
+      showAlert('❌ Error al guardar la actividad: ' + (result.error || 'Verifica los datos'));
     }
   } catch (error) {
-    console.error('Error:', error);
-    showAlert('❌ Error de conexión');
+    console.error('Error al guardar actividad:', error);
+    showAlert('❌ Error al guardar actividad: ' + (error.message || 'Error de conexión'));
   }
 }
 
