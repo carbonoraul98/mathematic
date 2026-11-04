@@ -1,5 +1,5 @@
 const express = require('express');
-const { Teacher } = require('../models/database');
+const { Teacher, CourseAssignment, Group, Subject } = require('../models/database');
 const router = express.Router();
 
 function clean(str) {
@@ -63,11 +63,42 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Listar todos los docentes (para el Super Admin)
+// Listar todos los docentes (para el Super Admin) enriquecido con sus cursos y materias
 router.get('/', async (req, res) => {
     try {
         const teachers = await Teacher.find({}, '-password').sort({ full_name: 1 });
-        res.json(teachers);
+        const teacherIds = teachers.map(t => t.id);
+
+        const [assignments, groups, subjects] = await Promise.all([
+            CourseAssignment.find({ teacher_id: { $in: teacherIds } }),
+            Group.find({}, 'id name code'),
+            Subject.find({}, 'id name description')
+        ]);
+
+        const groupMap = new Map(groups.map(g => [g.id, g.name]));
+        const subjectMap = new Map(subjects.map(s => [s.id, s.name]));
+
+        const assignmentMap = {};
+        assignments.forEach(a => {
+            if (!assignmentMap[a.teacher_id]) assignmentMap[a.teacher_id] = [];
+            assignmentMap[a.teacher_id].push({
+                assignment_id: a.id,
+                group_id: a.group_id,
+                group_name: groupMap.get(a.group_id) || `Aula #${a.group_id}`,
+                subject_id: a.subject_id,
+                subject_name: subjectMap.get(a.subject_id) || `Materia #${a.subject_id}`
+            });
+        });
+
+        const enriched = teachers.map(t => {
+            const tObj = t.toObject ? t.toObject() : { ...t };
+            return {
+                ...tObj,
+                assignments: assignmentMap[t.id] || []
+            };
+        });
+
+        res.json(enriched);
     } catch (error) {
         console.error('Error al listar docentes:', error);
         res.status(500).json({ error: error.message });

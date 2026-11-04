@@ -58,14 +58,21 @@ const connectionPromise = mongoose.connect(uri)
                 console.log(' Docente por defecto creado (Jorge Pajon)');
             }
 
-            // 3. Materia inicial (Matemáticas)
-            const existingSubject = await Subject.findOne({ name: { $regex: /^matem[aá]ticas$/i } });
-            if (!existingSubject) {
-                await Subject.create({
-                    name: 'Matemáticas',
-                    description: 'Materia base del sistema'
-                });
-                console.log(' Materia por defecto creada (Matemáticas)');
+            // 3. Materias iniciales con descripciones
+            const defaultSubjects = [
+                { name: 'Matemáticas', description: 'Aritmética, operaciones, lógica y resolución de problemas.' },
+                { name: 'Ciencias Naturales', description: 'Biología, física, ecosistemas y cuidado del medio ambiente.' },
+                { name: 'Lengua Castellana', description: 'Comprensión lectora, redacción, gramática y ortografía.' },
+                { name: 'Ciencias Sociales', description: 'Historia, geografía y competencias ciudadanas.' },
+                { name: 'Inglés', description: 'Vocabulario, estructuras gramaticales y expresión comunicativa.' }
+            ];
+
+            for (const sub of defaultSubjects) {
+                const found = await Subject.findOne({ name: { $regex: new RegExp(`^${sub.name}$`, 'i') } });
+                if (!found) {
+                    await Subject.create(sub);
+                    console.log(` Materia creada: ${sub.name}`);
+                }
             }
         } catch (seedErr) {
             console.error('Error inicializando superU/docente/materia:', seedErr.message);

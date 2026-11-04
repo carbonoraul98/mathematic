@@ -1893,12 +1893,25 @@ async function loadDashboardStats() {
             } else {
                 let html = '<div class="classrooms-list fade-in-content" style="gap: 14px;">';
                 groups.forEach(g => {
+                    let subjectsLabel = '';
+                    if (g.my_subjects && g.my_subjects.length > 0) {
+                        subjectsLabel = `<span style="background: rgba(147, 51, 234, 0.25); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 0.78rem;">📚 ${g.my_subjects.join(', ')}</span>`;
+                    } else if (g.assignments && g.assignments.length > 0) {
+                        const uniqueSubs = [...new Set(g.assignments.map(a => a.subject_name))];
+                        subjectsLabel = `<span style="background: rgba(147, 51, 234, 0.25); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 0.78rem;">📚 ${uniqueSubs.join(', ')}</span>`;
+                    } else {
+                        subjectsLabel = `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 6px; font-size: 0.78rem;">📚 Sin materia asignada</span>`;
+                    }
+
                     html += `
                     <div class="classroom-item" onclick="openClassroomDetail('${g.name}')" style="cursor: pointer; margin-bottom: 14px;">
                         <div class="classroom-item-info">
                             <div class="classroom-icon">🪐</div>
                             <div class="classroom-details">
-                                <h4>${g.name}</h4>
+                                <h4 style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    ${g.name}
+                                    ${subjectsLabel}
+                                </h4>
                                 <p>${g.code && g.code !== 'N/A' ? `Código: ${g.code} • ` : ''}${g.student_count || 0} estudiantes</p>
                             </div>
                         </div>
@@ -2130,7 +2143,12 @@ async function openClassroomDetail(groupName) {
     const groupObj = (window.todasLasAulas || []).find(g => g.name === groupName);
     const groupId = groupObj ? groupObj.id : null;
     
-    document.getElementById('classroomDetailTitle').innerText = '🪐 Aula ' + groupName;
+    const subjectsBadge = (groupObj && groupObj.my_subjects && groupObj.my_subjects.length > 0)
+        ? ` <span style="font-size: 0.85rem; background: rgba(147, 51, 234, 0.25); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); padding: 4px 10px; border-radius: 8px; font-weight: 600; vertical-align: middle;">📚 Materia: ${groupObj.my_subjects.join(', ')}</span>`
+        : (groupObj && groupObj.assignments && groupObj.assignments.length > 0
+            ? ` <span style="font-size: 0.85rem; background: rgba(147, 51, 234, 0.25); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); padding: 4px 10px; border-radius: 8px; font-weight: 600; vertical-align: middle;">📚 ${[...new Set(groupObj.assignments.map(a => `${a.subject_name} (${a.teacher_name})`))].join(' • ')}</span>`
+            : '');
+    document.getElementById('classroomDetailTitle').innerHTML = '🪐 Aula ' + groupName + subjectsBadge;
     
     const headerActions = document.getElementById('classroomDetailHeaderActions');
     if (headerActions) {
@@ -3144,6 +3162,12 @@ async function loadSuperTeachers() {
                 ? ''
                 : `<button class="btn btn--secondary btn--sm" style="color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3);" onclick="deleteTeacher(${t.id}, '${t.full_name.replace(/'/g, "\\'")}')" title="Eliminar docente">🗑️ Eliminar</button>`;
 
+            const assignmentsList = (t.assignments && t.assignments.length > 0)
+                ? `<div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">` +
+                  t.assignments.map(a => `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35); padding: 3px 8px; border-radius: 6px; font-size: 0.78rem;">🏫 ${a.group_name} ➔ 📚 ${a.subject_name}</span>`).join('') +
+                  `</div>`
+                : (!isSuper ? `<div style="margin-top: 6px; color: var(--text-muted); font-size: 0.78rem;">⚠️ Sin materias ni cursos asignados todavía</div>` : '');
+
             html += `
                 <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 18px;">
                     <div class="classroom-item-info" style="min-width: 200px; flex: 1;">
@@ -3154,6 +3178,7 @@ async function loadSuperTeachers() {
                                 <span>Usuario: <b>${t.username}</b></span>
                                 ${roleBadge}
                             </p>
+                            ${assignmentsList}
                         </div>
                     </div>
                     <div>${deleteBtn}</div>
@@ -3315,19 +3340,22 @@ async function loadSuperSubjects() {
 
         let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
         subjects.forEach(s => {
+            const cleanDesc = (s.description || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
+            const cleanName = s.name.replace(/'/g, "\\'");
             html += `
                 <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 18px;">
                     <div class="classroom-item-info" style="min-width: 200px; flex: 1;">
                         <div class="classroom-icon">📚</div>
                         <div class="classroom-details">
-                            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: 1rem;">${s.name}</h4>
-                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem;">
-                                ${s.description ? s.description : 'Sin descripción adicional'}
+                            <h4 style="margin: 0 0 6px 0; color: var(--text-primary); font-size: 1.05rem;">${s.name}</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.4;">
+                                ${s.description ? s.description : '<i style="color: var(--text-muted);">Sin descripción temática</i>'}
                             </p>
                         </div>
                     </div>
-                    <div>
-                        <button class="btn btn--secondary btn--sm" style="color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3);" onclick="deleteSubject(${s.id}, '${s.name.replace(/'/g, "\\'")}')" title="Eliminar materia">🗑️ Eliminar</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn--secondary btn--sm" onclick="openEditSubjectModal(${s.id}, '${cleanName}', '${cleanDesc}')" title="Editar materia y descripción">✏️ Editar</button>
+                        <button class="btn btn--secondary btn--sm" style="color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3);" onclick="deleteSubject(${s.id}, '${cleanName}')" title="Eliminar materia">🗑️ Eliminar</button>
                     </div>
                 </div>
             `;
@@ -3337,6 +3365,52 @@ async function loadSuperSubjects() {
     } catch (err) {
         console.error('Error cargando materias:', err);
         container.innerHTML = '<p style="color: #ff5c7a;">Error al cargar las materias.</p>';
+    }
+}
+
+function openEditSubjectModal(id, name, desc) {
+    document.getElementById('editSubjectId').value = id;
+    document.getElementById('editSubjectName').value = name;
+    document.getElementById('editSubjectDesc').value = desc || '';
+    document.getElementById('editSubjectModal').classList.add('active');
+    document.getElementById('editSubjectName').focus();
+}
+
+function closeEditSubjectModal() {
+    document.getElementById('editSubjectModal').classList.remove('active');
+}
+
+async function submitEditSubject() {
+    const id = document.getElementById('editSubjectId').value;
+    const name = document.getElementById('editSubjectName').value.trim();
+    const description = document.getElementById('editSubjectDesc').value.trim();
+
+    if (!name) {
+        showAlert('❌ El nombre de la materia es requerido.');
+        return;
+    }
+
+    showAppLoading('Actualizando materia...');
+    try {
+        const res = await fetch(`/api/subjects/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeEditSubjectModal();
+            showAlert(`✅ Materia "${data.subject.name}" actualizada con éxito`);
+            await loadSuperSubjects();
+            await populateSuperAssignmentSelectors();
+        } else {
+            showAlert(`❌ ${data.error || 'No se pudo actualizar la materia'}`);
+        }
+    } catch (err) {
+        console.error('Error al actualizar materia:', err);
+        showAlert('❌ Error de conexión al actualizar materia');
+    } finally {
+        hideAppLoading();
     }
 }
 

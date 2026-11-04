@@ -1,5 +1,5 @@
 const express = require('express');
-const { Group, Student, Attempt, CourseAssignment } = require('../models/database');
+const { Group, Student, Attempt, CourseAssignment, Teacher, Subject } = require('../models/database');
 const router = express.Router();
 
 // Generar código aleatorio de 5 caracteres alfanuméricos
@@ -32,8 +32,15 @@ router.get('/', async (req, res) => {
             groups = await Group.find().sort({ name: 1 });
         }
 
-        const studentCounts = await Student.aggregate([
-            { $group: { _id: "$group_id", count: { $sum: 1 } } }
+        const groupIds = groups.map(g => g.id);
+        const [studentCounts, assignments, subjects, teachers] = await Promise.all([
+            Student.aggregate([
+                { $match: { group_id: { $in: groupIds } } },
+                { $group: { _id: "$group_id", count: { $sum: 1 } } }
+            ]),
+            CourseAssignment.find({ group_id: { $in: groupIds } }),
+            Subject.find({}, 'id name description'),
+            Teacher.find({}, 'id full_name username')
         ]);
         
         const countMap = {};
@@ -41,10 +48,40 @@ router.get('/', async (req, res) => {
             countMap[item._id] = item.count;
         });
 
-        const groupsWithCount = groups.map(g => ({
-            ...g.toObject(),
-            student_count: countMap[g.id] || 0
-        }));
+        const subjectMap = new Map(subjects.map(s => [s.id, s]));
+        const teacherMap = new Map(teachers.map(t => [t.id, t]));
+
+        const assignmentMap = {};
+        assignments.forEach(a => {
+            if (!assignmentMap[a.group_id]) assignmentMap[a.group_id] = [];
+            const sub = subjectMap.get(a.subject_id);
+            const tch = teacherMap.get(a.teacher_id);
+            assignmentMap[a.group_id].push({
+                assignment_id: a.id,
+                subject_id: a.subject_id,
+                subject_name: sub ? sub.name : 'Materia',
+                subject_desc: sub ? sub.description : '',
+                teacher_id: a.teacher_id,
+                teacher_name: tch ? tch.full_name : 'Docente'
+            });
+        });
+
+        const groupsWithCount = groups.map(g => {
+            const grpObj = g.toObject();
+            const groupAssignments = assignmentMap[g.id] || [];
+            let mySubjects = [];
+            if (teacher_id) {
+                mySubjects = groupAssignments
+                    .filter(a => a.teacher_id === Number(teacher_id))
+                    .map(a => a.subject_name);
+            }
+            return {
+                ...grpObj,
+                student_count: countMap[g.id] || 0,
+                assignments: groupAssignments,
+                my_subjects: mySubjects
+            };
+        });
 
         res.json(groupsWithCount);
     } catch (error) {

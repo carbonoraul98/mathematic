@@ -779,24 +779,49 @@
 
   <!-- MODAL CREAR MATERIA -->
   <div class="modal-overlay" id="createSubjectModal">
-    <div class="modal-content" style="max-width: 450px; padding: var(--space-3xl); text-align: left;">
+    <div class="modal-content" style="max-width: 480px; padding: var(--space-3xl); text-align: left;">
       <h2 style="margin-bottom: var(--space-md); text-align: left;">📚 Crear nueva materia</h2>
-      <p style="color: var(--text-secondary); text-align: left; margin-bottom: var(--space-xl);">Ingresa el nombre de la materia (ej. Ciencias Naturales, Lenguaje, Inglés).</p>
+      <p style="color: var(--text-secondary); text-align: left; margin-bottom: var(--space-xl);">Ingresa el nombre de la materia y su descripción temática.</p>
       
       <div style="display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-2xl);">
         <div>
           <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">Nombre de la materia:</label>
-          <input type="text" id="newSubjectName" placeholder="Ej. Ciencias Naturales" class="input" style="width: 100%;" />
+          <input type="text" id="newSubjectName" placeholder="Ej. Ciencias Naturales, Inglés, etc." class="input" style="width: 100%;" />
         </div>
         <div>
-          <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">Descripción (opcional):</label>
-          <input type="text" id="newSubjectDesc" placeholder="Breve descripción" class="input" style="width: 100%;" />
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">Descripción de la materia:</label>
+          <textarea id="newSubjectDesc" placeholder="Describe los temas, competencias o enfoque de esta materia..." class="input" style="width: 100%; min-height: 80px; resize: vertical; font-family: inherit;"></textarea>
         </div>
       </div>
       
       <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
         <button class="btn btn--secondary btn--sm" onclick="closeCreateSubjectModal()">Cancelar</button>
         <button class="btn btn--sm" onclick="submitCreateSubject()">Guardar Materia</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR MATERIA -->
+  <div class="modal-overlay" id="editSubjectModal">
+    <div class="modal-content" style="max-width: 480px; padding: var(--space-3xl); text-align: left;">
+      <h2 style="margin-bottom: var(--space-md); text-align: left;">✏️ Editar materia</h2>
+      <p style="color: var(--text-secondary); text-align: left; margin-bottom: var(--space-xl);">Modifica el nombre o la descripción de esta materia.</p>
+      
+      <input type="hidden" id="editSubjectId" />
+      <div style="display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-2xl);">
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">Nombre de la materia:</label>
+          <input type="text" id="editSubjectName" class="input" style="width: 100%;" />
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-secondary);">Descripción de la materia:</label>
+          <textarea id="editSubjectDesc" class="input" style="width: 100%; min-height: 80px; resize: vertical; font-family: inherit;"></textarea>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md); justify-content: flex-end;">
+        <button class="btn btn--secondary btn--sm" onclick="closeEditSubjectModal()">Cancelar</button>
+        <button class="btn btn--sm" onclick="submitEditSubject()">Actualizar Materia</button>
       </div>
     </div>
   </div>
@@ -1174,6 +1199,6 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=27"></script>
+  <script src="js/main.js?v=28"></script>
 </body>
 </html>
