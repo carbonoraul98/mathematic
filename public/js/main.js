@@ -1295,6 +1295,14 @@ function showTeacherSection(id, btnElement) {
   } else if (id === "studentsSection") {
     loadStudents();
   } else if (id === "superAdminSection") {
+    const isSuper = window.currentTeacher && 
+        window.currentTeacher.username && 
+        window.currentTeacher.username.toLowerCase().trim() === 'superu';
+    if (!isSuper) {
+        showAlert('⛔ Acceso denegado: el Panel de Super Administrador es exclusivo para la cuenta superU.');
+        showTeacherSection('dashboardHome', document.getElementById('navLinkHome'));
+        return;
+    }
     loadSuperAdminData();
   }
 }
@@ -1838,6 +1846,7 @@ async function loadPractices() {
 // Cargar estudiantes al iniciar si estamos en el panel del profesor
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('teacherPanel')) {
+        setupTeacherRoleUI();
         loadStudents();
         loadDashboardStats();
     }
