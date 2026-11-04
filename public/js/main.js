@@ -292,7 +292,32 @@ function logout() {
   authenticatedRole = null;
   window.currentTeacher = null;
   estudianteActual = null;
+  estudiantes = [];
+  window.todasLasAulas = [];
+  window.teacherSubjects = [];
+  currentClassroomGroupName = null;
   activeMapGrade = '4';
+
+  purgeSuperAdminCache();
+
+  // Resetear todas las secciones del panel docente para no heredar vistas de sesiones previas
+  document.querySelectorAll("#teacherPanel .section").forEach((sec) => {
+    sec.classList.remove("show");
+    sec.style.display = "none";
+  });
+  const homeSec = document.getElementById("dashboardHome");
+  if (homeSec) {
+    homeSec.classList.add("show");
+    homeSec.style.display = "block";
+  }
+
+  try {
+    sessionStorage.clear();
+    if (window.caches && typeof window.caches.keys === 'function') {
+      window.caches.keys().then(keys => keys.forEach(k => window.caches.delete(k)));
+    }
+  } catch (e) {}
+
   if(document.getElementById("loginUser")) document.getElementById("loginUser").value = "";
   if(document.getElementById("loginPass")) document.getElementById("loginPass").value = "";
   if(document.getElementById("loginResult")) document.getElementById("loginResult").innerHTML = "";
@@ -441,10 +466,13 @@ async function enterAsRole(role) {
   }
 
   if (role === 'profesor') {
+    purgeSuperAdminCache();
     showScreen("teacherPanel");
     setupTeacherRoleUI();
-    await Promise.all([loadStudents(), loadDashboardStats()]);
+    showTeacherSection('dashboardHome', document.getElementById('navLinkHome'));
+    await loadStudents();
   } else {
+    purgeSuperAdminCache();
     showScreen("studentPanel");
     updateStudentDisplayNameUI();
     switchStudentTab('home');
@@ -1257,6 +1285,20 @@ document.addEventListener('click', (e) => {
 });
 
 function showTeacherSection(id, btnElement) {
+  const isSuper = isCurrentUserSuperAdmin();
+
+  // Siempre limpiar caché y DOM de Super Admin al cambiar de sección si no es superU o si sale de superAdminSection
+  if (!isSuper || id !== "superAdminSection") {
+    purgeSuperAdminCache();
+  }
+  setupTeacherRoleUI();
+
+  if (id === "superAdminSection" && !isSuper) {
+    showAlert('⛔ Acceso denegado: el Panel de Super Administrador es exclusivo para la cuenta superU.');
+    showTeacherSection('dashboardHome', document.getElementById('navLinkHome'));
+    return;
+  }
+
   document.querySelectorAll("#teacherPanel .section").forEach((sec) => {
     sec.classList.remove("show");
     sec.style.display = "none";
@@ -1302,14 +1344,6 @@ function showTeacherSection(id, btnElement) {
   } else if (id === "studentsSection") {
     loadStudents();
   } else if (id === "superAdminSection") {
-    const isSuper = window.currentTeacher && 
-        window.currentTeacher.username && 
-        window.currentTeacher.username.toLowerCase().trim() === 'superu';
-    if (!isSuper) {
-        showAlert('⛔ Acceso denegado: el Panel de Super Administrador es exclusivo para la cuenta superU.');
-        showTeacherSection('dashboardHome', document.getElementById('navLinkHome'));
-        return;
-    }
     loadSuperAdminData();
   }
 }
@@ -3103,10 +3137,71 @@ function renderProjectorActivitiesList(activities) {
    SUPER ADMIN MANAGEMENT MODULE
    ============================================================ */
 
+function isCurrentUserSuperAdmin() {
+    return Boolean(
+        window.currentTeacher &&
+        window.currentTeacher.username &&
+        window.currentTeacher.username.toLowerCase().trim() === 'superu'
+    );
+}
+
+function purgeSuperAdminCache() {
+    window.superAllTeachers = [];
+    window.superAllGroups = [];
+    window.superAllSubjects = [];
+    window.superAssignments = [];
+
+    const containers = [
+        'superTeachersListContainer',
+        'superCoursesListContainer',
+        'superSubjectsListContainer',
+        'superAssignmentsListContainer'
+    ];
+    containers.forEach(cid => {
+        const el = document.getElementById(cid);
+        if (el) el.innerHTML = '';
+    });
+
+    const selects = [
+        'assignGroupSelect',
+        'assignSubjectSelect',
+        'assignTeacherSelect',
+        'editAssignGroupSelect',
+        'editAssignSubjectSelect',
+        'editAssignTeacherSelect'
+    ];
+    selects.forEach(sid => {
+        const el = document.getElementById(sid);
+        if (el) el.innerHTML = '';
+    });
+
+    ['createTeacherModal', 'createSubjectModal', 'editAssignmentModal'].forEach(mid => {
+        const modal = document.getElementById(mid);
+        if (modal) modal.classList.remove('active');
+    });
+
+    if (!isCurrentUserSuperAdmin()) {
+        const superSec = document.getElementById('superAdminSection');
+        if (superSec) {
+            superSec.classList.remove('show');
+            superSec.style.display = 'none';
+        }
+        const superBanner = document.getElementById('superAdminHomeBanner');
+        if (superBanner) superBanner.style.display = 'none';
+
+        const superNavLink = document.getElementById('navLinkSuperAdmin');
+        if (superNavLink) {
+            superNavLink.classList.remove('active');
+            superNavLink.style.display = 'none';
+        }
+
+        const createClassBtn = document.getElementById('createClassroomHomeBtn');
+        if (createClassBtn) createClassBtn.style.display = 'none';
+    }
+}
+
 function setupTeacherRoleUI() {
-    const isSuper = window.currentTeacher && 
-        window.currentTeacher.username && 
-        window.currentTeacher.username.toLowerCase().trim() === 'superu';
+    const isSuper = isCurrentUserSuperAdmin();
 
     const superBanner = document.getElementById('superAdminHomeBanner');
     if (superBanner) {
@@ -3116,11 +3211,18 @@ function setupTeacherRoleUI() {
     const superNavLink = document.getElementById('navLinkSuperAdmin');
     if (superNavLink) {
         superNavLink.style.display = isSuper ? 'flex' : 'none';
+        if (!isSuper) superNavLink.classList.remove('active');
     }
 
     const createClassBtn = document.getElementById('createClassroomHomeBtn');
     if (createClassBtn) {
         createClassBtn.style.display = isSuper ? 'inline-block' : 'none';
+    }
+
+    const superSec = document.getElementById('superAdminSection');
+    if (!isSuper && superSec) {
+        superSec.classList.remove('show');
+        superSec.style.display = 'none';
     }
 
     const headerGreeting = document.querySelector('.dashboard-header h1');
@@ -3132,6 +3234,10 @@ function setupTeacherRoleUI() {
 }
 
 function switchSuperTab(tabName) {
+    if (!isCurrentUserSuperAdmin()) {
+        purgeSuperAdminCache();
+        return;
+    }
     const tabs = ['docentes', 'cursos', 'materias', 'asignaciones'];
     tabs.forEach(t => {
         const btn = document.getElementById(`superTab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
@@ -3163,6 +3269,10 @@ function switchSuperTab(tabName) {
 }
 
 async function loadSuperAdminData() {
+    if (!isCurrentUserSuperAdmin()) {
+        purgeSuperAdminCache();
+        return;
+    }
     showAppLoading('Cargando datos del Super Admin...');
     try {
         await Promise.all([
