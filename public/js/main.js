@@ -1003,6 +1003,9 @@ async function crearActividad() {
   const isTrainingLevel = chkManualTraining ? chkManualTraining.checked : false;
   const trainingGrade = isTrainingLevel ? document.getElementById("manualTrainingGrade").value : "";
   const trainingIcon = isTrainingLevel ? document.getElementById("manualTrainingIcon").value : "🏆";
+  const subEl = document.getElementById("activitySubject");
+  const selectedSubject = subEl ? subEl.value : 'Matemáticas';
+  const curTch = window.currentTeacher;
   
   try {
     const res = await fetch('/api/activities', {
@@ -1015,6 +1018,9 @@ async function crearActividad() {
         grade: gradoBase,
         group_id: primaryGroupId ? Number(primaryGroupId) : null,
         target_groups: targetGroups,
+        subject_name: selectedSubject,
+        teacher_id: curTch ? curTch.id : null,
+        teacher_name: curTch ? curTch.full_name : '',
         questions: preguntasTemp,
         is_training_level: isTrainingLevel,
         training_grade: trainingGrade,
@@ -1700,6 +1706,10 @@ async function loadActivities() {
                 ? `<span style="background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 8px; font-weight: 700;">🗺️ Nivel de Ruta (${act.training_grade || '?'}° Grado ${act.map_icon || '🏆'})</span>`
                 : '';
 
+            const subjectBadge = act.subject_name 
+                ? `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35); padding: 2px 8px; border-radius: 8px; font-weight: 600;">📖 ${act.subject_name}</span>`
+                : '';
+
             html += `
                 <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: var(--space-md); flex-wrap: wrap; gap: 12px;">
                     <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
@@ -1709,6 +1719,7 @@ async function loadActivities() {
                             <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <span style="background: rgba(99, 102, 241, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 8px; font-weight: 600;">${act.type || 'Actividad'}</span>
                                 ${trainingBadge}
+                                ${subjectBadge}
                                 ${aulaBadge}
                                 <span>• 📚 ${act.theme || 'Sin grado'}</span>
                                 <span>• ❓ ${qCount} pregunta${qCount === 1 ? '' : 's'}</span>
@@ -2351,8 +2362,36 @@ function createActivityForGroup(groupId, groupName) {
         themeInput.focus();
         themeInput.placeholder = `Ej: Taller práctico para Aula ${groupName}`;
     }
+
+    const grp = (window.todasLasAulas || []).find(g => g.id === Number(groupId) || g.name === groupName);
+    const subSel = document.getElementById('activitySubject');
+    if (grp && subSel) {
+        if (grp.my_subjects && grp.my_subjects.length > 0) {
+            subSel.value = grp.my_subjects[0];
+        } else if (grp.assignments && grp.assignments.length > 0) {
+            subSel.value = grp.assignments[0].subject_name;
+        }
+    }
     
     showAlert(`📍 Asignando actividad para Aula ${groupName}`);
+}
+
+async function populateActivitySubjectSelector() {
+    const subSel = document.getElementById('activitySubject');
+    if (!subSel) return;
+    try {
+        const res = await fetch('/api/subjects');
+        const subjects = await res.json();
+        if (Array.isArray(subjects) && subjects.length > 0) {
+            const currentVal = subSel.value;
+            subSel.innerHTML = subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            if (currentVal && subjects.some(s => s.name === currentVal)) {
+                subSel.value = currentVal;
+            }
+        }
+    } catch (e) {
+        console.error('Error al poblar materias en actividades:', e);
+    }
 }
 
 function updateTargetGroupOptions() {
@@ -2407,6 +2446,9 @@ function populateGroupSelectors(groups) {
 
     // 2. Selector en modal de edición
     updateEditTargetGroupOptions();
+
+    // 3. Materias disponibles
+    populateActivitySubjectSelector();
 
     // 3. Checkboxes para replicar a otros cursos
     const repList = document.getElementById('replicateGroupsList');
@@ -3624,7 +3666,8 @@ function openEditAssignmentModal(id) {
     const subjects = window.superAllSubjects || [];
     const teachers = window.superAllTeachers || [];
 
-    editGroupSel.innerHTML = groups.map(g => `<option value="${g.id}">Aula ${g.name}</option>`).join('');
+    editGroupSel.innerHTML = `<option value="all" style="font-weight: 700; color: #22d3ee;">🌟 Todas las aulas (asignación masiva)</option>` +
+        groups.map(g => `<option value="${g.id}">Aula ${g.name}</option>`).join('');
     editSubjectSel.innerHTML = subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     editTeacherSel.innerHTML = teachers.map(t => `<option value="${t.id}">${t.full_name} (${t.username})</option>`).join('');
 
@@ -3661,7 +3704,11 @@ async function submitEditAssignment() {
         const data = await res.json();
         if (data.success) {
             closeEditAssignmentModal();
-            showAlert(`✅ Asignación actualizada: Aula ${data.assignment.group_name} ➔ ${data.assignment.subject_name} (${data.assignment.teacher_name})`);
+            if (data.is_mass_assignment) {
+                showAlert(`✅ ${data.message}`);
+            } else {
+                showAlert(`✅ Asignación actualizada: Aula ${data.assignment.group_name} ➔ ${data.assignment.subject_name} (${data.assignment.teacher_name})`);
+            }
             await Promise.all([loadSuperAssignments(), loadSuperTeachers(), loadStudents()]);
         } else {
             showAlert(`❌ ${data.error || 'No se pudo actualizar la asignación'}`);

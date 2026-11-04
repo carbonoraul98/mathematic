@@ -5,7 +5,7 @@ const router = express.Router();
 // Crear actividad (con preguntas opcionales y asignación de aulas)
 router.post('/', async (req, res) => {
     try {
-        const { title, type, theme, grade, questions, group_id, target_groups, is_training_level, training_grade, map_icon } = req.body;
+        const { title, type, theme, grade, questions, group_id, target_groups, is_training_level, training_grade, map_icon, subject_id, subject_name, teacher_id, teacher_name } = req.body;
         
         if (!title) {
             return res.status(400).json({ error: 'El título es requerido' });
@@ -29,6 +29,10 @@ router.post('/', async (req, res) => {
             theme: theme || `Grado ${grade || 'General'}`,
             group_id: primaryGroupId,
             target_groups: targets,
+            subject_id: subject_id ? Number(subject_id) : null,
+            subject_name: subject_name ? String(subject_name).trim() : '',
+            teacher_id: teacher_id ? Number(teacher_id) : null,
+            teacher_name: teacher_name ? String(teacher_name).trim() : '',
             is_training_level: Boolean(is_training_level),
             training_grade: training_grade ? String(training_grade) : (grade ? String(grade) : ''),
             map_icon: map_icon || (type === 'Examen' ? '📝' : '🏆')

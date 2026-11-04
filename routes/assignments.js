@@ -142,19 +142,52 @@ router.put('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Asignación no encontrada' });
         }
 
-        const newGroupId = group_id ? Number(group_id) : assignment.group_id;
         const newSubjectId = subject_id ? Number(subject_id) : assignment.subject_id;
         const newTeacherId = teacher_id ? Number(teacher_id) : assignment.teacher_id;
 
-        const [group, subject, teacher] = await Promise.all([
-            Group.findOne({ id: newGroupId }),
+        const [subject, teacher] = await Promise.all([
             Subject.findOne({ id: newSubjectId }),
             Teacher.findOne({ id: newTeacherId })
         ]);
 
-        if (!group) return res.status(404).json({ error: 'Aula no encontrada' });
         if (!subject) return res.status(404).json({ error: 'Materia no encontrada' });
         if (!teacher) return res.status(404).json({ error: 'Docente no encontrado' });
+
+        // Si se seleccionó "Todas las aulas" en la modificación
+        if (group_id === 'all') {
+            const allClassrooms = await Group.find({});
+            if (allClassrooms.length === 0) {
+                return res.status(400).json({ error: 'No hay aulas registradas en el sistema' });
+            }
+
+            let affected = 0;
+            for (const grp of allClassrooms) {
+                const existing = await CourseAssignment.findOne({ group_id: grp.id, subject_id: newSubjectId });
+                if (existing) {
+                    existing.teacher_id = newTeacherId;
+                    await existing.save();
+                    affected++;
+                } else {
+                    await CourseAssignment.create({
+                        group_id: grp.id,
+                        subject_id: newSubjectId,
+                        teacher_id: newTeacherId
+                    });
+                    affected++;
+                }
+            }
+
+            return res.json({
+                success: true,
+                is_mass_assignment: true,
+                message: `Se aplicó la materia "${subject.name}" con el docente "${teacher.full_name}" a todas las ${allClassrooms.length} aulas.`
+            });
+        }
+
+        // Modificación a un aula individual
+        const newGroupId = group_id ? Number(group_id) : assignment.group_id;
+        const group = await Group.findOne({ id: newGroupId });
+        if (!group) return res.status(404).json({ error: 'Aula no encontrada' });
 
         // Verificar colisión con otra asignación existente
         const conflict = await CourseAssignment.findOne({
