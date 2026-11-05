@@ -1015,6 +1015,12 @@ if (!customElements.get('projector-player')) {
 
 // Global launcher
 window.projectActivity = function(activity) {
+  if (typeof canTeacherModifyActivity === 'function' && !canTeacherModifyActivity(activity)) {
+    if (typeof showAlert === 'function') {
+      showAlert(`⛔ Acceso denegado: solo el profesor de ${activity?.subject_name || 'la materia'} o el Super Admin (superU) pueden proyectar esta actividad.`);
+    }
+    return;
+  }
   let player = document.querySelector('projector-player');
   if (!player) {
     player = document.createElement('projector-player');
@@ -1032,6 +1038,12 @@ window.projectActivityById = async function(activityId) {
     const res = await fetch(`/api/activities/${activityId}`);
     if (!res.ok) throw new Error('No se pudo cargar la actividad.');
     const act = await res.json();
+    if (typeof canTeacherModifyActivity === 'function' && !canTeacherModifyActivity(act)) {
+      if (typeof showAlert === 'function') {
+        showAlert(`⛔ Acceso denegado: solo el profesor de ${act.subject_name || 'la materia'} o el Super Admin (superU) pueden proyectar esta actividad.`);
+      }
+      return;
+    }
     window.projectActivity(act);
   } catch (err) {
     console.error('Error cargando actividad para proyectar:', err);

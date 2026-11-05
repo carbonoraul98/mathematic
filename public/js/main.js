@@ -295,8 +295,13 @@ function logout() {
   estudiantes = [];
   window.todasLasAulas = [];
   window.teacherSubjects = [];
+  window.cachedActivitiesList = [];
+  allProjectorActivities = [];
   currentClassroomGroupName = null;
   activeMapGrade = '4';
+
+  const projList = document.getElementById('projectorActivitiesList');
+  if (projList) projList.innerHTML = '';
 
   purgeSuperAdminCache();
 
@@ -3239,22 +3244,38 @@ async function loadProjectorActivities() {
 
     showAppLoading('Cargando actividades a proyectar...');
     try {
+        const isSuper = isCurrentUserSuperAdmin();
+        const curTch = window.currentTeacher;
+        const groupsUrl = (isSuper || !curTch)
+            ? '/api/groups'
+            : `/api/groups?teacher_id=${curTch.id}`;
+
         const [resAct, resGroups] = await Promise.all([
             fetch('/api/activities'),
-            fetch('/api/groups')
+            fetch(groupsUrl)
         ]);
         const activities = await resAct.json();
         const groups = await resGroups.json();
 
-        allProjectorActivities = activities;
+        if (Array.isArray(groups)) {
+            window.todasLasAulas = groups;
+        }
 
-        // Poblar selector de filtro
+        // Solo mostrar y permitir proyectar las actividades que pertenecen a la materia asignada del profesor (superU ve todas)
+        allProjectorActivities = isSuper
+            ? (Array.isArray(activities) ? activities : [])
+            : (Array.isArray(activities) ? activities.filter(act => canTeacherModifyActivity(act)) : []);
+
+        // Poblar selector de filtro con las aulas asignadas al docente
         const filterSelect = document.getElementById('projectorGroupFilter');
         if (filterSelect) {
-            let optionsHtml = '<option value="all">Todas las actividades</option>';
+            let optionsHtml = `<option value="all">${isSuper ? 'Todas las actividades' : 'Todas las actividades de mi materia'}</option>`;
             if (Array.isArray(groups)) {
                 groups.forEach(g => {
-                    optionsHtml += `<option value="group_${g.id}">Aula: ${g.name}</option>`;
+                    const subInfo = (Array.isArray(g.my_subjects) && g.my_subjects.length > 0)
+                        ? ` (${g.my_subjects.join(', ')})`
+                        : '';
+                    optionsHtml += `<option value="group_${g.id}">Aula: ${g.name}${subInfo}</option>`;
                 });
             }
             optionsHtml += '<option value="4">4° Grado</option>';
@@ -3263,7 +3284,7 @@ async function loadProjectorActivities() {
             filterSelect.innerHTML = optionsHtml;
         }
 
-        renderProjectorActivitiesList(activities);
+        renderProjectorActivitiesList(allProjectorActivities);
     } catch (err) {
         console.error('Error cargando actividades a proyectar:', err);
         if (container) container.innerHTML = '<p style="color: var(--color-danger);">❌ Error al cargar actividades para proyectar.</p>';
@@ -3298,8 +3319,8 @@ function renderProjectorActivitiesList(activities) {
         container.innerHTML = `
             <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
                 <div style="font-size: 3rem; margin-bottom: 12px;">📽️</div>
-                <h3 style="color: var(--text-primary); margin: 0 0 8px 0;">No se encontraron actividades</h3>
-                <p style="margin: 0; font-size: 0.95rem;">Crea una nueva actividad o selecciona otro filtro para proyectar.</p>
+                <h3 style="color: var(--text-primary); margin: 0 0 8px 0;">No hay actividades de tu materia para proyectar</h3>
+                <p style="margin: 0; font-size: 0.95rem;">Crea una actividad o evaluación en tu materia asignada o selecciona otro filtro.</p>
             </div>
         `;
         return;
@@ -3315,6 +3336,23 @@ function renderProjectorActivitiesList(activities) {
                 ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.primary_group_name}</span>`
                 : `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 8px; font-weight: 500;">🪐 Todas las aulas</span>`);
 
+        const subjectBadge = act.subject_name 
+            ? `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35); padding: 2px 8px; border-radius: 8px; font-weight: 600;">📖 ${act.subject_name}</span>`
+            : '';
+
+        const teacherBadge = act.teacher_name
+            ? `<span style="background: rgba(56, 189, 248, 0.15); color: #7dd3fc; padding: 2px 8px; border-radius: 8px; font-size: 0.78rem;">👨‍🏫 ${act.teacher_name}</span>`
+            : '';
+
+        const canProject = canTeacherModifyActivity(act);
+        const projectBtnHtml = canProject
+            ? `
+                <button class="btn btn-projector-launch" onclick="projectActivityById(${act.id})" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; font-weight: 700; padding: 10px 20px; border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <span>📽️</span> <span>INICIAR PROYECCIÓN</span>
+                </button>
+            `
+            : `<span style="font-size: 0.78rem; color: var(--text-muted); padding: 6px 12px; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px;">🔒 Exclusiva de ${act.subject_name || 'otra materia'}</span>`;
+
         html += `
             <div class="classroom-item" style="cursor: default; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 14px; background: rgba(22, 27, 54, 0.85); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 18px 20px;">
                 <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
@@ -3323,6 +3361,8 @@ function renderProjectorActivitiesList(activities) {
                         <h4 style="margin: 0 0 6px 0; color: #ffffff; font-size: 1.15rem; font-weight: 700;">${act.title}</h4>
                         <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span style="background: rgba(99, 102, 241, 0.25); color: #a5b4fc; padding: 2px 8px; border-radius: 8px; font-weight: 600;">${act.type || 'Actividad'}</span>
+                            ${subjectBadge}
+                            ${teacherBadge}
                             ${aulaBadge}
                             <span>• ❓ <b>${qCount}</b> pregunta${qCount === 1 ? '' : 's'}</span>
                             <span>• 📚 ${act.theme || 'General'}</span>
@@ -3330,9 +3370,7 @@ function renderProjectorActivitiesList(activities) {
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="btn btn-projector-launch" onclick="projectActivityById(${act.id})" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; font-weight: 700; padding: 10px 20px; border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <span>📽️</span> <span>INICIAR PROYECCIÓN</span>
-                    </button>
+                    ${projectBtnHtml}
                     <button class="btn btn--secondary btn--sm" onclick="openReviewActivityModal(${act.id})" title="Ver detalles y preguntas" style="border-radius: 10px;">
                         👁️ Revisar
                     </button>
