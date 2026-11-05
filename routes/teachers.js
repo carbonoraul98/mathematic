@@ -53,6 +53,24 @@ router.post('/login', async (req, res) => {
             teacherData.role = isSuperU ? 'superadmin' : 'docente';
             teacherData.is_admin = isSuperU;
             delete teacherData.password;
+
+            const [assignments, groups, subjects] = await Promise.all([
+                CourseAssignment.find({ teacher_id: matchedTeacher.id }),
+                Group.find({}, 'id name'),
+                Subject.find({}, 'id name')
+            ]);
+            const groupMap = new Map(groups.map(g => [g.id, g.name]));
+            const subjectMap = new Map(subjects.map(s => [s.id, s.name]));
+
+            teacherData.assignments = assignments.map(a => ({
+                assignment_id: a.id,
+                group_id: a.group_id,
+                group_name: groupMap.get(a.group_id) || '',
+                subject_id: a.subject_id,
+                subject_name: subjectMap.get(a.subject_id) || ''
+            }));
+            teacherData.assigned_subjects = [...new Set(teacherData.assignments.map(a => a.subject_name).filter(Boolean))];
+
             res.json({ success: true, teacher: teacherData });
         } else {
             res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos' });

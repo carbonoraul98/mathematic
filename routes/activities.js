@@ -1,6 +1,99 @@
 const express = require('express');
-const { Activity, Question, Attempt, Student, Group } = require('../models/database');
+const { Activity, Question, Attempt, Student, Group, Teacher, CourseAssignment, Subject } = require('../models/database');
 const router = express.Router();
+
+function cleanStr(str) {
+    return String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+async function checkTeacherCanModifyActivity(act, req) {
+    const rawTeacherId = req.body?.requester_teacher_id ?? req.query?.requester_teacher_id ?? req.headers?.['x-teacher-id'];
+    if (rawTeacherId === undefined || rawTeacherId === null || rawTeacherId === '') {
+        if (act.teacher_id || act.subject_name || act.subject_id) {
+            return { allowed: false, error: '⛔ Solo el docente titular de la materia o el Super Admin (superU) pueden modificar esta evaluación.' };
+        }
+        return { allowed: true };
+    }
+
+    const teacherId = Number(rawTeacherId);
+    if (!teacherId) {
+        return { allowed: false, error: '⛔ Docente no identificado.' };
+    }
+
+    const teacher = await Teacher.findOne({ id: teacherId });
+    if (!teacher) {
+        return { allowed: false, error: '⛔ Docente no encontrado.' };
+    }
+
+    // 1. El Super Admin (superU) siempre puede modificar cualquier actividad/examen
+    if (cleanStr(teacher.username) === 'superu') {
+        return { allowed: true };
+    }
+
+    // 2. Obtener las asignaciones académicas del docente
+    const [assignments, subjects] = await Promise.all([
+        CourseAssignment.find({ teacher_id: teacher.id }),
+        Subject.find({})
+    ]);
+    const subjectNameMap = new Map(subjects.map(s => [s.id, cleanStr(s.name)]));
+    const teacherSubjects = new Set(assignments.map(a => subjectNameMap.get(a.subject_id)).filter(Boolean));
+
+    const actSubject = cleanStr(act.subject_name || '');
+    const actGroups = (Array.isArray(act.target_groups) && act.target_groups.length > 0)
+        ? act.target_groups.map(Number)
+        : (act.group_id ? [Number(act.group_id)] : []);
+
+    const teachesSubjectInCourse = actSubject
+        ? assignments.some(a => {
+            const subName = subjectNameMap.get(a.subject_id);
+            if (subName !== actSubject) return false;
+            if (actGroups.length === 0) return true;
+            return actGroups.includes(Number(a.group_id));
+        })
+        : false;
+
+    const isCreator = Boolean(act.teacher_id && Number(act.teacher_id) === Number(teacher.id));
+
+    if (actSubject) {
+        if (teachesSubjectInCourse || (isCreator && (teacherSubjects.has(actSubject) || assignments.length === 0))) {
+            return { allowed: true };
+        }
+        return {
+            allowed: false,
+            error: `⛔ Acceso denegado: solo el profesor de ${act.subject_name} o el Super Admin (superU) pueden modificar esta evaluación.`
+        };
+    }
+
+    if (act.teacher_id) {
+        if (isCreator) {
+            return { allowed: true };
+        }
+        return {
+            allowed: false,
+            error: '⛔ Acceso denegado: solo el profesor creador de esta evaluación o el Super Admin (superU) pueden modificarla.'
+        };
+    }
+
+    const teachesMath = assignments.some(a => {
+        const subName = subjectNameMap.get(a.subject_id);
+        if (subName !== 'matematicas') return false;
+        if (actGroups.length === 0) return true;
+        return actGroups.includes(Number(a.group_id));
+    });
+    if (teachesMath) {
+        return { allowed: true };
+    }
+
+    return {
+        allowed: false,
+        error: '⛔ Acceso denegado: solo el profesor de la materia correspondiente o el Super Admin (superU) pueden modificar esta evaluación.'
+    };
+}
 
 // Crear actividad (con preguntas opcionales y asignación de aulas)
 router.post('/', async (req, res) => {
@@ -22,6 +115,12 @@ router.post('/', async (req, res) => {
         }
         
         const primaryGroupId = group_id ? Number(group_id) : (targets[0] || null);
+        let resolvedSubjectId = subject_id ? Number(subject_id) : null;
+        const resolvedSubjectName = subject_name ? String(subject_name).trim() : '';
+        if (!resolvedSubjectId && resolvedSubjectName) {
+            const foundSub = await Subject.findOne({ name: { $regex: new RegExp(`^${resolvedSubjectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+            if (foundSub) resolvedSubjectId = foundSub.id;
+        }
 
         const activity = await Activity.create({
             title,
@@ -29,8 +128,8 @@ router.post('/', async (req, res) => {
             theme: theme || `Grado ${grade || 'General'}`,
             group_id: primaryGroupId,
             target_groups: targets,
-            subject_id: subject_id ? Number(subject_id) : null,
-            subject_name: subject_name ? String(subject_name).trim() : '',
+            subject_id: resolvedSubjectId,
+            subject_name: resolvedSubjectName,
             teacher_id: teacher_id ? Number(teacher_id) : null,
             teacher_name: teacher_name ? String(teacher_name).trim() : '',
             is_training_level: Boolean(is_training_level),
@@ -215,7 +314,17 @@ router.get('/:id/attempts', async (req, res) => {
 // Eliminar / reiniciar un intento específico de un estudiante
 router.delete('/:id/attempts/:attemptId', async (req, res) => {
     try {
-        const { attemptId } = req.params;
+        const { id, attemptId } = req.params;
+        const act = await Activity.findOne({ id: Number(id) });
+        if (!act) {
+            return res.status(404).json({ success: false, error: 'Actividad no encontrada' });
+        }
+
+        const auth = await checkTeacherCanModifyActivity(act, req);
+        if (!auth.allowed) {
+            return res.status(403).json({ success: false, error: auth.error });
+        }
+
         const attempt = await Attempt.findOne({ id: Number(attemptId) });
         if (attempt) {
             // Descontar puntaje del estudiante si corresponde
@@ -236,10 +345,20 @@ router.delete('/:id/attempts/:attemptId', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, type, theme, group_id, target_groups, is_training_level, training_grade, map_icon } = req.body;
+        const { title, type, theme, group_id, target_groups, is_training_level, training_grade, map_icon, subject_name } = req.body;
         
         if (!title) {
             return res.status(400).json({ error: 'El título es requerido' });
+        }
+
+        const existingAct = await Activity.findOne({ id: Number(id) });
+        if (!existingAct) {
+            return res.status(404).json({ error: 'Actividad no encontrada' });
+        }
+
+        const auth = await checkTeacherCanModifyActivity(existingAct, req);
+        if (!auth.allowed) {
+            return res.status(403).json({ success: false, error: auth.error });
         }
 
         const updateData = { title, type, theme };
@@ -258,15 +377,14 @@ router.put('/:id', async (req, res) => {
         if (map_icon !== undefined) {
             updateData.map_icon = String(map_icon);
         }
+        if (subject_name !== undefined && String(subject_name).trim()) {
+            updateData.subject_name = String(subject_name).trim();
+        }
         
-        const result = await Activity.updateOne(
+        await Activity.updateOne(
             { id: Number(id) },
             { $set: updateData }
         );
-        
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ error: 'Actividad no encontrada' });
-        }
         
         res.json({ success: true, message: 'Actividad actualizada' });
     } catch (error) {
@@ -279,13 +397,18 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
-        const result = await Activity.deleteOne({ id: Number(id) });
-        await Question.deleteMany({ activity_id: Number(id) });
-        
-        if (result.deletedCount === 0) {
+        const existingAct = await Activity.findOne({ id: Number(id) });
+        if (!existingAct) {
             return res.status(404).json({ error: 'Actividad no encontrada' });
         }
+
+        const auth = await checkTeacherCanModifyActivity(existingAct, req);
+        if (!auth.allowed) {
+            return res.status(403).json({ success: false, error: auth.error });
+        }
+        
+        await Activity.deleteOne({ id: Number(id) });
+        await Question.deleteMany({ activity_id: Number(id) });
         
         res.json({ success: true, message: 'Actividad eliminada' });
     } catch (error) {
@@ -298,6 +421,16 @@ router.delete('/:id', async (req, res) => {
 router.put('/:id/questions/:questionId', async (req, res) => {
     try {
         const { id, questionId } = req.params;
+        const existingAct = await Activity.findOne({ id: Number(id) });
+        if (!existingAct) {
+            return res.status(404).json({ success: false, error: 'Actividad no encontrada' });
+        }
+
+        const auth = await checkTeacherCanModifyActivity(existingAct, req);
+        if (!auth.allowed) {
+            return res.status(403).json({ success: false, error: auth.error });
+        }
+
         const { pregunta, tipo, a, b, c, d, correcta } = req.body;
         
         const options = JSON.stringify([a || "", b || "", c || "", d || ""]);
@@ -328,6 +461,16 @@ router.put('/:id/questions/:questionId', async (req, res) => {
 router.post('/:id/questions', async (req, res) => {
     try {
         const { id } = req.params;
+        const existingAct = await Activity.findOne({ id: Number(id) });
+        if (!existingAct) {
+            return res.status(404).json({ success: false, error: 'Actividad no encontrada' });
+        }
+
+        const auth = await checkTeacherCanModifyActivity(existingAct, req);
+        if (!auth.allowed) {
+            return res.status(403).json({ success: false, error: auth.error });
+        }
+
         const { pregunta, tipo, a, b, c, d, correcta } = req.body;
         
         const count = await Question.countDocuments({ activity_id: Number(id) });
@@ -352,6 +495,16 @@ router.post('/:id/questions', async (req, res) => {
 router.delete('/:id/questions/:questionId', async (req, res) => {
     try {
         const { id, questionId } = req.params;
+        const existingAct = await Activity.findOne({ id: Number(id) });
+        if (!existingAct) {
+            return res.status(404).json({ success: false, error: 'Actividad no encontrada' });
+        }
+
+        const auth = await checkTeacherCanModifyActivity(existingAct, req);
+        if (!auth.allowed) {
+            return res.status(403).json({ success: false, error: auth.error });
+        }
+
         await Question.deleteOne({ id: Number(questionId), activity_id: Number(id) });
         res.json({ success: true, message: 'Pregunta eliminada' });
     } catch (error) {

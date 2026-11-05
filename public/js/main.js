@@ -1651,6 +1651,9 @@ async function uploadDocxExam() {
   const isTrainingLevel = chkDocxTraining ? chkDocxTraining.checked : false;
   const trainingGrade = isTrainingLevel ? (trainingGradeEl ? trainingGradeEl.value : grade) : '';
   const trainingIcon = isTrainingLevel ? (trainingIconEl ? trainingIconEl.value : '📝') : '📝';
+  const subEl = document.getElementById('activitySubject');
+  const selectedSubject = subEl ? subEl.value : 'Matemáticas';
+  const curTch = window.currentTeacher;
 
   uploadBtn.disabled = true;
   btnText.textContent = isGDocs ? 'DESCARGANDO Y PROCESANDO GOOGLE DOCS...' : 'PROCESANDO ARCHIVO...';
@@ -1668,6 +1671,9 @@ async function uploadDocxExam() {
     formData.append('grade', grade);
     if (primaryGroupId) formData.append('group_id', primaryGroupId);
     formData.append('target_groups', JSON.stringify(targetGroups));
+    formData.append('subject_name', selectedSubject);
+    if (curTch && curTch.id) formData.append('teacher_id', curTch.id);
+    if (curTch && curTch.full_name) formData.append('teacher_name', curTch.full_name);
     formData.append('is_training_level', isTrainingLevel ? 'true' : 'false');
     formData.append('training_grade', trainingGrade);
     formData.append('map_icon', trainingIcon);
@@ -1711,6 +1717,71 @@ async function uploadDocxExam() {
   }
 }
 
+function normalizeSubjectStr(str) {
+    return String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function canTeacherModifyActivity(act) {
+    if (!act) return false;
+    if (isCurrentUserSuperAdmin()) return true;
+    const curTch = window.currentTeacher;
+    if (!curTch || !curTch.id) return false;
+
+    const actSubject = normalizeSubjectStr(act.subject_name || '');
+    const actGroups = (Array.isArray(act.target_groups) && act.target_groups.length > 0)
+        ? act.target_groups.map(Number)
+        : (act.group_id ? [Number(act.group_id)] : []);
+
+    // Reunir las asignaciones del docente desde su perfil y desde todasLasAulas
+    const teacherAssignments = Array.isArray(curTch.assignments) ? [...curTch.assignments] : [];
+    (window.todasLasAulas || []).forEach(g => {
+        if (Array.isArray(g.my_subjects)) {
+            g.my_subjects.forEach(subName => {
+                teacherAssignments.push({ group_id: g.id, subject_name: subName });
+            });
+        }
+    });
+
+    const teacherSubjects = new Set(
+        teacherAssignments.map(a => normalizeSubjectStr(a.subject_name)).filter(Boolean)
+    );
+    if (Array.isArray(curTch.assigned_subjects)) {
+        curTch.assigned_subjects.forEach(s => {
+            const norm = normalizeSubjectStr(s);
+            if (norm) teacherSubjects.add(norm);
+        });
+    }
+
+    const teachesSubjectInCourse = actSubject
+        ? teacherAssignments.some(a => {
+            if (normalizeSubjectStr(a.subject_name) !== actSubject) return false;
+            if (actGroups.length === 0) return true;
+            return actGroups.includes(Number(a.group_id));
+        })
+        : false;
+
+    const isCreator = Boolean(act.teacher_id && Number(act.teacher_id) === Number(curTch.id));
+
+    if (actSubject) {
+        return Boolean(teachesSubjectInCourse || (isCreator && (teacherSubjects.has(actSubject) || teacherAssignments.length === 0)));
+    }
+
+    if (act.teacher_id) {
+        return isCreator;
+    }
+
+    return teacherAssignments.some(a => {
+        if (normalizeSubjectStr(a.subject_name) !== 'matematicas') return false;
+        if (actGroups.length === 0) return true;
+        return actGroups.includes(Number(a.group_id));
+    });
+}
+
 async function loadActivities() {
     const container = document.getElementById('activitiesList');
     if (container) {
@@ -1721,6 +1792,7 @@ async function loadActivities() {
     try {
         const res = await fetch('/api/activities');
         const activities = await res.json();
+        window.cachedActivitiesList = activities;
 
         if (activities.length === 0) {
             container.innerHTML = '<p>No hay actividades cargadas aún.</p>';
@@ -1745,6 +1817,18 @@ async function loadActivities() {
                 ? `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35); padding: 2px 8px; border-radius: 8px; font-weight: 600;">📖 ${act.subject_name}</span>`
                 : '';
 
+            const teacherBadge = act.teacher_name
+                ? `<span style="background: rgba(56, 189, 248, 0.15); color: #7dd3fc; padding: 2px 8px; border-radius: 8px; font-size: 0.78rem;">👨‍🏫 ${act.teacher_name}</span>`
+                : '';
+
+            const canModify = canTeacherModifyActivity(act);
+            const editDeleteButtons = canModify
+                ? `
+                    <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
+                    <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                `
+                : `<span style="font-size: 0.78rem; color: var(--text-muted); padding: 4px 10px; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px;" title="Solo el docente de ${act.subject_name || 'esta materia'} o superU pueden modificarla">🔒 Solo lectura</span>`;
+
             html += `
                 <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: var(--space-md); flex-wrap: wrap; gap: 12px;">
                     <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
@@ -1755,6 +1839,7 @@ async function loadActivities() {
                                 <span style="background: rgba(99, 102, 241, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 8px; font-weight: 600;">${act.type || 'Actividad'}</span>
                                 ${trainingBadge}
                                 ${subjectBadge}
+                                ${teacherBadge}
                                 ${aulaBadge}
                                 <span>• 📚 ${act.theme || 'Sin grado'}</span>
                                 <span>• ❓ ${qCount} pregunta${qCount === 1 ? '' : 's'}</span>
@@ -1764,8 +1849,7 @@ async function loadActivities() {
                     </div>
                     <div class="activity-actions-row">
                         <button class="btn btn-activity-action btn-review" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
-                        <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
-                        <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                        ${editDeleteButtons}
                     </div>
                 </div>
             `;
@@ -1815,6 +1899,11 @@ async function crearPractica() {
         return;
     }
     
+    const curTch = window.currentTeacher;
+    const defaultSub = (curTch && Array.isArray(curTch.assigned_subjects) && curTch.assigned_subjects.length > 0)
+        ? curTch.assigned_subjects[0]
+        : 'Matemáticas';
+
     try {
         const res = await fetch('/api/activities', {
             method: 'POST',
@@ -1824,6 +1913,9 @@ async function crearPractica() {
                 type: 'Práctica',
                 theme: `Grado ${gradoBase}`,
                 grade: gradoBase,
+                subject_name: defaultSub,
+                teacher_id: curTch ? curTch.id : null,
+                teacher_name: curTch ? curTch.full_name : '',
                 questions: preguntasPracticaTemp
             })
         });
@@ -1863,18 +1955,25 @@ async function loadPractices() {
         
         let html = '';
         practicas.forEach(act => {
+            const canModify = canTeacherModifyActivity(act);
+            const actionBtns = canModify
+                ? `
+                    <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
+                    <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                `
+                : `<span style="font-size: 0.78rem; color: var(--text-muted); padding: 4px 10px; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px;">🔒 Solo lectura</span>`;
+
             html += `
                 <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: var(--space-md);">
                     <div class="classroom-item-info">
                         <div class="classroom-icon">🎮</div>
                         <div class="classroom-details">
                             <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: var(--text-md);">${act.title}</h4>
-                            <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm);">📚 ${act.theme || 'Sin grado'}</p>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm);">📚 ${act.theme || 'Sin grado'}${act.subject_name ? ` • 📖 ${act.subject_name}` : ''}</p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: var(--space-sm);">
-                        <button class="btn btn--outline btn--sm" style="padding: var(--space-sm) var(--space-md);" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
-                        <button class="btn btn--secondary btn--sm" style="padding: var(--space-sm) var(--space-md); background: rgba(255,50,50,0.2); color: #ff5555;" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                    <div style="display: flex; gap: var(--space-sm); align-items: center;">
+                        ${actionBtns}
                     </div>
                 </div>
             `;
@@ -2037,17 +2136,31 @@ function selectActivityType(type, element) {
 }
 
 async function deleteActivity(id) {
+    const act = (window.cachedActivitiesList || []).find(a => Number(a.id) === Number(id));
+    if (act && !canTeacherModifyActivity(act)) {
+        showAlert(`⛔ Acceso denegado: solo el profesor de ${act.subject_name || 'la materia'} o el Super Admin (superU) pueden eliminar esta evaluación.`);
+        return;
+    }
     if (!confirm('¿Estás seguro de que quieres eliminar esta actividad? Esta acción no se puede deshacer.')) return;
     
+    const curTchId = window.currentTeacher ? window.currentTeacher.id : '';
     try {
-        const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/activities/${id}?requester_teacher_id=${encodeURIComponent(curTchId)}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requester_teacher_id: curTchId })
+        });
         const result = await res.json();
         if (result.success) {
             showAlert('✅ Actividad eliminada');
             loadActivities();
             loadDashboardStats();
+            if (currentClassroomGroupName) {
+                const grp = (window.todasLasAulas || []).find(g => g.name === currentClassroomGroupName);
+                if (grp) loadClassroomActivities(currentClassroomGroupName, grp.id);
+            }
         } else {
-            showAlert('❌ Error: ' + result.error);
+            showAlert('❌ ' + (result.error || 'No se pudo eliminar la actividad'));
         }
     } catch (error) {
         console.error(error);
@@ -2056,6 +2169,11 @@ async function deleteActivity(id) {
 }
 
 function openEditActivityModal(id, title, type, theme, groupId, isTrainingLevel, trainingGrade, mapIcon) {
+    const act = (window.cachedActivitiesList || []).find(a => Number(a.id) === Number(id));
+    if (act && !canTeacherModifyActivity(act)) {
+        showAlert(`⛔ Acceso denegado: solo el profesor de ${act.subject_name || 'la materia'} o el Super Admin (superU) pueden modificar esta evaluación.`);
+        return;
+    }
     document.getElementById('editActivityId').value = id;
     document.getElementById('editActivityTitle').value = title;
     document.getElementById('editActivityType').value = type;
@@ -2152,7 +2270,8 @@ async function submitEditActivity() {
             target_groups: targetGroups,
             is_training_level: isTrainingLevel,
             training_grade: trainingGrade,
-            map_icon: mapIcon
+            map_icon: mapIcon,
+            requester_teacher_id: window.currentTeacher ? window.currentTeacher.id : null
         };
         
         const res = await fetch(`/api/activities/${id}`, {
@@ -2172,7 +2291,7 @@ async function submitEditActivity() {
                 if (grp) loadClassroomActivities(currentClassroomGroupName, grp.id);
             }
         } else {
-            showAlert('❌ Error: ' + result.error);
+            showAlert('❌ ' + (result.error || 'No se pudo actualizar la actividad'));
         }
     } catch (error) {
         console.error(error);
@@ -2308,6 +2427,7 @@ async function loadClassroomActivities(groupName, groupId) {
     try {
         const res = await fetch('/api/activities');
         const allActivities = await res.json();
+        window.cachedActivitiesList = allActivities;
         
         // Filtrar actividades asociadas a esta aula
         const classroomActivities = allActivities.filter(a => {
@@ -2343,6 +2463,22 @@ async function loadClassroomActivities(groupName, groupId) {
                 ? `<span style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">🤝 Compartida: ${act.target_group_names.join(', ')}</span>`
                 : `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">🔒 Exclusiva de ${groupName}</span>`;
 
+            const subjectBadge = act.subject_name
+                ? `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35); padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">📖 ${act.subject_name}</span>`
+                : '';
+
+            const teacherBadge = act.teacher_name
+                ? `<span style="background: rgba(56, 189, 248, 0.15); color: #7dd3fc; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem;">👨‍🏫 ${act.teacher_name}</span>`
+                : '';
+
+            const canModify = canTeacherModifyActivity(act);
+            const editDeleteButtons = canModify
+                ? `
+                    <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
+                    <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                `
+                : `<span style="font-size: 0.78rem; color: var(--text-muted); padding: 4px 10px; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px;" title="Solo el docente de ${act.subject_name || 'esta materia'} o superU pueden modificarla">🔒 Solo lectura</span>`;
+
             html += `
                 <div class="classroom-item" style="cursor: default; align-items: center; margin-bottom: 0; flex-wrap: wrap; gap: 12px;">
                     <div class="classroom-item-info" style="min-width: 240px; flex: 1;">
@@ -2351,6 +2487,8 @@ async function loadClassroomActivities(groupName, groupId) {
                             <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: var(--text-md);">${act.title}</h4>
                             <p style="margin: 0; color: var(--text-secondary); font-size: var(--text-sm); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <span style="background: rgba(99, 102, 241, 0.2); color: #93c5fd; padding: 2px 8px; border-radius: 8px; font-weight: 600;">${act.type || 'Actividad'}</span>
+                                ${subjectBadge}
+                                ${teacherBadge}
                                 ${scopeBadge}
                                 <span>• ❓ ${qCount} preg.</span>
                                 <span>• 📅 ${new Date(act.created_at).toLocaleDateString()}</span>
@@ -2359,8 +2497,7 @@ async function loadClassroomActivities(groupName, groupId) {
                     </div>
                     <div class="activity-actions-row">
                         <button class="btn btn-activity-action btn-review" onclick="openReviewActivityModal(${act.id})">👁️ Revisar</button>
-                        <button class="btn btn-activity-action btn-edit" onclick="openEditActivityModal(${act.id}, '${act.title.replace(/'/g, "\\'")}', '${act.type}', '${act.theme}', ${act.group_id || 'null'}, ${Boolean(act.is_training_level)}, '${act.training_grade || ''}', '${act.map_icon || '🏆'}')">✏️ Editar</button>
-                        <button class="btn btn-activity-action btn-delete" onclick="deleteActivity(${act.id})">🗑️ Eliminar</button>
+                        ${editDeleteButtons}
                     </div>
                 </div>
             `;
@@ -2418,9 +2555,38 @@ async function populateActivitySubjectSelector() {
         const res = await fetch('/api/subjects');
         const subjects = await res.json();
         if (Array.isArray(subjects) && subjects.length > 0) {
+            const isSuper = isCurrentUserSuperAdmin();
+            const curTch = window.currentTeacher;
+            let allowedNames = [];
+
+            if (!isSuper && curTch) {
+                const targetGroupEl = document.getElementById('activityTargetGroup');
+                const selectedGroupVal = targetGroupEl ? targetGroupEl.value : 'ALL_GRADE';
+
+                if (selectedGroupVal && selectedGroupVal !== 'ALL_GRADE') {
+                    const grp = (window.todasLasAulas || []).find(g => String(g.id) === String(selectedGroupVal));
+                    if (grp && Array.isArray(grp.my_subjects) && grp.my_subjects.length > 0) {
+                        allowedNames = grp.my_subjects;
+                    }
+                }
+                if (allowedNames.length === 0) {
+                    const fromGroups = [];
+                    (window.todasLasAulas || []).forEach(g => {
+                        if (Array.isArray(g.my_subjects)) fromGroups.push(...g.my_subjects);
+                    });
+                    const fromProfile = Array.isArray(curTch.assigned_subjects) ? curTch.assigned_subjects : [];
+                    allowedNames = [...new Set([...fromGroups, ...fromProfile])];
+                }
+            }
+
+            const filteredSubjects = (!isSuper && allowedNames.length > 0)
+                ? subjects.filter(s => allowedNames.some(an => normalizeSubjectStr(an) === normalizeSubjectStr(s.name)))
+                : subjects;
+
+            const finalSubjects = filteredSubjects.length > 0 ? filteredSubjects : subjects;
             const currentVal = subSel.value;
-            subSel.innerHTML = subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-            if (currentVal && subjects.some(s => s.name === currentVal)) {
+            subSel.innerHTML = finalSubjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            if (currentVal && finalSubjects.some(s => s.name === currentVal)) {
                 subSel.value = currentVal;
             }
         }
@@ -2530,6 +2696,8 @@ function onActivityTargetGroupChange() {
             }
         });
     }
+
+    populateActivitySubjectSelector();
 }
 
 function toggleReplicateCheckboxes() {
@@ -2685,9 +2853,10 @@ async function openReviewActivityModal(id) {
         const attemptsData = await resAttempts.json();
         
         currentReviewActivity = act;
+        const canModify = canTeacherModifyActivity(act);
         
         document.getElementById('reviewActTitle').innerText = act.title;
-        document.getElementById('reviewActBadgeType').innerText = act.type || 'Actividad';
+        document.getElementById('reviewActBadgeType').innerText = (act.type || 'Actividad') + (act.subject_name ? ` • ${act.subject_name}` : '');
         document.getElementById('reviewActBadgeGrade').innerText = act.theme || 'Grado General';
         
         const questions = act.preguntas || [];
@@ -2701,14 +2870,18 @@ async function openReviewActivityModal(id) {
                 <div style="text-align: center; padding: 30px 20px; color: var(--text-secondary);">
                     <div style="font-size: 2.5rem; margin-bottom: 10px;">📝</div>
                     <p style="margin: 0 0 16px 0; font-size: 1rem;">Esta actividad aún no tiene preguntas configuradas.</p>
-                    <button class="btn btn--sm" onclick="openAddQuestionModal()" style="border-radius: 20px;">➕ Agregar Primera Pregunta</button>
+                    ${canModify ? `<button class="btn btn--sm" onclick="openAddQuestionModal()" style="border-radius: 20px;">➕ Agregar Primera Pregunta</button>` : `<span style="font-size: 0.8rem; color: var(--text-muted);">🔒 Solo el docente de ${act.subject_name || 'la materia'} o superU pueden agregar preguntas.</span>`}
                 </div>
             `;
         } else {
+            const headerActionHtml = canModify
+                ? `<button class="btn btn--sm" style="border-radius: 20px; font-size: 0.8rem; padding: 6px 14px;" onclick="openAddQuestionModal()">➕ Agregar Pregunta</button>`
+                : `<span style="font-size: 0.78rem; color: var(--text-muted); padding: 4px 10px; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px;">🔒 Modo solo lectura (${act.subject_name || 'Otra materia'})</span>`;
+
             let qHtml = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; gap: 8px;">
                     <span style="font-size: 0.85rem; color: var(--text-secondary);">Preguntas registradas: <b style="color: #f8fafc;">${questions.length}</b></span>
-                    <button class="btn btn--sm" style="border-radius: 20px; font-size: 0.8rem; padding: 6px 14px;" onclick="openAddQuestionModal()">➕ Agregar Pregunta</button>
+                    ${headerActionHtml}
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 14px;">
             `;
@@ -2722,6 +2895,15 @@ async function openReviewActivityModal(id) {
                     graphicHtml = parsed.graphicHtml;
                 }
 
+                const questionActionsHtml = canModify
+                    ? `
+                        <div style="display: flex; gap: 6px;">
+                            <button class="btn btn--secondary btn--sm" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 8px;" onclick="openEditQuestionModal(${index})" title="Editar pregunta">✏️ Editar</button>
+                            <button class="btn btn--secondary btn--sm" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; font-size: 0.75rem; border-radius: 8px;" onclick="deleteQuestionFromActivity(${q.id})" title="Eliminar pregunta">🗑️</button>
+                        </div>
+                    `
+                    : '';
+
                 qHtml += `
                     <div class="card" style="background: rgba(16, 23, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 14px 16px; text-align: left;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2729,10 +2911,7 @@ async function openReviewActivityModal(id) {
                                 <span style="font-size: 0.8rem; font-weight: 700; color: #818cf8; text-transform: uppercase;">Pregunta ${index + 1}</span>
                                 <span style="font-size: 0.75rem; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 8px; color: var(--text-muted);">${isOption ? '🔘 Opción Múltiple' : '✍️ Abierta'}</span>
                             </div>
-                            <div style="display: flex; gap: 6px;">
-                                <button class="btn btn--secondary btn--sm" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 8px;" onclick="openEditQuestionModal(${index})" title="Editar pregunta">✏️ Editar</button>
-                                <button class="btn btn--secondary btn--sm" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; font-size: 0.75rem; border-radius: 8px;" onclick="deleteQuestionFromActivity(${q.id})" title="Eliminar pregunta">🗑️</button>
-                            </div>
+                            ${questionActionsHtml}
                         </div>
                         <h4 style="margin: 0 0 10px 0; font-size: 0.95rem; color: #f8fafc; font-weight: 600;">${cleanText}</h4>
                         ${graphicHtml ? `<div style="margin: 10px 0;">${graphicHtml}</div>` : ''}
@@ -2785,6 +2964,9 @@ async function openReviewActivityModal(id) {
             let sHtml = '<div style="display: flex; flex-direction: column; gap: 10px;">';
             attempts.forEach(att => {
                 const dateStr = new Date(att.completed_at).toLocaleString();
+                const resetBtnHtml = canModify
+                    ? `<button class="btn btn--secondary btn--sm" style="background: rgba(255, 92, 122, 0.15); color: #ff5c7a; border: 1px solid rgba(255, 92, 122, 0.3); padding: 4px 8px; font-size: 0.75rem; border-radius: 12px;" onclick="deleteStudentActivityAttempt(${act.id}, ${att.id}, '${att.student_name.replace(/'/g, "\\'")}')">🔄 Reiniciar</button>`
+                    : '';
                 sHtml += `
                     <div class="card" style="background: rgba(16, 23, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; text-align: left; flex-wrap: wrap; gap: 8px;">
                         <div>
@@ -2793,7 +2975,7 @@ async function openReviewActivityModal(id) {
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <span style="font-size: 0.95rem; font-weight: 700; color: #38bdf8;">+${att.score} pts</span>
-                            <button class="btn btn--secondary btn--sm" style="background: rgba(255, 92, 122, 0.15); color: #ff5c7a; border: 1px solid rgba(255, 92, 122, 0.3); padding: 4px 8px; font-size: 0.75rem; border-radius: 12px;" onclick="deleteStudentActivityAttempt(${act.id}, ${att.id}, '${att.student_name.replace(/'/g, "\\'")}')">🔄 Reiniciar</button>
+                            ${resetBtnHtml}
                         </div>
                     </div>
                 `;
@@ -2845,15 +3027,24 @@ function testActivityAsTeacher() {
 }
 
 async function deleteStudentActivityAttempt(activityId, attemptId, studentName) {
+    if (currentReviewActivity && !canTeacherModifyActivity(currentReviewActivity)) {
+        showAlert('⛔ Solo el profesor de esta materia o el Super Admin (superU) pueden reiniciar intentos.');
+        return;
+    }
     if (!confirm(`¿Deseas reiniciar el intento de "${studentName}" para esta actividad? Se eliminará su entrega actual.`)) return;
+    const curTchId = window.currentTeacher ? window.currentTeacher.id : '';
     try {
-        const res = await fetch(`/api/activities/${activityId}/attempts/${attemptId}`, { method: 'DELETE' });
+        const res = await fetch(`/api/activities/${activityId}/attempts/${attemptId}?requester_teacher_id=${encodeURIComponent(curTchId)}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requester_teacher_id: curTchId })
+        });
         const data = await res.json();
         if (data.success) {
             showAlert(`Intento de ${studentName} reiniciado correctamente.`);
             openReviewActivityModal(activityId);
         } else {
-            showAlert('❌ No se pudo reiniciar el intento.');
+            showAlert('❌ ' + (data.error || 'No se pudo reiniciar el intento.'));
         }
     } catch(err) {
         console.error(err);
@@ -2864,6 +3055,10 @@ async function deleteStudentActivityAttempt(activityId, attemptId, studentName) 
 // GESTIÓN Y EDICIÓN DE PREGUNTAS EN ACTIVIDADES/TALLERES
 function openEditQuestionModal(index) {
     if (!currentReviewActivity || !currentReviewActivity.preguntas || !currentReviewActivity.preguntas[index]) return;
+    if (!canTeacherModifyActivity(currentReviewActivity)) {
+        showAlert(`⛔ Acceso denegado: solo el profesor de ${currentReviewActivity.subject_name || 'la materia'} o el Super Admin (superU) pueden modificar esta evaluación.`);
+        return;
+    }
     const q = currentReviewActivity.preguntas[index];
 
     const modal = document.getElementById('editQuestionModal');
@@ -2903,6 +3098,10 @@ function openEditQuestionModal(index) {
 
 function openAddQuestionModal() {
     if (!currentReviewActivity) return;
+    if (!canTeacherModifyActivity(currentReviewActivity)) {
+        showAlert(`⛔ Acceso denegado: solo el profesor de ${currentReviewActivity.subject_name || 'la materia'} o el Super Admin (superU) pueden modificar esta evaluación.`);
+        return;
+    }
     const modal = document.getElementById('editQuestionModal');
     if (!modal) return;
 
@@ -2930,6 +3129,10 @@ function closeEditQuestionModal() {
 
 async function saveQuestionModal() {
     if (!currentReviewActivity) return;
+    if (!canTeacherModifyActivity(currentReviewActivity)) {
+        showAlert(`⛔ Acceso denegado: solo el profesor de ${currentReviewActivity.subject_name || 'la materia'} o el Super Admin (superU) pueden modificar esta evaluación.`);
+        return;
+    }
     const qId = document.getElementById('editQuestionId').value;
     const pregunta = document.getElementById('editQuestionText').value.trim();
     const a = document.getElementById('editOptionA').value.trim();
@@ -2959,7 +3162,8 @@ async function saveQuestionModal() {
         b,
         c,
         d,
-        correcta
+        correcta,
+        requester_teacher_id: window.currentTeacher ? window.currentTeacher.id : null
     };
 
     try {
@@ -2986,7 +3190,7 @@ async function saveQuestionModal() {
             showAlert(qId ? '✅ Pregunta actualizada exitosamente.' : '✅ Pregunta agregada exitosamente.');
             await openReviewActivityModal(currentReviewActivity.id);
         } else {
-            showAlert('❌ Error: ' + (data.error || 'No se pudo guardar la pregunta'));
+            showAlert('❌ ' + (data.error || 'No se pudo guardar la pregunta'));
         }
     } catch (err) {
         console.error(err);
@@ -2996,18 +3200,25 @@ async function saveQuestionModal() {
 
 async function deleteQuestionFromActivity(questionId) {
     if (!currentReviewActivity) return;
+    if (!canTeacherModifyActivity(currentReviewActivity)) {
+        showAlert(`⛔ Acceso denegado: solo el profesor de ${currentReviewActivity.subject_name || 'la materia'} o el Super Admin (superU) pueden modificar esta evaluación.`);
+        return;
+    }
     if (!confirm('¿Estás seguro de eliminar esta pregunta de la actividad?')) return;
 
+    const curTchId = window.currentTeacher ? window.currentTeacher.id : '';
     try {
-        const res = await fetch(`/api/activities/${currentReviewActivity.id}/questions/${questionId}`, {
-            method: 'DELETE'
+        const res = await fetch(`/api/activities/${currentReviewActivity.id}/questions/${questionId}?requester_teacher_id=${encodeURIComponent(curTchId)}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requester_teacher_id: curTchId })
         });
         const data = await res.json();
         if (data.success) {
             showAlert('🗑️ Pregunta eliminada correctamente.');
             await openReviewActivityModal(currentReviewActivity.id);
         } else {
-            showAlert('❌ Error: ' + (data.error || 'No se pudo eliminar la pregunta'));
+            showAlert('❌ ' + (data.error || 'No se pudo eliminar la pregunta'));
         }
     } catch (err) {
         console.error(err);

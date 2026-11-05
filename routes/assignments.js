@@ -74,8 +74,14 @@ router.post('/', async (req, res) => {
 
             let createdCount = 0;
             for (const grp of allClassrooms) {
-                const existing = await CourseAssignment.findOne({ group_id: grp.id, subject_id: subId, teacher_id: tchId });
-                if (!existing) {
+                const existing = await CourseAssignment.findOne({ group_id: grp.id, subject_id: subId });
+                if (existing) {
+                    if (existing.teacher_id !== tchId) {
+                        existing.teacher_id = tchId;
+                        await existing.save();
+                        createdCount++;
+                    }
+                } else {
                     await CourseAssignment.create({
                         group_id: grp.id,
                         subject_id: subId,
@@ -102,9 +108,25 @@ router.post('/', async (req, res) => {
         const group = await Group.findOne({ id: grpId });
         if (!group) return res.status(404).json({ error: 'Aula no encontrada' });
 
-        const existing = await CourseAssignment.findOne({ group_id: grpId, subject_id: subId, teacher_id: tchId });
+        const existing = await CourseAssignment.findOne({ group_id: grpId, subject_id: subId });
         if (existing) {
-            return res.status(400).json({ error: 'Este docente ya está asignado a esa materia en esta aula' });
+            if (existing.teacher_id === tchId) {
+                return res.status(400).json({ error: 'Este docente ya está asignado a esa materia en esta aula' });
+            }
+            existing.teacher_id = tchId;
+            await existing.save();
+            return res.json({
+                success: true,
+                assignment: {
+                    id: existing.id,
+                    group_id: grpId,
+                    group_name: group.name,
+                    subject_id: subId,
+                    subject_name: subject.name,
+                    teacher_id: tchId,
+                    teacher_name: teacher.full_name
+                }
+            });
         }
 
         const assignment = await CourseAssignment.create({

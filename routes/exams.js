@@ -4,7 +4,7 @@ const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
-const { Activity, Question, Group } = require('../models/database');
+const { Activity, Question, Group, Subject } = require('../models/database');
 const { generateFourthOption } = require('../scripts/migrateQuestionsToFourOptions');
 const router = express.Router();
 
@@ -292,6 +292,15 @@ const handleImportExam = async (req, res) => {
         const is_training_level = req.body.is_training_level === 'true' || req.body.is_training_level === true;
         const training_grade = req.body.training_grade ? String(req.body.training_grade).trim() : (grade.includes('5') ? '5' : '4');
         const map_icon = (req.body.map_icon || '').trim() || (type === 'Examen' ? '📝' : '🏆');
+        const subject_name = req.body.subject_name ? String(req.body.subject_name).trim() : '';
+        let subject_id = req.body.subject_id ? Number(req.body.subject_id) : null;
+        const teacher_id = req.body.teacher_id ? Number(req.body.teacher_id) : null;
+        const teacher_name = req.body.teacher_name ? String(req.body.teacher_name).trim() : '';
+
+        if (!subject_id && subject_name) {
+            const foundSub = await Subject.findOne({ name: { $regex: new RegExp(`^${subject_name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+            if (foundSub) subject_id = foundSub.id;
+        }
         
         let targets = [];
         if (target_groups) {
@@ -326,6 +335,10 @@ const handleImportExam = async (req, res) => {
             theme: `Grado ${grade}`,
             group_id: primaryGroupId,
             target_groups: targets,
+            subject_id,
+            subject_name,
+            teacher_id,
+            teacher_name,
             is_training_level,
             training_grade,
             map_icon
