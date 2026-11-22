@@ -33,6 +33,7 @@ app.use('/api/assignments', require('./routes/assignments'));
 
 const seedGrade4Activity = require('./seedGrade4Activity');
 const seedGrade5Activity = require('./seedGrade5Activity');
+const seedNegacionDePedro = require('./seedNegacionDePedro');
 
 // Seed inicial tras conectar a la base de datos
 connectionPromise.then(async () => {
@@ -40,6 +41,7 @@ connectionPromise.then(async () => {
         await seedPractices();
         await seedGrade4Activity();
         await seedGrade5Activity();
+        await seedNegacionDePedro();
     }
 }).catch(err => {
     if (process.env.NODE_ENV !== 'test') {

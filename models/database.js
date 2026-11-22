@@ -64,7 +64,8 @@ const connectionPromise = mongoose.connect(uri)
                 { name: 'Ciencias Naturales', description: 'Biología, física, ecosistemas y cuidado del medio ambiente.' },
                 { name: 'Lengua Castellana', description: 'Comprensión lectora, redacción, gramática y ortografía.' },
                 { name: 'Ciencias Sociales', description: 'Historia, geografía y competencias ciudadanas.' },
-                { name: 'Inglés', description: 'Vocabulario, estructuras gramaticales y expresión comunicativa.' }
+                { name: 'Inglés', description: 'Vocabulario, estructuras gramaticales y expresión comunicativa.' },
+                { name: 'Cristianismo', description: 'Enseñanzas bíblicas, valores cristianos, historia de la fe y vida de Jesús.' }
             ];
 
             for (const sub of defaultSubjects) {

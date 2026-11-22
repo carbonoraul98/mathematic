@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Mathematic's Adventure</title>
+  <title>Learning Adventure</title>
 
   <link rel="icon" type="image/png" href="images/favicon.png?v=1" />
   <link rel="shortcut icon" href="favicon.ico?v=1" />
@@ -21,9 +21,9 @@
         <div class="preloader-orbit"></div>
         <div class="preloader-orbit-ring-secondary"></div>
         <div class="preloader-planet-node">🪐</div>
-        <img src="images/astronaut-hero.png" alt="Mathematic's Adventure" class="preloader-avatar" />
+        <img src="images/astronaut-hero.png" alt="Learning Adventure" class="preloader-avatar" />
       </div>
-      <h3 class="preloader-brand">Mathematic's Adventure</h3>
+      <h3 class="preloader-brand">Learning Adventure</h3>
       <p class="preloader-text" id="appPreloaderText">Cargando aventura espacial...</p>
       <div class="preloader-progress-track">
         <div class="preloader-progress-fill"></div>
@@ -51,10 +51,10 @@
   <!-- PORTADA + LOGIN -->
 
   <div class="screen active" id="home">
-    <img src="images/astronaut-hero.png" class="logo logo--minimal" alt="Astronauta Mathematic's Adventure" loading="lazy" decoding="async" />
+    <img src="images/astronaut-hero.png" class="logo logo--minimal" alt="Astronauta Learning Adventure" loading="lazy" decoding="async" />
 
     <div class="brand-title">
-      <span class="brand-title__primary">MATHEMATIC'S</span>
+      <span class="brand-title__primary">LEARNING</span>
       <span class="brand-title__secondary">ADVENTURE</span>
     </div>
 
@@ -138,7 +138,7 @@
     <header class="teacher-top-header">
       <div class="sidebar-logo">
         <img src="images/astronaut-hero.png" alt="Logo" class="sidebar-logo-img" loading="lazy" decoding="async" />
-        <span class="sidebar-logo-text">Mathematic's Adventure</span>
+        <span class="sidebar-logo-text">Learning Adventure</span>
       </div>
     </header>
 
@@ -323,6 +323,7 @@
             <label for="activitySubject">📖 Materia:</label>
             <select id="activitySubject">
               <option value="Matemáticas">Matemáticas</option>
+              <option value="Cristianismo">Cristianismo</option>
             </select>
           </div>
         </div>
@@ -1043,7 +1044,7 @@
             <span id="studentPanelName" style="color: var(--color-primary); font-weight: 700; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Estudiante</span>
             <button type="button" class="btn-edit-nickname" onclick="openEditNicknameModal()" title="Personalizar mi nombre" aria-label="Personalizar nombre">✏️</button>
           </h1>
-          <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.8rem; text-align: left;">Bienvenido a tu aventura matemática</p>
+          <p style="margin: 2px 0 0; color: var(--text-muted); font-size: 0.8rem; text-align: left;">Bienvenido a Learning Adventure</p>
         </div>
         <div class="header-profile-badge">
           <button class="btn btn--outline btn--sm header-profile-logout" onclick="logout()" title="Cerrar sesión">Salir</button>
@@ -1172,7 +1173,8 @@
   <script src="js/components/question-modal.js"></script>
   <script src="js/components/fraction-graphics.js?v=1"></script>
   <script src="js/components/activity-player.js?v=6"></script>
-  <script src="js/components/projector-player.js?v=3"></script>
+  <script src="js/components/projector-player.js?v=2"></script>
+  <script src="js/components/projector-player.js?v=4"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <!-- MODAL: Crear Estudiante -->
   <div class="modal-overlay" id="createStudentModal">
@@ -1234,6 +1236,7 @@
     </div>
   </div>
 
-  <script src="js/main.js?v=34"></script>
+  <script src="js/main.js?v=33"></script>
+  <script src="js/main.js?v=35"></script>
 </body>
 </html>

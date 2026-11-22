@@ -893,7 +893,7 @@ class ProjectorPlayer extends HTMLElement {
           <div class="pj-feedback-banner pj-feedback-banner--correct">
             <div class="pj-feedback-text">
               <span style="font-size: 1.5rem;">🎉</span>
-              <div><b>¡Respuesta correcta!</b> Coincide perfectamente con la solución matemática esperada.</div>
+              <div><b>¡Respuesta correcta!</b> Coincide perfectamente con la respuesta correcta esperada.</div>
             </div>
           </div>
         `;
