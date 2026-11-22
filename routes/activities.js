@@ -44,6 +44,10 @@ async function checkTeacherCanModifyActivity(act, req) {
     const teacherSubjects = new Set(assignments.map(a => subjectNameMap.get(a.subject_id)).filter(Boolean));
 
     const actSubject = cleanStr(act.subject_name || '');
+    // Cristianismo no tiene asignación de aula: cualquier docente o superU puede gestionar/proyectar la clase
+    if (actSubject === 'cristianismo') {
+        return { allowed: true };
+    }
     const actGroups = (Array.isArray(act.target_groups) && act.target_groups.length > 0)
         ? act.target_groups.map(Number)
         : (act.group_id ? [Number(act.group_id)] : []);
@@ -104,19 +108,23 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'El título es requerido' });
         }
 
+        const resolvedSubjectName = subject_name ? String(subject_name).trim() : '';
+        const isCristianismo = cleanStr(resolvedSubjectName) === 'cristianismo';
+
         let targets = [];
-        if (Array.isArray(target_groups) && target_groups.length > 0) {
-            targets = target_groups.map(Number);
-        } else if (group_id) {
-            targets = [Number(group_id)];
-        } else if (grade && (String(grade) === '4' || String(grade) === '5')) {
-            const gradeGroups = await Group.find({ name: { $regex: new RegExp(`^${grade}`) } });
-            targets = gradeGroups.map(g => g.id);
+        if (!isCristianismo) {
+            if (Array.isArray(target_groups) && target_groups.length > 0) {
+                targets = target_groups.map(Number);
+            } else if (group_id) {
+                targets = [Number(group_id)];
+            } else if (grade && (String(grade) === '4' || String(grade) === '5')) {
+                const gradeGroups = await Group.find({ name: { $regex: new RegExp(`^${grade}`) } });
+                targets = gradeGroups.map(g => g.id);
+            }
         }
         
-        const primaryGroupId = group_id ? Number(group_id) : (targets[0] || null);
+        const primaryGroupId = isCristianismo ? null : (group_id ? Number(group_id) : (targets[0] || null));
         let resolvedSubjectId = subject_id ? Number(subject_id) : null;
-        const resolvedSubjectName = subject_name ? String(subject_name).trim() : '';
         if (!resolvedSubjectId && resolvedSubjectName) {
             const foundSub = await Subject.findOne({ name: { $regex: new RegExp(`^${resolvedSubjectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
             if (foundSub) resolvedSubjectId = foundSub.id;
@@ -125,7 +133,7 @@ router.post('/', async (req, res) => {
         const activity = await Activity.create({
             title,
             type: type || 'Actividad',
-            theme: theme || `Grado ${grade || 'General'}`,
+            theme: isCristianismo ? (theme || 'Clase Bíblica General') : (theme || `Grado ${grade || 'General'}`),
             group_id: primaryGroupId,
             target_groups: targets,
             subject_id: resolvedSubjectId,
@@ -134,7 +142,7 @@ router.post('/', async (req, res) => {
             teacher_name: teacher_name ? String(teacher_name).trim() : '',
             is_training_level: Boolean(is_training_level),
             training_grade: training_grade ? String(training_grade) : (grade ? String(grade) : ''),
-            map_icon: map_icon || (type === 'Examen' ? '📝' : '🏆')
+            map_icon: map_icon || (isCristianismo ? '✝️' : (type === 'Examen' ? '📝' : '🏆'))
         });
         
         // Guardar las preguntas si vienen en el body

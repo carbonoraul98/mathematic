@@ -1,4 +1,4 @@
-const { connectionPromise, Activity, Question, Group, Subject } = require('./models/database');
+const { connectionPromise, Activity, Question, Group, Subject, CourseAssignment } = require('./models/database');
 
 const negacionPedroQuestions = [
     {
@@ -32,34 +32,34 @@ const negacionPedroQuestions = [
         correct: "Aseguró con firmeza que estaba dispuesto a ir con Jesús a la cárcel y a la muerte"
     },
     {
-        q: "Tras el arresto de Jesús en Getsemaní, ¿hasta dónde lo siguió Pedro de lejos?",
+        q: "Tras el arresto de Jesús en Getsemaní, ¿cómo lo siguió Pedro y hasta dónde llegó?",
         opts: [
-            "Hasta el patio de la casa del sumo sacerdote Caifás",
-            "Hasta el templo de Salomón en Belén",
-            "Hasta el monte Sinaí junto a Juan el Bautista",
-            "Hasta la sinagoga de Nazaret"
+            "Lo siguió de lejos hasta el patio de la casa del sumo sacerdote Caifás",
+            "Fue corriendo delante de los soldados hasta el templo de Belén",
+            "Se quedó esperando en el monte Sinaí junto a Juan el Bautista",
+            "Regresó inmediatamente a su barca en Capernaúm"
         ],
-        correct: "Hasta el patio de la casa del sumo sacerdote Caifás"
+        correct: "Lo siguió de lejos hasta el patio de la casa del sumo sacerdote Caifás"
     },
     {
         q: "¿Quién reconoció e interrogó a Pedro por primera vez mientras se calentaba junto al fuego?",
         opts: [
-            "Una criada del sumo sacerdote que lo vio sentado a la luz del fuego",
+            "Una criada del sumo sacerdote que lo vio sentado a la luz de la fogata",
             "El gobernador romano Poncio Pilato",
             "Un centurión romano en la puerta de la ciudad",
             "Nicodemo, miembro del concilio"
         ],
-        correct: "Una criada del sumo sacerdote que lo vio sentado a la luz del fuego"
+        correct: "Una criada del sumo sacerdote que lo vio sentado a la luz de la fogata"
     },
     {
         q: "¿Por qué detalle reconocieron a Pedro la tercera vez los que estaban en el patio?",
         opts: [
-            "Por su manera de hablar y su acento de Galilea",
+            "Por su manera de hablar y su acento de Galilea, y un pariente de Malco lo identificó",
             "Porque llevaba escrita una inscripción en su manto",
             "Porque portaba las redes de pesca en sus manos",
             "Porque él mismo anunció su nombre en voz alta"
         ],
-        correct: "Por su manera de hablar y su acento de Galilea"
+        correct: "Por su manera de hablar y su acento de Galilea, y un pariente de Malco lo identificó"
     },
     {
         q: "¿Qué ocurrió inmediatamente después de que Pedro negó por tercera vez conocer a Jesús?",
@@ -72,7 +72,7 @@ const negacionPedroQuestions = [
         correct: "Cantó el gallo y el Señor se volvió y miró a Pedro"
     },
     {
-        q: "¿Cómo reaccionó Pedro al recordar las palabras de Jesús cuando escuchó cantar al gallo?",
+        q: "¿Cómo reaccionó Pedro al recordar las palabras de Jesús cuando escuchó cantar al gallo y vio la mirada del Señor?",
         opts: [
             "Salió afuera y lloró amargamente con profundo arrepentimiento",
             "Se quedó dormido junto a la fogata del patio",
@@ -84,22 +84,22 @@ const negacionPedroQuestions = [
     {
         q: "Después de resucitar, ¿cómo restauró Jesús a Pedro junto al mar de Galilea (Juan 21)?",
         opts: [
-            "Le preguntó tres veces «¿Me amas?» y le encomendó: «Apacienta mis ovejas»",
+            "Le preguntó tres veces «¿Me amas?» junto al fuego y le encomendó: «Apacienta mis ovejas»",
             "Le pidió que escribiera tres cartas antes de volver a Jerusalén",
             "Lo envió a construir un templo en la orilla del lago",
             "Le entregó una corona frente a todos los pescadores"
         ],
-        correct: "Le preguntó tres veces «¿Me amas?» y le encomendó: «Apacienta mis ovejas»"
+        correct: "Le preguntó tres veces «¿Me amas?» junto al fuego y le encomendó: «Apacienta mis ovejas»"
     },
     {
-        q: "¿Qué enseñanza fundamental nos transmite el relato de la negación y restauración de Pedro?",
+        q: "¿Qué enseñanza fundamental nos deja lo que pasó en la negación y restauración de Pedro?",
         opts: [
-            "Que el perdón y la gracia de Dios restauran a quien se arrepiente de corazón",
+            "Que no debemos confiar solo en nuestras fuerzas, y que el amor de Jesús restaura a quien se arrepiente de corazón",
             "Que los discípulos nunca enfrentaron momentos de temor o debilidad",
-            "Que la fe depende únicamente de la fuerza humana sin ayuda de Dios",
-            "Que un error impide para siempre servir a los demás"
+            "Que la fe depende únicamente de la valentía humana sin necesidad de oración",
+            "Que un error impide para siempre servir a Dios y a los demás"
         ],
-        correct: "Que el perdón y la gracia de Dios restauran a quien se arrepiente de corazón"
+        correct: "Que no debemos confiar solo en nuestras fuerzas, y que el amor de Jesús restaura a quien se arrepiente de corazón"
     }
 ];
 
@@ -115,27 +115,29 @@ async function seedNegacionDePedro() {
         console.log(' Materia creada: Cristianismo');
     }
 
-    const allGroups = await Group.find({});
-    const allGroupIds = allGroups.map(g => g.id);
+    // Quitar asignaciones de aula para Cristianismo (Cristianismo no lleva aula asignada)
+    await CourseAssignment.deleteMany({ subject_id: cristianismoSub.id });
 
     let act = await Activity.findOne({ title: { $regex: /^la negaci[oó]n de pedro$/i } });
     if (!act) {
         act = await Activity.create({
             title: 'La negación de Pedro',
             type: 'Taller',
-            theme: 'Grado General',
-            group_id: allGroupIds[0] || 1,
-            target_groups: allGroupIds.length > 0 ? allGroupIds : [1, 2, 3, 4, 5],
+            theme: 'Clase Bíblica General',
+            group_id: null,
+            target_groups: [],
             subject_id: cristianismoSub.id,
             subject_name: 'Cristianismo',
             is_training_level: false,
             map_icon: '✝️'
         });
-        console.log(`✅ Creada clase para proyectar "La negación de Pedro" (ID: ${act.id})`);
+        console.log(`✅ Creada clase para proyectar "La negación de Pedro" sin asignación de aula (ID: ${act.id})`);
     } else {
         act.subject_id = cristianismoSub.id;
         act.subject_name = 'Cristianismo';
-        act.target_groups = allGroupIds.length > 0 ? allGroupIds : act.target_groups;
+        act.theme = 'Clase Bíblica General';
+        act.group_id = null;
+        act.target_groups = [];
         act.map_icon = '✝️';
         await act.save();
     }
@@ -161,7 +163,7 @@ async function seedNegacionDePedro() {
         });
     }
 
-    console.log(`✅ Preguntas listas para "La negación de Pedro" (${negacionPedroQuestions.length} preguntas, Materia: Cristianismo)`);
+    console.log(`✅ Clase y preguntas listas para "La negación de Pedro" (Sin asignación de aula, Materia: Cristianismo)`);
 }
 
 if (require.main === module) {

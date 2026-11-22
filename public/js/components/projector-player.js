@@ -455,6 +455,14 @@ class ProjectorPlayer extends HTMLElement {
             <span class="pj-badge">📽️ MODO PROYECTOR</span>
             <h2 class="pj-activity-title" id="pjActivityTitle">Actividad</h2>
           </div>
+          <div id="pjModeSwitcher" style="display: none; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button class="pj-btn" id="pjTabStoryBtn" style="background: linear-gradient(135deg, #d97706, #b45309); color: #fff; border: 1px solid #fbbf24;">
+              <span>📖</span> <span>La Clase: ¿Qué pasó en ese momento?</span>
+            </button>
+            <button class="pj-btn" id="pjTabQuizBtn" style="background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.2);">
+              <span>❓</span> <span>Preguntas y Respuestas</span>
+            </button>
+          </div>
           <div class="pj-top-actions">
             <button class="pj-btn pj-btn-fullscreen" id="pjFullscreenBtn" title="Pantalla completa para el proyector">
               <span>🖥️</span> <span>Pantalla Completa</span>
@@ -479,7 +487,7 @@ class ProjectorPlayer extends HTMLElement {
           <div class="pj-graphics-wrapper" id="pjGraphicsWrapper" style="display: none;"></div>
 
           <div id="pjBodyContent">
-            <!-- Las opciones o input se inyectan acá -->
+            <!-- Las opciones o láminas de la clase se inyectan acá -->
           </div>
 
           <div id="pjFeedbackSlot"></div>
@@ -539,6 +547,8 @@ class ProjectorPlayer extends HTMLElement {
     this.querySelector('#pjNextBtn').addEventListener('click', () => this.nextQuestion());
     this.querySelector('#pjRetryBtn').addEventListener('click', () => this.retryCurrentQuestion());
     this.querySelector('#pjRestartBtn').addEventListener('click', () => this.restartSession());
+    this.querySelector('#pjTabStoryBtn').addEventListener('click', () => this.switchProjectorMode('story'));
+    this.querySelector('#pjTabQuizBtn').addEventListener('click', () => this.switchProjectorMode('quiz'));
     this.querySelector('#pjFinishExitBtn').addEventListener('click', () => {
       this.querySelector('#pjSummaryModal').style.display = 'none';
       this.close();
@@ -666,12 +676,72 @@ class ProjectorPlayer extends HTMLElement {
     return rawList.slice(0, 4).map((text, i) => ({ letter: letters[i], text }));
   }
 
+  getStorySlidesForActivity(activity) {
+    const title = String(activity?.title || '').toLowerCase();
+    const subject = String(activity?.subject_name || '').toLowerCase();
+    if (title.includes('negaci') || title.includes('pedro') || subject.includes('cristianismo')) {
+      return [
+        {
+          badge: 'ESCENA 1 DE 6 • LUCAS 22:31-34 / MATEO 26:31-35',
+          icon: '🍷',
+          title: '1. La Advertencia de Jesús en la Última Cena',
+          whatHappened: 'Durante la Última Cena, antes de salir hacia el monte de los Olivos, Jesús miró a sus discípulos y les advirtió que aquella misma noche todos pasarían por una gran prueba. Simón Pedro, confiando en su propia valentía humana, afirmó: «Señor, dispuesto estoy a ir contigo no solo a la cárcel, sino también a la muerte».',
+          quote: '«Jesús le dijo: Pedro, te digo que el gallo no cantará hoy antes que tú niegues tres veces que me conoces.» (Lucas 22:34)',
+          lesson: 'Pedro amaba a Jesús sinceramente, pero confió demasiado en sus propias fuerzas en lugar de reconocer su debilidad y depender de Dios.'
+        },
+        {
+          badge: 'ESCENA 2 DE 6 • LUCAS 22:47-54',
+          icon: '🌿',
+          title: '2. El Arresto en Getsemaní y el Seguimiento de Lejos',
+          whatHappened: 'En el huerto de Getsemaní, Jesús pidió a Pedro, Jacobo y Juan que velaran y oraran para no entrar en tentación, pero ellos se durmieron. Cuando llegó la multitud para arrestar a Jesús y lo llevaron a la casa del sumo sacerdote Caifás, el texto bíblico dice que «Pedro le seguía de lejos».',
+          quote: '«Y prendiéndole, le llevaron, y le condujeron a casa del sumo sacerdote. Y Pedro le seguía de lejos.» (Lucas 22:54)',
+          lesson: 'La falta de oración en Getsemaní dejó a Pedro sin fortaleza espiritual cuando llegó el momento del temor.'
+        },
+        {
+          badge: 'ESCENA 3 DE 6 • LUCAS 22:55-60 / JUAN 18:17-27',
+          icon: '🔥',
+          title: '3. Las Tres Negaciones junto al Fuego en el Patio',
+          whatHappened: 'En medio del frío de la noche, encendieron fuego en el patio y Pedro se sentó entre los guardias. Allí ocurrió lo que Jesús había anunciado: 1) Una criada lo vio a la luz del fuego y dijo: «También éste estaba con él», pero Pedro dijo: «Mujer, no lo conozco». 2) Poco después otro lo vio y dijo: «Tú también eres de ellos», y Pedro respondió: «Hombre, no lo soy». 3) Una hora más tarde, otros insistieron porque su acento de Galilea lo delataba (incluso un pariente de Malco lo reconoció), y Pedro negó por tercera vez diciendo: «Hombre, no sé lo que dices».',
+          quote: '«Entonces él comenzó a maldecir, y a jurar: No conozco al hombre. Y en seguida cantó el gallo.» (Mateo 26:74)',
+          lesson: 'El miedo a ser juzgado o arrestado hizo que el discípulo más valiente negara tres veces a su Maestro.'
+        },
+        {
+          badge: 'ESCENA 4 DE 6 • LUCAS 22:60-61',
+          icon: '🐓',
+          title: '4. El Canto del Gallo y la Mirada de Jesús',
+          whatHappened: 'Mientras Pedro todavía estaba pronunciando la tercera negación, cantó el gallo en la madrugada de Jerusalén. En ese preciso instante, Jesús —que estaba siendo juzgado y maltratado— «se volvió y miró a Pedro». No fue una mirada de rechazo ni de rencor, sino una mirada llena de amor, dolor y verdad.',
+          quote: '«Entonces, vuelto el Señor, miró a Pedro; y Pedro se acordó de la palabra del Señor...» (Lucas 22:61)',
+          lesson: 'Aun en medio de su propio sufrimiento, Jesús no se olvidó de Pedro: una sola mirada suya bastó para tocar su conciencia.'
+        },
+        {
+          badge: 'ESCENA 5 DE 6 • LUCAS 22:62',
+          icon: '💧',
+          title: '5. El Llanto Amargo y el Arrepentimiento Verdadero',
+          whatHappened: 'Al cruzarse con la mirada de Jesús y escuchar el canto del gallo, las palabras del Maestro resonaron en la mente de Pedro. Su orgullo se quebró por completo: salió inmediatamente del patio hacia la oscuridad de la noche y «lloró amargamente».',
+          quote: '«Y Pedro, saliendo fuera, lloró amargamente.» (Lucas 22:62)',
+          lesson: 'Ese llanto amargo fue el inicio de un arrepentimiento genuino que abrió la puerta a su transformación espiritual.'
+        },
+        {
+          badge: 'ESCENA 6 DE 6 • JUAN 21:15-19',
+          icon: '🌅',
+          title: '6. La Restauración de Pedro junto al Mar de Galilea',
+          whatHappened: 'La historia no terminó en derrota. Después de resucitar, Jesús buscó a Pedro en la orilla del mar de Galilea junto a unas brasas de fuego. Así como Pedro lo había negado tres veces junto al fuego, Jesús le preguntó tres veces con amor: «Simón, hijo de Jonás, ¿me amas?». En cada respuesta de Pedro («Sí, Señor; tú sabes que te amo»), Jesús lo perdonó y le devolvió su propósito: «Apacienta mis ovejas».',
+          quote: '«Le dijo la tercera vez: Simón, hijo de Jonás, ¿me amas?... Jesús le dijo: Apacienta mis ovejas.» (Juan 21:17)',
+          lesson: 'En Dios ningún error tiene la última palabra cuando hay arrepentimiento sincero: Jesús perdona, restaura y vuelve a confiar en nosotros.'
+        }
+      ];
+    }
+    return [];
+  }
+
   project(activity) {
     if (!activity) return;
     this.activity = activity;
     let questions = activity.preguntas || [];
-    if (questions.length === 0) {
-      alert('Esta actividad no tiene preguntas registradas para proyectar.');
+    this.storySlides = this.getStorySlidesForActivity(activity);
+
+    if (questions.length === 0 && this.storySlides.length === 0) {
+      alert('Esta actividad no tiene contenido registrado para proyectar.');
       return;
     }
 
@@ -685,19 +755,87 @@ class ProjectorPlayer extends HTMLElement {
     });
 
     this.currentIndex = 0;
+    this.storyIndex = 0;
     this.answers = new Array(this.questions.length).fill(null);
     this.results = new Array(this.questions.length).fill(null);
+
+    const switcher = this.querySelector('#pjModeSwitcher');
+    if (this.storySlides.length > 0) {
+      this.mode = 'story';
+      if (switcher) switcher.style.display = 'flex';
+    } else {
+      this.mode = 'quiz';
+      if (switcher) switcher.style.display = 'none';
+    }
 
     this.querySelector('#pjActivityTitle').innerText = activity.title || 'Actividad';
     this.querySelector('#pjOverlay').classList.add('active');
 
+    this.updateModeButtons();
     this.renderPills();
     this.renderCurrentQuestion();
+  }
+
+  switchProjectorMode(newMode) {
+    if (newMode === 'story' && (!this.storySlides || this.storySlides.length === 0)) return;
+    this.mode = newMode;
+    this.updateModeButtons();
+    this.renderPills();
+    this.renderCurrentQuestion();
+  }
+
+  updateModeButtons() {
+    const storyBtn = this.querySelector('#pjTabStoryBtn');
+    const quizBtn = this.querySelector('#pjTabQuizBtn');
+    if (!storyBtn || !quizBtn) return;
+
+    if (this.mode === 'story') {
+      storyBtn.style.background = 'linear-gradient(135deg, #d97706, #b45309)';
+      storyBtn.style.color = '#ffffff';
+      storyBtn.style.border = '1px solid #fbbf24';
+      storyBtn.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.45)';
+
+      quizBtn.style.background = 'rgba(255,255,255,0.08)';
+      quizBtn.style.color = '#cbd5e1';
+      quizBtn.style.border = '1px solid rgba(255,255,255,0.18)';
+      quizBtn.style.boxShadow = 'none';
+    } else {
+      quizBtn.style.background = 'linear-gradient(135deg, #4f46e5, #7c3aed)';
+      quizBtn.style.color = '#ffffff';
+      quizBtn.style.border = '1px solid #818cf8';
+      quizBtn.style.boxShadow = '0 0 15px rgba(99, 102, 241, 0.45)';
+
+      storyBtn.style.background = 'rgba(255,255,255,0.08)';
+      storyBtn.style.color = '#cbd5e1';
+      storyBtn.style.border = '1px solid rgba(255,255,255,0.18)';
+      storyBtn.style.boxShadow = 'none';
+    }
   }
 
   renderPills() {
     const container = this.querySelector('#pjPillsContainer');
     container.innerHTML = '';
+
+    if (this.mode === 'story' && this.storySlides && this.storySlides.length > 0) {
+      this.storySlides.forEach((slide, idx) => {
+        const pill = document.createElement('button');
+        pill.className = 'pj-pill';
+        pill.innerHTML = `${slide.icon} Escena ${idx + 1}`;
+        if (idx === this.storyIndex) {
+          pill.classList.add('active');
+          pill.style.background = '#d97706';
+          pill.style.borderColor = '#fbbf24';
+        }
+        pill.addEventListener('click', () => {
+          this.storyIndex = idx;
+          this.renderPills();
+          this.renderCurrentQuestion();
+        });
+        container.appendChild(pill);
+      });
+      return;
+    }
+
     this.questions.forEach((_, idx) => {
       const pill = document.createElement('button');
       pill.className = 'pj-pill';
@@ -715,13 +853,68 @@ class ProjectorPlayer extends HTMLElement {
   }
 
   renderCurrentQuestion() {
+    const bodyContent = this.querySelector('#pjBodyContent');
+    const feedbackSlot = this.querySelector('#pjFeedbackSlot');
+    const gWrapper = this.querySelector('#pjGraphicsWrapper');
+    const retryBtn = this.querySelector('#pjRetryBtn');
+    const nextBtn = this.querySelector('#pjNextBtn');
+
+    bodyContent.innerHTML = '';
+    feedbackSlot.innerHTML = '';
+    gWrapper.innerHTML = '';
+    gWrapper.style.display = 'none';
+
+    if (this.mode === 'story' && this.storySlides && this.storySlides.length > 0) {
+      const slide = this.storySlides[this.storyIndex];
+      const totalSlides = this.storySlides.length;
+
+      this.querySelector('#pjQuestionNumber').innerText = slide.badge;
+      this.querySelector('#pjQuestionType').innerText = '📖 Desarrollo de la Clase';
+      this.querySelector('#pjQuestionTitle').innerHTML = `<span style="margin-right: 10px;">${slide.icon}</span>${slide.title}`;
+      retryBtn.style.display = 'none';
+
+      this.querySelector('#pjPrevBtn').disabled = this.storyIndex === 0;
+      if (this.storyIndex === totalSlides - 1) {
+        nextBtn.innerHTML = '<span>Ir a Preguntas y Respuestas</span> <span>❓➡️</span>';
+      } else {
+        nextBtn.innerHTML = '<span>Siguiente Escena</span> <span>➡️</span>';
+      }
+
+      bodyContent.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 18px; text-align: left;">
+          <div style="background: rgba(30, 41, 74, 0.78); border-left: 5px solid #f59e0b; border-radius: 16px; padding: 22px 26px; box-shadow: 0 8px 25px rgba(0,0,0,0.3);">
+            <div style="font-size: 0.9rem; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;">
+              📜 ¿Qué pasó en ese momento?
+            </div>
+            <p style="font-size: 1.35rem; line-height: 1.6; color: #f8fafc; margin: 0;">
+              ${slide.whatHappened}
+            </p>
+          </div>
+
+          <div style="background: rgba(99, 102, 241, 0.14); border: 1px solid rgba(129, 140, 248, 0.35); border-radius: 14px; padding: 16px 22px; font-style: italic; font-size: 1.2rem; color: #e0e7ff;">
+            📖 ${slide.quote}
+          </div>
+
+          <div style="background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 16px 22px; display: flex; align-items: flex-start; gap: 12px;">
+            <span style="font-size: 1.5rem;">💡</span>
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 800; color: #34d399; text-transform: uppercase; margin-bottom: 4px;">Reflexión para la Clase</div>
+              <div style="font-size: 1.18rem; color: #d1fae5; line-height: 1.45;">${slide.lesson}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      this.renderPills();
+      return;
+    }
+
     const q = this.questions[this.currentIndex];
     const total = this.questions.length;
 
     this.querySelector('#pjQuestionNumber').innerText = `PREGUNTA ${this.currentIndex + 1} DE ${total}`;
     this.querySelector('#pjQuestionType').innerText = q.tipo === 'opcion' ? '🔘 Opción Múltiple' : '✍️ Pregunta Abierta';
 
-    // Parsear gráfico si contiene tag
     let cleanText = q.pregunta;
     let graphicHtml = '';
     if (window.FractionGraphics && typeof window.FractionGraphics.parseQuestion === 'function') {
@@ -732,31 +925,19 @@ class ProjectorPlayer extends HTMLElement {
 
     this.querySelector('#pjQuestionTitle').innerText = cleanText;
 
-    const gWrapper = this.querySelector('#pjGraphicsWrapper');
     if (graphicHtml) {
       gWrapper.innerHTML = graphicHtml;
       gWrapper.style.display = 'flex';
-    } else {
-      gWrapper.innerHTML = '';
-      gWrapper.style.display = 'none';
     }
 
-    // Controles navegación
-    this.querySelector('#pjPrevBtn').disabled = this.currentIndex === 0;
-    const nextBtn = this.querySelector('#pjNextBtn');
+    this.querySelector('#pjPrevBtn').disabled = this.currentIndex === 0 && (!this.storySlides || this.storySlides.length === 0);
     if (this.currentIndex === total - 1) {
       nextBtn.innerHTML = '<span>Finalizar Sesión</span> <span>🏁</span>';
     } else {
       nextBtn.innerHTML = '<span>Siguiente</span> <span>➡️</span>';
     }
 
-    const bodyContent = this.querySelector('#pjBodyContent');
-    const feedbackSlot = this.querySelector('#pjFeedbackSlot');
-    bodyContent.innerHTML = '';
-    feedbackSlot.innerHTML = '';
-
     const hasAnswered = this.answers[this.currentIndex] !== null;
-    const retryBtn = this.querySelector('#pjRetryBtn');
     retryBtn.style.display = hasAnswered ? 'inline-flex' : 'none';
 
     if (q.tipo === 'opcion') {
@@ -959,13 +1140,33 @@ class ProjectorPlayer extends HTMLElement {
   }
 
   prevQuestion() {
+    if (this.mode === 'story') {
+      if (this.storyIndex > 0) {
+        this.storyIndex--;
+        this.renderCurrentQuestion();
+      }
+      return;
+    }
     if (this.currentIndex > 0) {
       this.currentIndex--;
       this.renderCurrentQuestion();
+    } else if (this.storySlides && this.storySlides.length > 0) {
+      this.storyIndex = this.storySlides.length - 1;
+      this.switchProjectorMode('story');
     }
   }
 
   nextQuestion() {
+    if (this.mode === 'story') {
+      if (this.storyIndex < this.storySlides.length - 1) {
+        this.storyIndex++;
+        this.renderCurrentQuestion();
+      } else {
+        this.currentIndex = 0;
+        this.switchProjectorMode('quiz');
+      }
+      return;
+    }
     if (this.currentIndex < this.questions.length - 1) {
       this.currentIndex++;
       this.renderCurrentQuestion();

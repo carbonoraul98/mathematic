@@ -1738,6 +1738,8 @@ function canTeacherModifyActivity(act) {
     if (!curTch || !curTch.id) return false;
 
     const actSubject = normalizeSubjectStr(act.subject_name || '');
+    // Cristianismo no lleva asignación de aula: está disponible como clase general
+    if (actSubject === 'cristianismo') return true;
     const actGroups = (Array.isArray(act.target_groups) && act.target_groups.length > 0)
         ? act.target_groups.map(Number)
         : (act.group_id ? [Number(act.group_id)] : []);
@@ -1808,11 +1810,14 @@ async function loadActivities() {
         activities.forEach(act => {
             const icono = act.map_icon || (act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩')));
             const qCount = act.preguntas ? act.preguntas.length : 0;
-            const aulaBadge = act.target_group_names && act.target_group_names.length > 0 
-                ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.target_group_names.join(', ')}</span>`
-                : (act.primary_group_name 
-                    ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.primary_group_name}</span>`
-                    : `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 8px; font-weight: 500;">🪐 Todas las aulas</span>`);
+            const isCristianismo = normalizeSubjectStr(act.subject_name || '') === 'cristianismo';
+            const aulaBadge = isCristianismo
+                ? `<span style="background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.35); padding: 2px 8px; border-radius: 8px; font-weight: 600;">✝️ Sin asignación de aula</span>`
+                : (act.target_group_names && act.target_group_names.length > 0 
+                    ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.target_group_names.join(', ')}</span>`
+                    : (act.primary_group_name 
+                        ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.primary_group_name}</span>`
+                        : `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 8px; font-weight: 500;">🪐 Todas las aulas</span>`));
 
             const trainingBadge = act.is_training_level
                 ? `<span style="background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 8px; font-weight: 700;">🗺️ Nivel de Ruta (${act.training_grade || '?'}° Grado ${act.map_icon || '🏆'})</span>`
@@ -2585,7 +2590,7 @@ async function populateActivitySubjectSelector() {
             }
 
             const filteredSubjects = (!isSuper && allowedNames.length > 0)
-                ? subjects.filter(s => allowedNames.some(an => normalizeSubjectStr(an) === normalizeSubjectStr(s.name)))
+                ? subjects.filter(s => normalizeSubjectStr(s.name) === 'cristianismo' || allowedNames.some(an => normalizeSubjectStr(an) === normalizeSubjectStr(s.name)))
                 : subjects;
 
             const finalSubjects = filteredSubjects.length > 0 ? filteredSubjects : subjects;
@@ -2594,9 +2599,29 @@ async function populateActivitySubjectSelector() {
             if (currentVal && finalSubjects.some(s => s.name === currentVal)) {
                 subSel.value = currentVal;
             }
+            subSel.onchange = onActivitySubjectChange;
+            onActivitySubjectChange();
         }
     } catch (e) {
         console.error('Error al poblar materias en actividades:', e);
+    }
+}
+
+function onActivitySubjectChange() {
+    const subSel = document.getElementById('activitySubject');
+    const isCrist = subSel && normalizeSubjectStr(subSel.value) === 'cristianismo';
+    const targetGroupEl = document.getElementById('activityTargetGroup');
+    const targetGradeEl = document.getElementById('activityTargetGrade');
+    const repSection = document.getElementById('activityReplicateSection');
+
+    if (targetGroupEl && targetGroupEl.parentElement) {
+        targetGroupEl.parentElement.style.display = isCrist ? 'none' : '';
+    }
+    if (targetGradeEl && targetGradeEl.parentElement) {
+        targetGradeEl.parentElement.style.display = isCrist ? 'none' : '';
+    }
+    if (isCrist && repSection) {
+        repSection.style.display = 'none';
     }
 }
 
@@ -3330,11 +3355,14 @@ function renderProjectorActivitiesList(activities) {
     activities.forEach(act => {
         const icono = act.map_icon || (act.type === 'Examen' ? '📝' : (act.type === 'Quiz' ? '⏱️' : (act.type === 'Taller' ? '🛠️' : '🧩')));
         const qCount = act.preguntas ? act.preguntas.length : 0;
-        const aulaBadge = act.target_group_names && act.target_group_names.length > 0 
-            ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.target_group_names.join(', ')}</span>`
-            : (act.primary_group_name 
-                ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.primary_group_name}</span>`
-                : `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 8px; font-weight: 500;">🪐 Todas las aulas</span>`);
+        const isCristianismo = normalizeSubjectStr(act.subject_name || '') === 'cristianismo';
+        const aulaBadge = isCristianismo
+            ? `<span style="background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.35); padding: 2px 8px; border-radius: 8px; font-weight: 600;">✝️ Sin asignación de aula</span>`
+            : (act.target_group_names && act.target_group_names.length > 0 
+                ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.target_group_names.join(', ')}</span>`
+                : (act.primary_group_name 
+                    ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 8px; font-weight: 600;">🪐 ${act.primary_group_name}</span>`
+                    : `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); padding: 2px 8px; border-radius: 8px; font-weight: 500;">🪐 Todas las aulas</span>`));
 
         const subjectBadge = act.subject_name 
             ? `<span style="background: rgba(147, 51, 234, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35); padding: 2px 8px; border-radius: 8px; font-weight: 600;">📖 ${act.subject_name}</span>`
