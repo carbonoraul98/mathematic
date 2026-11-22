@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="60%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="360" fill="url(#bg3)" rx="18"/>
+  <!-- Full Moon & Stars over Jerusalem Path -->
+  <circle cx="670" cy="85" r="36" fill="#fef9c3" opacity="0.9"/>
+  <circle cx="670" cy="85" r="56" fill="#fef08a" opacity="0.2"/>
+  <circle cx="150" cy="60" r="2" fill="#fff"/>
+  <circle cx="280" cy="45" r="2.5" fill="#fff"/>
+  <circle cx="430" cy="70" r="2" fill="#fff"/>
+  <circle cx="520" cy="40" r="1.8" fill="#fff"/>
+  <!-- Path to Mount of Olives -->
+  <path d="M0 290 Q240 230 480 250 T800 210 L800 360 L0 360 Z" fill="#1e293b"/>
+  <path d="M120 360 Q320 270 550 245 L610 245 Q400 285 240 360 Z" fill="#475569" opacity="0.6"/>
+  <!-- Shepherd's Staff & Speech Banner -->
+  <path d="M350 255 L350 140 Q350 120 368 120 Q382 120 382 135" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+  <!-- Silhouettes of Jesus, Peter raising hand, and disciples -->
+  <circle cx="330" cy="175" r="13" fill="#e2e8f0"/>
+  <path d="M312 255 Q330 190 348 255 Z" fill="#cbd5e1"/>
+  <circle cx="420" cy="178" r="13" fill="#fde047"/>
+  <path d="M402 255 Q420 195 438 255 Z" fill="#fbbf24"/>
+  <line x1="412" y1="205" x2="385" y2="165" stroke="#fbbf24" stroke-width="5" stroke-linecap="round"/>
+  <!-- Other disciples -->
+  <circle cx="475" cy="185" r="11" fill="#94a3b8"/>
+  <path d="M460 255 Q475 200 490 255 Z" fill="#64748b"/>
+  <circle cx="515" cy="188" r="11" fill="#94a3b8"/>
+  <path d="M500 255 Q515 203 530 255 Z" fill="#64748b"/>
+  <text x="30" y="42" fill="#c7d2fe" font-family="sans-serif" font-size="16" font-weight="bold">PASO 3 • CAMINO AL MONTE DE LOS OLIVOS (MATEO 26:31-35 / MARCOS 14:27-31 NTV)</text>
+  <text x="30" y="335" fill="#e0e7ff" font-family="sans-serif" font-size="14" font-style="italic">«Aunque todos te abandonen, yo jamás te abandonaré... ¡Aunque tenga que morir contigo, jamás te negaré!»</text>
+</svg>

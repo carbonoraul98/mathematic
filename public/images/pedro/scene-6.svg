@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg6" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="60%" stop-color="#311042"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </linearGradient>
+    <radialGradient id="dawn6" cx="0.82" cy="0.28" r="0.35">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="360" fill="url(#bg6)" rx="18"/>
+  <circle cx="650" cy="100" r="150" fill="url(#dawn6)"/>
+  <!-- Rooster crowing on the wall at dawn -->
+  <g transform="translate(610, 105)">
+    <path d="M0 60 Q15 20 35 25 Q45 5 55 25 Q70 30 55 50 Q45 75 15 75 Z" fill="#f59e0b"/>
+    <path d="M35 12 Q42 0 48 14 Q55 4 58 18" fill="none" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+    <polygon points="58,25 72,22 60,32" fill="#fde047"/>
+    <!-- Sound waves of rooster crow -->
+    <path d="M80 12 Q92 22 80 32 M92 5 Q108 22 92 39" fill="none" stroke="#fde047" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- Beam of Jesus' Gaze towards Peter -->
+  <line x1="210" y1="165" x2="450" y2="185" stroke="#fde047" stroke-width="3" stroke-dasharray="6,6" opacity="0.75"/>
+  <!-- Jesus turning to look at Peter -->
+  <circle cx="195" cy="165" r="28" fill="#fde047" opacity="0.25"/>
+  <circle cx="195" cy="165" r="14" fill="#fef08a"/>
+  <path d="M172 250 Q195 182 218 250 Z" fill="#f8fafc"/>
+  <!-- Peter weeping bitterly with teardrops -->
+  <circle cx="470" cy="185" r="14" fill="#93c5fd"/>
+  <path d="M446 260 Q470 202 494 260 Z" fill="#3b82f6"/>
+  <path d="M515 170 Q523 185 515 192 Q507 185 515 170 Z" fill="#38bdf8"/>
+  <path d="M535 190 Q543 205 535 212 Q527 205 535 190 Z" fill="#38bdf8"/>
+  <text x="30" y="42" fill="#e9d5ff" font-family="sans-serif" font-size="16" font-weight="bold">PASO 6 • EL CANTO DEL GALLO, LA MIRADA DEL SEÑOR Y EL LLANTO (LUCAS 22:60-62 NTV)</text>
+  <text x="30" y="335" fill="#f3e8ff" font-family="sans-serif" font-size="14" font-style="italic">«En ese momento, el Señor se volvió y miró a Pedro... Y Pedro salió del patio, llorando amargamente»</text>
+</svg>

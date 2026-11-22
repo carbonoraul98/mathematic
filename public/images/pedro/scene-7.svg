@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg7" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c4a6e"/>
+      <stop offset="50%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+    <radialGradient id="sunrise7" cx="0.5" cy="0.5" r="0.45">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="360" fill="url(#bg7)" rx="18"/>
+  <circle cx="400" cy="180" r="190" fill="url(#sunrise7)"/>
+  <!-- Beach & Sea of Galilee at Sunrise (John 21) -->
+  <path d="M0 225 Q400 205 800 235 L800 360 L0 360 Z" fill="#92400e"/>
+  <path d="M0 200 Q400 220 800 195 L800 235 Q400 215 0 225 Z" fill="#0284c7" opacity="0.8"/>
+  <!-- Charcoal Fire (Brasas) with Fish & Bread on the Shore -->
+  <ellipse cx="400" cy="260" rx="45" ry="14" fill="#451a03"/>
+  <path d="M400 215 Q420 240 410 258 Q400 265 390 258 Q380 240 400 215 Z" fill="#f97316"/>
+  <path d="M400 228 Q412 245 405 256 Q400 260 395 256 Q388 245 400 228 Z" fill="#fde047"/>
+  <!-- Risen Jesus restoring Peter with 3 Questions of Love -->
+  <circle cx="320" cy="175" r="15" fill="#fef08a"/>
+  <path d="M295 255 Q320 192 345 255 Z" fill="#ffffff"/>
+  <circle cx="480" cy="180" r="14" fill="#fed7aa"/>
+  <path d="M456 255 Q480 198 504 255 Z" fill="#38bdf8"/>
+  <!-- Three Hearts / Sheep symbolizing the 3 restorations -->
+  <text x="368" y="155" font-size="24">🐑 🐑 🐑</text>
+  <text x="30" y="42" fill="#fef08a" font-family="sans-serif" font-size="16" font-weight="bold">PASO 7 • LA RESTAURACIÓN EN EL EVANGELIO DE JUAN (JUAN 21:1-19 NTV)</text>
+  <text x="30" y="335" fill="#fef3c7" font-family="sans-serif" font-size="14" font-style="italic">Junto a otra fogata, Jesús resucitado le preguntó tres veces: «Simón, hijo de Jonás, ¿me amas?... Apacienta mis ovejas»</text>
+</svg>

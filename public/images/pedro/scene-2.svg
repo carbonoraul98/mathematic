@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1c1917"/>
+      <stop offset="50%" stop-color="#451a03"/>
+      <stop offset="100%" stop-color="#292524"/>
+    </linearGradient>
+    <radialGradient id="lamp2" cx="0.5" cy="0.45" r="0.5">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#d97706" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="360" fill="url(#bg2)" rx="18"/>
+  <circle cx="400" cy="165" r="240" fill="url(#lamp2)"/>
+  <!-- Stone Arches of the Upper Room -->
+  <path d="M60 320 L60 120 Q160 40 260 120 L260 320" fill="none" stroke="#78350f" stroke-width="6" opacity="0.5"/>
+  <path d="M540 320 L540 120 Q640 40 740 120 L740 320" fill="none" stroke="#78350f" stroke-width="6" opacity="0.5"/>
+  <!-- Table of the Last Supper -->
+  <rect x="130" y="215" width="540" height="18" rx="6" fill="#92400e" stroke="#f59e0b" stroke-width="2"/>
+  <rect x="150" y="233" width="500" height="45" fill="#fef3c7" opacity="0.15"/>
+  <!-- Chalice, Bread & Oil Lamp -->
+  <path d="M390 185 L410 185 L405 205 L412 215 L388 215 L395 205 Z" fill="#fbbf24"/>
+  <ellipse cx="345" cy="208" rx="22" ry="9" fill="#d97706" stroke="#fde68a" stroke-width="1.5"/>
+  <!-- Oil lamp flame -->
+  <path d="M455 205 Q465 180 455 170 Q445 180 455 205 Z" fill="#fef08a"/>
+  <!-- Jesus and Peter dialogue -->
+  <circle cx="370" cy="135" r="22" fill="#fde047" opacity="0.3"/>
+  <circle cx="370" cy="135" r="14" fill="#fed7aa"/>
+  <path d="M342 215 Q370 155 398 215 Z" fill="#f8fafc"/>
+  <circle cx="465" cy="142" r="13" fill="#fdba74"/>
+  <path d="M440 215 Q465 162 490 215 Z" fill="#3b82f6"/>
+  <text x="30" y="42" fill="#fde68a" font-family="sans-serif" font-size="16" font-weight="bold">PASO 2 • LA ÚLTIMA CENA (JUAN 13:36-38 NTV)</text>
+  <text x="30" y="335" fill="#fef3c7" font-family="sans-serif" font-size="14" font-style="italic">«¿Morir por mí? Pedro, te digo la verdad... antes de que cante el gallo, negarás tres veces que me conoces»</text>
+</svg>

@@ -682,60 +682,94 @@ class ProjectorPlayer extends HTMLElement {
     if (title.includes('negaci') || title.includes('pedro') || subject.includes('cristianismo')) {
       return [
         {
-          badge: 'ESCENA 1 DE 7 • JUAN 13:36-38 (NTV)',
+          badge: 'PARTE 1: EL CAMINO A LA NEGACIÓN (1/10) • EL DISCÍPULO',
+          icon: '🛶',
+          image: 'images/pedro/scene-1.svg',
+          title: '1. ¿Quién era Simón Pedro antes de aquella noche?',
+          whatHappened: 'Para entender cómo llegó Pedro a negar a Jesús, primero debemos recordar quién era: Simón Pedro era un pescador de Galilea apasionado, sincero e impulsivo. Había dejado sus redes para seguir a Jesús, caminó sobre el agua, vio su gloria y fue quien confesó: «Tú eres el Mesías, el Hijo del Dios viviente». Pedro amaba a Jesús de verdad, pero aún no conocía su propia debilidad.',
+          quote: '«Simón Pedro contestó: —Tú eres el Mesías, el Hijo del Dios viviente.» (Mateo 16:16 NTV)',
+          lesson: 'Tener experiencias hermosas con Dios en el pasado no nos hace inmunes a caer si dejamos de depender de Él cada día.'
+        },
+        {
+          badge: 'PARTE 1: EL CAMINO A LA NEGACIÓN (2/10) • JUAN 13:36-38 (NTV)',
           icon: '🍞',
-          title: '1. «¿Morir por mí?» — El Señor ya sabía lo que pasaría',
-          whatHappened: 'Antes de que ocurriera el arresto, Jesús ya conocía profundamente el corazón de Pedro: sabía su deseo sincero de seguirlo, pero también conocía su fragilidad humana. Cuando Pedro aseguró que estaba dispuesto a dar su vida en ese mismo instante, el Señor —que todo lo sabe— le reveló con amor y verdad lo que ocurriría antes del amanecer, pero primero le dejó una promesa: «Ahora no puedes venir conmigo, pero me seguirás después».',
+          image: 'images/pedro/scene-2.svg',
+          title: '2. El Señor ya lo sabía: «Ahora no puedes venir conmigo, pero me seguirás después»',
+          whatHappened: 'Durante la Última Cena (en el Evangelio de Juan), Jesús sabía exactamente todo lo que iba a suceder. Cuando Pedro le preguntó adónde iba y aseguró con entusiasmo: «Estoy dispuesto a morir por ti», Jesús —que conocía el corazón de Pedro mejor que el mismo Pedro— le anticipó que lo negaría tres veces antes de que cantara el gallo. Pero notemos algo maravilloso: antes de anunciarle su caída, Jesús ya le había dado la promesa de su futura restauración: «me seguirás después».',
           quote: '«36 Simón Pedro le preguntó: —Señor, ¿adónde vas? Y Jesús contestó: —Ahora no puedes venir conmigo, pero me seguirás después. 37 —¿Pero por qué no puedo ir ahora, Señor? —le preguntó—. Estoy dispuesto a morir por ti. 38 —¿Morir por mí? —le contestó Jesús—. Pedro, te digo la verdad, mañana por la mañana, antes de que cante el gallo, negarás tres veces que me conoces.» (Juan 13:36-38 NTV)',
-          lesson: 'El Señor conocía la caída de Pedro antes de que sucediera, y aun sabiéndolo no lo rechazó: le prometió que después lo seguiría.'
+          lesson: 'El Señor ya sabía que Pedro lo negaría, y aun sabiéndolo no lo desechó: ya tenía planeado restaurarlo después.'
         },
         {
-          badge: 'ESCENA 2 DE 7 • MATEO 26:31-35 (NTV)',
+          badge: 'PARTE 1: EL CAMINO A LA NEGACIÓN (3/10) • MATEO 26:31-35 / MARCOS 14:27-31 (NTV)',
           icon: '🐑',
-          title: '2. El Pastor Golpeado y la Promesa de Galilea',
-          whatHappened: 'En el camino hacia el monte de los Olivos, Jesús les anunció que todos lo abandonarían aquella noche, cumpliéndose la profecía del Pastor y las ovejas. Sin embargo, fijémonos en cómo es el corazón de Jesús: antes siquiera de que sus discípulos le fallaran, Él ya les estaba dando cita para restaurarlos después de resucitar («iré delante de ustedes a Galilea y allí los veré»). Pedro, confiando en sus propias fuerzas, juró que jamás lo abandonaría.',
-          quote: '«31 En el camino, Jesús les dijo: “Esta noche, todos ustedes me abandonarán, porque las Escrituras dicen: ‘Dios golpeará al Pastor, y las ovejas del rebaño se dispersarán’. 32 Sin embargo, después de ser levantado de los muertos, iré delante de ustedes a Galilea y allí los veré”. 33 Pedro declaró: —Aunque todos te abandonen, yo jamás te abandonaré. 34 Jesús respondió: —Te digo la verdad, Pedro: esta misma noche, antes de que cante el gallo, negarás tres veces que me conoces. 35 —¡No! —insistió Pedro—. Aunque tenga que morir contigo, ¡jamás te negaré! Y los demás discípulos juraron lo mismo.» (Mateo 26:31-35 NTV)',
-          lesson: 'Cuando nos comparamos con los demás diciendo «aunque todos te fallen, yo jamás», caemos en la autoconfianza en lugar de depender de la gracia de Dios.'
+          image: 'images/pedro/scene-3.svg',
+          title: '3. Primer Paso hacia la Caída: La Autoconfianza («Yo jamás te abandonaré»)',
+          whatHappened: 'Salieron rumbo al monte de los Olivos y Jesús citó la profecía: «Dios golpeará al Pastor, y las ovejas del rebaño se dispersarán», dándoles además una promesa: «después de ser levantado de los muertos, iré delante de ustedes a Galilea y allí los veré». En vez de recibir con humildad la advertencia de Jesús, Pedro dio el primer paso hacia la caída: confió demasiado en sí mismo, se creyó más fuerte que los demás discípulos y contradijo la palabra del Señor diciendo: «¡No! Aunque tenga que morir contigo, ¡jamás te negaré!».',
+          quote: '«33 Pedro declaró: —Aunque todos te abandonen, yo jamás te abandonaré. 34 Jesús respondió: —Te digo la verdad, Pedro: esta misma noche, antes de que cante el gallo, negarás tres veces que me conoces. 35 —¡No! —insistió Pedro—. Aunque tenga que morir contigo, ¡jamás te negaré! Y los demás discípulos juraron lo mismo.» (Mateo 26:33-35 NTV / Marcos 14:29-31 NTV)',
+          lesson: 'A veces nosotros también somos así: decimos «yo jamás fallaría en eso», olvidando que quien confía solo en su propia fuerza ya empezó a tropezar.'
         },
         {
-          badge: 'ESCENA 3 DE 7 • MARCOS 14:27-31 (NTV)',
-          icon: '🐓',
-          title: '3. La Advertencia Precisa: «Antes de que cante el gallo dos veces»',
-          whatHappened: 'El evangelio de Marcos nos muestra con cuánta precisión el Señor conocía cada detalle de esa noche: Jesús le advirtió a Pedro que antes de que el gallo cantara dos veces, él lo negaría tres veces. Pero Pedro, en lugar de humillarse y pedir fuerzas a Dios en oración, exclamó enfáticamente «¡No!» confiando en su propia valentía.',
-          quote: '«29 Pedro le dijo: —Aunque todos te abandonen, yo jamás lo haré. 30 Jesús respondió: —Te digo la verdad, Pedro: esta misma noche, antes de que cante el gallo dos veces, negarás tres veces que me conoces. 31 —¡No! —exclamó Pedro enfáticamente—. Aunque tenga que morir contigo, ¡jamás te negaré! Y los demás juraron lo mismo.» (Marcos 14:29-31 NTV)',
-          lesson: 'Las buenas intenciones y las palabras fuertes no bastan cuando llega la prueba si no estamos afirmados en la comunión con el Señor.'
+          badge: 'PARTE 1: EL CAMINO A LA NEGACIÓN (4/10) • MATEO 26:40-41 / JUAN 18:10-11 (NTV)',
+          icon: '🌿',
+          image: 'images/pedro/scene-4.svg',
+          title: '4. Segundo Paso hacia la Caída: Dormir en lugar de Orar en Getsemaní',
+          whatHappened: '¿Qué más pasó antes de la negación? Llegaron al huerto de Getsemaní. Jesús, en profunda angustia, le pidió a Pedro que velara y orara con Él para vencer la tentación, pero Pedro se quedó dormido tres veces. Por no haberse preparado en oración, cuando llegó la multitud a arrestar a Jesús, Pedro reaccionó por impulso carnal: sacó una espada y le cortó la oreja derecha a Malco, el siervo del sumo sacerdote. Jesús lo detuvo y sanó al siervo.',
+          quote: '«Luego volvió a los discípulos y los encontró dormidos. Le dijo a Pedro: —¿No pudieron velar conmigo ni siquiera una hora? Velen y oren para que no cedan ante la tentación, porque el espíritu está dispuesto, pero el cuerpo es débil.» (Mateo 26:40-41 NTV)',
+          lesson: 'Pedro tenía valentía para pelear con una espada física, pero le faltaba la fortaleza espiritual que solo se recibe en la oración.'
         },
         {
-          badge: 'ESCENA 4 DE 7 • LUCAS 22:54-57 (NTV)',
+          badge: 'PARTE 1: EL CAMINO A LA NEGACIÓN (5/10) • LUCAS 22:54-60 (NTV)',
           icon: '🔥',
-          title: '4. Siguiendo de Lejos y la Primera Negación junto a la Fogata',
-          whatHappened: 'Cuando arrestaron a Jesús y lo llevaron a la casa del sumo sacerdote, Pedro «los siguió de lejos». En medio del patio, los guardias encendieron una fogata y Pedro se sentó con ellos tratando de pasar desapercibido. Allí, a la luz del fuego, una sirvienta lo miró fijamente y lo identificó como seguidor de Jesús, pero el temor pudo más que sus promesas.',
-          quote: '«54 Entonces lo arrestaron y lo llevaron a la casa del sumo sacerdote. Y Pedro los siguió de lejos. 55 Los guardias encendieron una fogata en medio del patio y se sentaron alrededor, y Pedro se sumó al grupo. 56 Una sirvienta lo vio a la luz de la fogata y comenzó a mirarlo fijamente. Por fin dijo: “Este hombre era uno de los seguidores de Jesús”. 57 Pero Pedro lo negó: “¡Mujer, ni siquiera lo conozco!”.» (Lucas 22:54-57 NTV)',
-          lesson: 'El peligro comienza cuando empezamos a seguir a Jesús «de lejos» y buscamos acomodarnos en el ambiente de quienes no lo honran.'
+          image: 'images/pedro/scene-5.svg',
+          title: '5. Tercer Paso: Seguir a Jesús de Lejos y las Tres Negaciones junto a la Fogata',
+          whatHappened: 'Tras el arresto, Pedro «los siguió de lejos» hasta la casa del sumo sacerdote y se sentó junto a la fogata con los guardias. Allí se derrumbó su autoconfianza en tres momentos: 1) Una sirvienta lo miró fijamente a la luz del fuego y dijo: «Este hombre era uno de los seguidores de Jesús», y Pedro negó: «¡Mujer, ni siquiera lo conozco!». 2) Poco después alguien más dijo: «Seguramente tú eres uno de ellos», y contestó: «¡No, hombre, no lo soy!». 3) Una hora más tarde, otro insistió porque era galileo (un pariente de Malco, a quien Pedro le había cortado la oreja, Juan 18:26), y Pedro dijo: «¡Hombre, no sé de qué hablas!».',
+          quote: '«59 Alrededor de una hora más tarde, otra persona insistió: “Seguro este es uno de ellos porque también es galileo”. 60 Pero Pedro dijo: “¡Hombre, no sé de qué hablas!”. Inmediatamente, mientras aún hablaba, el gallo cantó.» (Lucas 22:59-60 NTV)',
+          lesson: 'Seguir a Jesús «de lejos» y sentarnos a calentarnos en la fogata del temor al qué dirán nos lleva a callar nuestra fe cuando más debemos confesarla.'
         },
         {
-          badge: 'ESCENA 5 DE 7 • LUCAS 22:58-60 (NTV)',
-          icon: '🗣️',
-          title: '5. La Segunda y Tercera Negación y el Canto del Gallo',
-          whatHappened: 'Una caída no corregida lleva a otra: después de un rato, alguien más lo reconoció y Pedro volvió a negarlo («¡No, hombre, no lo soy!»). Alrededor de una hora más tarde, otra persona insistió porque su condición y acento de galileo lo delataban. Cuando Pedro negó por tercera vez diciendo «¡Hombre, no sé de qué hablas!», inmediatamente, mientras aún tenía esas palabras en la boca, cantó el gallo.',
-          quote: '«58 Después de un rato, alguien más lo vio y dijo: —Seguramente tú eres uno de ellos. —¡No, hombre, no lo soy! —contestó. 59 Alrededor de una hora más tarde, otra persona insistió: “Seguro este es uno de ellos porque también es galileo”. 60 Pero Pedro dijo: “¡Hombre, no sé de qué hablas!”. Inmediatamente, mientras aún hablaba, el gallo cantó.» (Lucas 22:58-60 NTV)',
-          lesson: 'Todo lo que el Señor había dicho se cumplió al pie de la letra: Él conoce la verdad de nuestro corazón mejor que nosotros mismos.'
-        },
-        {
-          badge: 'ESCENA 6 DE 7 • LUCAS 22:61-62 (NTV)',
-          icon: '💧',
-          title: '6. La Mirada del Señor y el Llanto Amargo de Pedro',
-          whatHappened: 'En ese preciso instante ocurrió el momento más conmovedor de aquella madrugada: en medio de sus acusadores, «el Señor se volvió y miró a Pedro». No fue una mirada de odio ni de desprecio, sino la mirada del Maestro que ya sabía que Pedro fallaría y aun así iba camino a la cruz para salvarlo. Las palabras de Jesús pasaron rápidamente por la mente de Pedro, y saliendo del patio, lloró amargamente.',
+          badge: 'PARTE 1: EL CAMINO A LA NEGACIÓN (6/10) • LUCAS 22:61-62 (NTV)',
+          icon: '🐓',
+          image: 'images/pedro/scene-6.svg',
+          title: '6. El Canto del Gallo, la Mirada del Señor y el Llanto Amargo',
+          whatHappened: 'Mientras Pedro aún hablaba, cantó el gallo. En ese instante ocurrió lo que quebrantó su corazón: «el Señor se volvió y miró a Pedro». A pesar de estar siendo juzgado e insultado, Jesús tenía sus ojos puestos en su amigo. Esa mirada llena de amor y verdad hizo que las palabras de Jesús pasaran rápidamente por la mente de Pedro, quien salió del patio llorando amargamente.',
           quote: '«61 En ese momento, el Señor se volvió y miró a Pedro. De repente, las palabras del Señor pasaron rápidamente por la mente de Pedro: “Mañana por la mañana, antes de que cante el gallo, negarás tres veces que me conoces”. 62 Y Pedro salió del patio, llorando amargamente.» (Lucas 22:61-62 NTV)',
-          lesson: 'La mirada de Jesús no es para hundirnos en desesperación, sino para quebrantar nuestro orgullo y llevarnos a un arrepentimiento genuino.'
+          lesson: 'Las lágrimas de Pedro no fueron de simple remordimiento, sino de verdadero arrepentimiento al cruzarse con la mirada de amor de Jesús.'
         },
         {
-          badge: 'ESCENA 7 DE 7 • APLICACIÓN A NUESTRA VIDA',
-          icon: '❤️‍🩹',
-          title: '7. El Señor ya lo sabía... y a veces nosotros también somos como Pedro',
-          whatHappened: '¿Por qué es tan importante recordar que el mismo Señor ya sabía que Pedro lo negaría? Porque muchas veces nosotros somos exactamente como Pedro: cuando todo está bien decimos con seguridad «Señor, yo jamás te fallaría», pero cuando enfrentamos presión, miedo al qué dirán o tentación, terminamos callando nuestra fe o actuando como si no lo conociéramos. La buena noticia es que Jesús ya conocía nuestra debilidad antes de llamarnos, y así como no desechó a Pedro sino que lo miró con amor y luego lo restauró en Galilea, hoy también nos tiende su mano para levantarnos.',
-          quote: '«Simón, hijo de Jonás, ¿me amas?... Señor, tú lo sabes todo; tú sabes que te amo. Jesús le dijo: Apacienta mis ovejas.» (Juan 21:17)',
-          lesson: 'Reconozcamos con humildad que sin Dios somos frágiles como Pedro, pero que en el amor y el perdón de Cristo siempre hay restauración para quien vuelve a Él de corazón.'
+          badge: 'PARTE 1: SÍNTESIS (7/10) • ESPEJO PARA NUESTRA VIDA',
+          icon: '🪞',
+          image: 'images/pedro/scene-8.svg',
+          title: '7. Resumen: Cómo llegó Pedro a la negación y cómo a veces nosotros somos iguales',
+          whatHappened: 'Mirando todo el camino que recorrió Pedro, vemos que su caída no fue casualidad: 1) Confió en sus propias fuerzas («yo jamás te negaré»), 2) Se durmió cuando debía orar en Getsemaní, 3) Siguió a Jesús de lejos, y 4) Se sentó junto al fuego de quienes rechazaban a Jesús. A veces nosotros también somos como Pedro: prometemos mucho cuando no hay presión, descuidamos la oración y ante el temor flaqueamos. Pero la historia no termina en el patio de Caifás: ¡veamos ahora la Restauración en el mismo Evangelio de Juan!',
+          quote: '«El espíritu está dispuesto, pero el cuerpo es débil.» (Mateo 26:41 NTV)',
+          lesson: 'Reconocer los pasos que llevaron a Pedro a caer nos enseña a vivir humildes, orando siempre y caminando cerca del Señor.'
+        },
+        {
+          badge: 'PARTE 2: LA RESTAURACIÓN EN JUAN (8/10) • JUAN 21:1-14 (NTV)',
+          icon: '🌅',
+          image: 'images/pedro/scene-7.svg',
+          title: '8. La Restauración en el Evangelio de Juan: Otra Fogata en el Mar de Galilea',
+          whatHappened: 'Tal como Jesús lo había prometido («iré delante de ustedes a Galilea y allí los veré»), en Juan 21 vemos a Pedro de vuelta en el mar de Galilea. Tras pescar toda la noche sin atrapar nada, Jesús resucitado aparece en la orilla al amanecer y les da una pesca milagrosa. Al escuchar «¡Es el Señor!», Pedro se lanza al agua y nada hasta la playa. ¿Y con qué los recibe Jesús en la orilla? ¡Con una fogata de carbón (brasas), pescado y pan! Jesús recreó el escenario de una fogata para sanar la herida que había quedado en la fogata del patio.',
+          quote: '«Cuando llegaron a la orilla, vieron una fogata con pescado sobre las brasas y pan. Jesús les dijo: “Vengan y desayunen”.» (Juan 21:9, 12 NTV)',
+          lesson: 'Cuando le fallamos a Dios, Él no nos espera con piedras para destruirnos, sino con la mesa servida para restaurar nuestra comunión con Él.'
+        },
+        {
+          badge: 'PARTE 2: LA RESTAURACIÓN EN JUAN (9/10) • JUAN 21:15-17 (NTV)',
+          icon: '🐑',
+          image: 'images/pedro/scene-9.svg',
+          title: '9. Tres Negaciones borradas por Tres Preguntas de Amor (Juan 21:15-17 NTV)',
+          whatHappened: 'Después de desayunar junto al fuego, Jesús restauró públicamente a Pedro delante de los demás discípulos. Como Pedro lo había negado tres veces, Jesús le preguntó tres veces: «Simón, hijo de Jonás, ¿me amas?». La primera vez Jesús le preguntó «¿me amas más que estos?» (recordándole cuando Pedro decía que jamás lo abandonaría aunque los demás lo hicieran). Ahora un Pedro humilde ya no se compara con nadie: solo responde «Señor, tú sabes todo. Tú sabes que yo te quiero». Y tres veces Jesús le devuelve su llamado: «Alimenta a mis corderos... Cuida de mis ovejas... Alimenta a mis ovejas».',
+          quote: '«15 Después de desayunar, Jesús le preguntó a Simón Pedro: —Simón, hijo de Jonás, ¿me amas más que estos? —Sí, Señor —contestó Pedro—, tú sabes que te quiero. —Entonces, alimenta a mis corderos —le dijo Jesús... 17 Le preguntó por tercera vez: —Simón, hijo de Jonás, ¿me quieres? A Pedro le dolió que Jesús le preguntara la tercera vez... —Señor, tú sabes todo. Tú sabes que yo te quiero. Jesús le dijo: —Entonces, alimenta a mis ovejas.» (Juan 21:15-17 NTV)',
+          lesson: 'Por cada «no lo conozco» de Pedro, Jesús puso un «tú sabes que te quiero» y le confió lo más valioso que tenía: el cuidado de sus ovejas.'
+        },
+        {
+          badge: 'PARTE 2: LA RESTAURACIÓN EN JUAN (10/10) • JUAN 21:18-19 (NTV)',
+          icon: '✝️',
+          image: 'images/pedro/scene-10.svg',
+          title: '10. El Cumplimiento de Juan 13:36 en Juan 21:19: «¡Sígueme!»',
+          whatHappened: '¿Recuerdan que en Juan 13:36, antes de la negación, Jesús le había dicho a Pedro: «Ahora no puedes venir conmigo, pero me seguirás después»? En Juan 21:18-19 esa promesa se cumple por completo: Jesús le anuncia a Pedro cómo algún día sí daría su vida para glorificar a Dios, y cierra la restauración con las mismas palabras con las que lo llamó por primera vez en Galilea: «¡Sígueme!». Aquel Pedro temeroso que negó a Jesús ante una sirvienta, una vez restaurado y lleno del Espíritu Santo, predicó sin miedo ante miles de personas.',
+          quote: '«19 Jesús dijo esto para darle a entender a Pedro con qué clase de muerte glorificaría a Dios. Después Jesús le dijo: “¡Sígueme!”.» (Juan 21:19 NTV)',
+          lesson: 'El mismo Señor que sabía que Pedro lo negaría es quien hoy conoce nuestras luchas, perdona nuestras caídas cuando nos arrepentimos y vuelve a decirnos con amor: «¡Sígueme!».'
         }
       ];
     }
@@ -888,26 +922,35 @@ class ProjectorPlayer extends HTMLElement {
         nextBtn.innerHTML = '<span>Siguiente Escena</span> <span>➡️</span>';
       }
 
+      const imgHtml = slide.image
+        ? `
+          <div style="width: 100%; max-height: 250px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(251, 191, 36, 0.35); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); background: #0f172a; display: flex; justify-content: center; align-items: center;">
+            <img src="${slide.image}" alt="${slide.title}" style="width: 100%; height: 240px; object-fit: cover; display: block;" />
+          </div>
+        `
+        : '';
+
       bodyContent.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 18px; text-align: left;">
-          <div style="background: rgba(30, 41, 74, 0.78); border-left: 5px solid #f59e0b; border-radius: 16px; padding: 22px 26px; box-shadow: 0 8px 25px rgba(0,0,0,0.3);">
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; text-align: left;">
+          ${imgHtml}
+          <div style="background: rgba(30, 41, 74, 0.78); border-left: 5px solid #f59e0b; border-radius: 16px; padding: 20px 24px; box-shadow: 0 8px 25px rgba(0,0,0,0.3);">
             <div style="font-size: 0.9rem; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;">
               📜 ¿Qué pasó en ese momento?
             </div>
-            <p style="font-size: 1.35rem; line-height: 1.6; color: #f8fafc; margin: 0;">
+            <p style="font-size: 1.25rem; line-height: 1.55; color: #f8fafc; margin: 0;">
               ${slide.whatHappened}
             </p>
           </div>
 
-          <div style="background: rgba(99, 102, 241, 0.14); border: 1px solid rgba(129, 140, 248, 0.35); border-radius: 14px; padding: 16px 22px; font-style: italic; font-size: 1.2rem; color: #e0e7ff;">
+          <div style="background: rgba(99, 102, 241, 0.14); border: 1px solid rgba(129, 140, 248, 0.35); border-radius: 14px; padding: 14px 20px; font-style: italic; font-size: 1.12rem; color: #e0e7ff;">
             📖 ${slide.quote}
           </div>
 
-          <div style="background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 16px 22px; display: flex; align-items: flex-start; gap: 12px;">
-            <span style="font-size: 1.5rem;">💡</span>
+          <div style="background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 14px 20px; display: flex; align-items: flex-start; gap: 12px;">
+            <span style="font-size: 1.4rem;">💡</span>
             <div>
-              <div style="font-size: 0.85rem; font-weight: 800; color: #34d399; text-transform: uppercase; margin-bottom: 4px;">Reflexión para la Clase</div>
-              <div style="font-size: 1.18rem; color: #d1fae5; line-height: 1.45;">${slide.lesson}</div>
+              <div style="font-size: 0.85rem; font-weight: 800; color: #34d399; text-transform: uppercase; margin-bottom: 4px;">Enseñanza para Nuestra Vida</div>
+              <div style="font-size: 1.12rem; color: #d1fae5; line-height: 1.45;">${slide.lesson}</div>
             </div>
           </div>
         </div>
@@ -936,6 +979,16 @@ class ProjectorPlayer extends HTMLElement {
     if (graphicHtml) {
       gWrapper.innerHTML = graphicHtml;
       gWrapper.style.display = 'flex';
+    } else if (this.storySlides && this.storySlides.length > 0) {
+      const matchedSlide = this.storySlides[this.currentIndex % this.storySlides.length];
+      if (matchedSlide && matchedSlide.image) {
+        gWrapper.innerHTML = `
+          <div style="width: 100%; max-height: 185px; border-radius: 14px; overflow: hidden; border: 1px solid rgba(129, 140, 248, 0.3); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);">
+            <img src="${matchedSlide.image}" alt="Ilustración de la pregunta" style="width: 100%; height: 180px; object-fit: cover; display: block;" />
+          </div>
+        `;
+        gWrapper.style.display = 'flex';
+      }
     }
 
     this.querySelector('#pjPrevBtn').disabled = this.currentIndex === 0 && (!this.storySlides || this.storySlides.length === 0);

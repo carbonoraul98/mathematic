@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#1c1917"/>
+    </linearGradient>
+    <radialGradient id="fire5" cx="0.5" cy="0.62" r="0.4">
+      <stop offset="0%" stop-color="#f97316" stop-opacity="0.85"/>
+      <stop offset="45%" stop-color="#ea580c" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="360" fill="url(#bg5)" rx="18"/>
+  <circle cx="400" cy="220" r="220" fill="url(#fire5)"/>
+  <!-- Courtyard Walls of Caiaphas' House -->
+  <rect x="70" y="70" width="660" height="220" fill="none" stroke="#44403c" stroke-width="4" rx="10"/>
+  <!-- Courtyard Fire in the Center -->
+  <path d="M365 255 L435 240 M370 240 L430 255" stroke="#78350f" stroke-width="8" stroke-linecap="round"/>
+  <path d="M400 175 Q430 215 415 245 Q400 255 385 245 Q370 215 400 175 Z" fill="#f97316"/>
+  <path d="M400 195 Q418 220 408 242 Q400 248 392 242 Q382 220 400 195 Z" fill="#fde047"/>
+  <!-- Servant Girl pointing at Peter by the Firelight -->
+  <circle cx="290" cy="175" r="13" fill="#fed7aa"/>
+  <path d="M270 255 Q290 192 310 255 Z" fill="#a855f7"/>
+  <line x1="302" y1="205" x2="345" y2="195" stroke="#fed7aa" stroke-width="5" stroke-linecap="round"/>
+  <!-- Peter turning back in fear -->
+  <circle cx="505" cy="175" r="14" fill="#fdba74"/>
+  <path d="M482 255 Q505 192 528 255 Z" fill="#3b82f6"/>
+  <text x="30" y="42" fill="#fdba74" font-family="sans-serif" font-size="16" font-weight="bold">PASO 5 • LA FOGATA EN EL PATIO Y LAS TRES NEGACIONES (LUCAS 22:54-60 NTV)</text>
+  <text x="30" y="335" fill="#fed7aa" font-family="sans-serif" font-size="14" font-style="italic">Pedro siguió a Jesús de lejos, se sentó al fuego y negó tres veces: «¡Mujer, ni siquiera lo conozco!»</text>
+</svg>

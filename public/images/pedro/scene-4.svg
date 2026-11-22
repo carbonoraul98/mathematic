@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#052e16"/>
+      <stop offset="55%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <radialGradient id="prayGlow" cx="0.28" cy="0.48" r="0.35">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="360" fill="url(#bg4)" rx="18"/>
+  <circle cx="220" cy="175" r="140" fill="url(#prayGlow)"/>
+  <!-- Olive Tree in Gethsemane -->
+  <path d="M390 290 Q400 220 380 170 Q350 130 320 120 M400 220 Q435 165 470 140" stroke="#451a03" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <ellipse cx="340" cy="115" rx="65" ry="35" fill="#065f46" opacity="0.85"/>
+  <ellipse cx="420" cy="105" rx="75" ry="40" fill="#047857" opacity="0.85"/>
+  <ellipse cx="475" cy="130" rx="55" ry="30" fill="#065f46" opacity="0.85"/>
+  <!-- Jesus praying by the rock (Left) -->
+  <path d="M120 265 Q155 215 195 265 Z" fill="#334155"/>
+  <circle cx="215" cy="205" r="12" fill="#fef08a"/>
+  <path d="M195 265 Q210 220 230 265 Z" fill="#f8fafc"/>
+  <!-- Sleeping disciples & Sword of Peter (Right) -->
+  <ellipse cx="565" cy="255" rx="35" ry="16" fill="#475569"/>
+  <circle cx="540" cy="245" r="10" fill="#94a3b8"/>
+  <!-- Sword icon symbolizing impulsive reaction with Malchus -->
+  <g transform="translate(630, 175) rotate(-30)">
+    <rect x="0" y="0" width="8" height="70" rx="3" fill="#e2e8f0"/>
+    <rect x="-12" y="65" width="32" height="6" rx="2" fill="#fbbf24"/>
+    <rect x="1" y="71" width="6" height="18" rx="2" fill="#78350f"/>
+  </g>
+  <text x="30" y="42" fill="#6ee7b7" font-family="sans-serif" font-size="16" font-weight="bold">PASO 4 • GETSEMANÍ: SUEÑO EN LA ORACIÓN E IMPULSO CON LA ESPADA</text>
+  <text x="30" y="335" fill="#a7f3d0" font-family="sans-serif" font-size="14" font-style="italic">«Velen y oren para que no cedan ante la tentación» — Pedro durmió en vez de orar y actuó por impulso</text>
+</svg>

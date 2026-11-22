@@ -92,14 +92,34 @@ const negacionPedroQuestions = [
         correct: "El Señor se volvió y miró a Pedro; las palabras de Jesús pasaron rápidamente por su mente y Pedro salió del patio llorando amargamente"
     },
     {
-        q: "El Señor sabía de antemano que Pedro lo negaría, y sin embargo no lo desechó. ¿Por qué esta historia nos muestra que a veces nosotros también podemos ser como Pedro?",
+        q: "En la restauración de Pedro en el mismo Evangelio de Juan (Juan 21:9-17 NTV), ¿con qué recibió Jesús resucitado a sus discípulos en la playa de Galilea y qué le preguntó tres veces a Pedro?",
         opts: [
-            "Porque a veces prometemos ser fieles apoyados en nuestras propias fuerzas, pero ante el temor o la presión fallamos; aun así, Jesús ya nos conoce, nos mira con amor y nos restaura si nos arrepentimos",
-            "Porque solo los discípulos del primer siglo podían equivocarse y hoy nadie pasa por pruebas de fe",
-            "Porque basta con hacer grandes promesas verbales sin necesidad de orar ni depender de Dios",
-            "Porque cuando una persona falla una vez, Dios ya no vuelve a darle otra oportunidad"
+            "Los recibió con una fogata de brasas, pescado y pan, y le preguntó tres veces «Simón, hijo de Jonás, ¿me amas?», encargándole: «Alimenta a mis ovejas»",
+            "Los recibió en el templo de Jerusalén y le pidió que repitiera sus promesas de la Última Cena",
+            "Le quitó el ministerio de apóstol por haberlo negado tres veces en el patio",
+            "Le pidió que permaneciera pescando en Galilea sin predicar el evangelio"
         ],
-        correct: "Porque a veces prometemos ser fieles apoyados en nuestras propias fuerzas, pero ante el temor o la presión fallamos; aun así, Jesús ya nos conoce, nos mira con amor y nos restaura si nos arrepentimos"
+        correct: "Los recibió con una fogata de brasas, pescado y pan, y le preguntó tres veces «Simón, hijo de Jonás, ¿me amas?», encargándole: «Alimenta a mis ovejas»"
+    },
+    {
+        q: "¿Cómo se conecta la promesa que Jesús le dio a Pedro antes de su caída en Juan 13:36 («Ahora no puedes venir conmigo, pero me seguirás después») con el cierre de su restauración en Juan 21:19 (NTV)?",
+        opts: [
+            "Se cumple cuando Jesús, después de perdonarlo y restaurarlo junto al mar de Galilea, vuelve a llamarlo diciéndole: «¡Sígueme!»",
+            "No tienen relación porque Juan 21 trata únicamente sobre la pesca en el lago",
+            "Significaba que Pedro nunca más podría servir como discípulo de Jesús",
+            "Se refería únicamente a caminar hacia el monte de los Olivos aquella noche"
+        ],
+        correct: "Se cumple cuando Jesús, después de perdonarlo y restaurarlo junto al mar de Galilea, vuelve a llamarlo diciéndole: «¡Sígueme!»"
+    },
+    {
+        q: "El Señor sabía de antemano todo lo que pasaría para que Pedro llegara a negarlo (la autoconfianza, la falta de oración en Getsemaní y seguirlo de lejos). ¿Qué nos enseña esto cuando nosotros también fallamos?",
+        opts: [
+            "Que a veces somos como Pedro al confiar en nuestras fuerzas y flaquear ante el temor, pero Jesús ya nos conoce, nos mira con amor y nos restaura cuando nos arrepentimos de corazón",
+            "Que solo los discípulos del primer siglo podían equivocarse y hoy nadie pasa por pruebas de fe",
+            "Que basta con hacer grandes promesas verbales sin necesidad de orar ni depender de Dios",
+            "Que cuando una persona falla una vez, Dios ya no vuelve a darle otra oportunidad"
+        ],
+        correct: "Que a veces somos como Pedro al confiar en nuestras fuerzas y flaquear ante el temor, pero Jesús ya nos conoce, nos mira con amor y nos restaura cuando nos arrepentimos de corazón"
     }
 ];
 
