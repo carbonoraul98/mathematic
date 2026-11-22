@@ -682,52 +682,60 @@ class ProjectorPlayer extends HTMLElement {
     if (title.includes('negaci') || title.includes('pedro') || subject.includes('cristianismo')) {
       return [
         {
-          badge: 'ESCENA 1 DE 6 • LUCAS 22:31-34 / MATEO 26:31-35',
-          icon: '🍷',
-          title: '1. La Advertencia de Jesús en la Última Cena',
-          whatHappened: 'Durante la Última Cena, antes de salir hacia el monte de los Olivos, Jesús miró a sus discípulos y les advirtió que aquella misma noche todos pasarían por una gran prueba. Simón Pedro, confiando en su propia valentía humana, afirmó: «Señor, dispuesto estoy a ir contigo no solo a la cárcel, sino también a la muerte».',
-          quote: '«Jesús le dijo: Pedro, te digo que el gallo no cantará hoy antes que tú niegues tres veces que me conoces.» (Lucas 22:34)',
-          lesson: 'Pedro amaba a Jesús sinceramente, pero confió demasiado en sus propias fuerzas en lugar de reconocer su debilidad y depender de Dios.'
+          badge: 'ESCENA 1 DE 7 • JUAN 13:36-38 (NTV)',
+          icon: '🍞',
+          title: '1. «¿Morir por mí?» — El Señor ya sabía lo que pasaría',
+          whatHappened: 'Antes de que ocurriera el arresto, Jesús ya conocía profundamente el corazón de Pedro: sabía su deseo sincero de seguirlo, pero también conocía su fragilidad humana. Cuando Pedro aseguró que estaba dispuesto a dar su vida en ese mismo instante, el Señor —que todo lo sabe— le reveló con amor y verdad lo que ocurriría antes del amanecer, pero primero le dejó una promesa: «Ahora no puedes venir conmigo, pero me seguirás después».',
+          quote: '«36 Simón Pedro le preguntó: —Señor, ¿adónde vas? Y Jesús contestó: —Ahora no puedes venir conmigo, pero me seguirás después. 37 —¿Pero por qué no puedo ir ahora, Señor? —le preguntó—. Estoy dispuesto a morir por ti. 38 —¿Morir por mí? —le contestó Jesús—. Pedro, te digo la verdad, mañana por la mañana, antes de que cante el gallo, negarás tres veces que me conoces.» (Juan 13:36-38 NTV)',
+          lesson: 'El Señor conocía la caída de Pedro antes de que sucediera, y aun sabiéndolo no lo rechazó: le prometió que después lo seguiría.'
         },
         {
-          badge: 'ESCENA 2 DE 6 • LUCAS 22:47-54',
-          icon: '🌿',
-          title: '2. El Arresto en Getsemaní y el Seguimiento de Lejos',
-          whatHappened: 'En el huerto de Getsemaní, Jesús pidió a Pedro, Jacobo y Juan que velaran y oraran para no entrar en tentación, pero ellos se durmieron. Cuando llegó la multitud para arrestar a Jesús y lo llevaron a la casa del sumo sacerdote Caifás, el texto bíblico dice que «Pedro le seguía de lejos».',
-          quote: '«Y prendiéndole, le llevaron, y le condujeron a casa del sumo sacerdote. Y Pedro le seguía de lejos.» (Lucas 22:54)',
-          lesson: 'La falta de oración en Getsemaní dejó a Pedro sin fortaleza espiritual cuando llegó el momento del temor.'
+          badge: 'ESCENA 2 DE 7 • MATEO 26:31-35 (NTV)',
+          icon: '🐑',
+          title: '2. El Pastor Golpeado y la Promesa de Galilea',
+          whatHappened: 'En el camino hacia el monte de los Olivos, Jesús les anunció que todos lo abandonarían aquella noche, cumpliéndose la profecía del Pastor y las ovejas. Sin embargo, fijémonos en cómo es el corazón de Jesús: antes siquiera de que sus discípulos le fallaran, Él ya les estaba dando cita para restaurarlos después de resucitar («iré delante de ustedes a Galilea y allí los veré»). Pedro, confiando en sus propias fuerzas, juró que jamás lo abandonaría.',
+          quote: '«31 En el camino, Jesús les dijo: “Esta noche, todos ustedes me abandonarán, porque las Escrituras dicen: ‘Dios golpeará al Pastor, y las ovejas del rebaño se dispersarán’. 32 Sin embargo, después de ser levantado de los muertos, iré delante de ustedes a Galilea y allí los veré”. 33 Pedro declaró: —Aunque todos te abandonen, yo jamás te abandonaré. 34 Jesús respondió: —Te digo la verdad, Pedro: esta misma noche, antes de que cante el gallo, negarás tres veces que me conoces. 35 —¡No! —insistió Pedro—. Aunque tenga que morir contigo, ¡jamás te negaré! Y los demás discípulos juraron lo mismo.» (Mateo 26:31-35 NTV)',
+          lesson: 'Cuando nos comparamos con los demás diciendo «aunque todos te fallen, yo jamás», caemos en la autoconfianza en lugar de depender de la gracia de Dios.'
         },
         {
-          badge: 'ESCENA 3 DE 6 • LUCAS 22:55-60 / JUAN 18:17-27',
-          icon: '🔥',
-          title: '3. Las Tres Negaciones junto al Fuego en el Patio',
-          whatHappened: 'En medio del frío de la noche, encendieron fuego en el patio y Pedro se sentó entre los guardias. Allí ocurrió lo que Jesús había anunciado: 1) Una criada lo vio a la luz del fuego y dijo: «También éste estaba con él», pero Pedro dijo: «Mujer, no lo conozco». 2) Poco después otro lo vio y dijo: «Tú también eres de ellos», y Pedro respondió: «Hombre, no lo soy». 3) Una hora más tarde, otros insistieron porque su acento de Galilea lo delataba (incluso un pariente de Malco lo reconoció), y Pedro negó por tercera vez diciendo: «Hombre, no sé lo que dices».',
-          quote: '«Entonces él comenzó a maldecir, y a jurar: No conozco al hombre. Y en seguida cantó el gallo.» (Mateo 26:74)',
-          lesson: 'El miedo a ser juzgado o arrestado hizo que el discípulo más valiente negara tres veces a su Maestro.'
-        },
-        {
-          badge: 'ESCENA 4 DE 6 • LUCAS 22:60-61',
+          badge: 'ESCENA 3 DE 7 • MARCOS 14:27-31 (NTV)',
           icon: '🐓',
-          title: '4. El Canto del Gallo y la Mirada de Jesús',
-          whatHappened: 'Mientras Pedro todavía estaba pronunciando la tercera negación, cantó el gallo en la madrugada de Jerusalén. En ese preciso instante, Jesús —que estaba siendo juzgado y maltratado— «se volvió y miró a Pedro». No fue una mirada de rechazo ni de rencor, sino una mirada llena de amor, dolor y verdad.',
-          quote: '«Entonces, vuelto el Señor, miró a Pedro; y Pedro se acordó de la palabra del Señor...» (Lucas 22:61)',
-          lesson: 'Aun en medio de su propio sufrimiento, Jesús no se olvidó de Pedro: una sola mirada suya bastó para tocar su conciencia.'
+          title: '3. La Advertencia Precisa: «Antes de que cante el gallo dos veces»',
+          whatHappened: 'El evangelio de Marcos nos muestra con cuánta precisión el Señor conocía cada detalle de esa noche: Jesús le advirtió a Pedro que antes de que el gallo cantara dos veces, él lo negaría tres veces. Pero Pedro, en lugar de humillarse y pedir fuerzas a Dios en oración, exclamó enfáticamente «¡No!» confiando en su propia valentía.',
+          quote: '«29 Pedro le dijo: —Aunque todos te abandonen, yo jamás lo haré. 30 Jesús respondió: —Te digo la verdad, Pedro: esta misma noche, antes de que cante el gallo dos veces, negarás tres veces que me conoces. 31 —¡No! —exclamó Pedro enfáticamente—. Aunque tenga que morir contigo, ¡jamás te negaré! Y los demás juraron lo mismo.» (Marcos 14:29-31 NTV)',
+          lesson: 'Las buenas intenciones y las palabras fuertes no bastan cuando llega la prueba si no estamos afirmados en la comunión con el Señor.'
         },
         {
-          badge: 'ESCENA 5 DE 6 • LUCAS 22:62',
+          badge: 'ESCENA 4 DE 7 • LUCAS 22:54-57 (NTV)',
+          icon: '🔥',
+          title: '4. Siguiendo de Lejos y la Primera Negación junto a la Fogata',
+          whatHappened: 'Cuando arrestaron a Jesús y lo llevaron a la casa del sumo sacerdote, Pedro «los siguió de lejos». En medio del patio, los guardias encendieron una fogata y Pedro se sentó con ellos tratando de pasar desapercibido. Allí, a la luz del fuego, una sirvienta lo miró fijamente y lo identificó como seguidor de Jesús, pero el temor pudo más que sus promesas.',
+          quote: '«54 Entonces lo arrestaron y lo llevaron a la casa del sumo sacerdote. Y Pedro los siguió de lejos. 55 Los guardias encendieron una fogata en medio del patio y se sentaron alrededor, y Pedro se sumó al grupo. 56 Una sirvienta lo vio a la luz de la fogata y comenzó a mirarlo fijamente. Por fin dijo: “Este hombre era uno de los seguidores de Jesús”. 57 Pero Pedro lo negó: “¡Mujer, ni siquiera lo conozco!”.» (Lucas 22:54-57 NTV)',
+          lesson: 'El peligro comienza cuando empezamos a seguir a Jesús «de lejos» y buscamos acomodarnos en el ambiente de quienes no lo honran.'
+        },
+        {
+          badge: 'ESCENA 5 DE 7 • LUCAS 22:58-60 (NTV)',
+          icon: '🗣️',
+          title: '5. La Segunda y Tercera Negación y el Canto del Gallo',
+          whatHappened: 'Una caída no corregida lleva a otra: después de un rato, alguien más lo reconoció y Pedro volvió a negarlo («¡No, hombre, no lo soy!»). Alrededor de una hora más tarde, otra persona insistió porque su condición y acento de galileo lo delataban. Cuando Pedro negó por tercera vez diciendo «¡Hombre, no sé de qué hablas!», inmediatamente, mientras aún tenía esas palabras en la boca, cantó el gallo.',
+          quote: '«58 Después de un rato, alguien más lo vio y dijo: —Seguramente tú eres uno de ellos. —¡No, hombre, no lo soy! —contestó. 59 Alrededor de una hora más tarde, otra persona insistió: “Seguro este es uno de ellos porque también es galileo”. 60 Pero Pedro dijo: “¡Hombre, no sé de qué hablas!”. Inmediatamente, mientras aún hablaba, el gallo cantó.» (Lucas 22:58-60 NTV)',
+          lesson: 'Todo lo que el Señor había dicho se cumplió al pie de la letra: Él conoce la verdad de nuestro corazón mejor que nosotros mismos.'
+        },
+        {
+          badge: 'ESCENA 6 DE 7 • LUCAS 22:61-62 (NTV)',
           icon: '💧',
-          title: '5. El Llanto Amargo y el Arrepentimiento Verdadero',
-          whatHappened: 'Al cruzarse con la mirada de Jesús y escuchar el canto del gallo, las palabras del Maestro resonaron en la mente de Pedro. Su orgullo se quebró por completo: salió inmediatamente del patio hacia la oscuridad de la noche y «lloró amargamente».',
-          quote: '«Y Pedro, saliendo fuera, lloró amargamente.» (Lucas 22:62)',
-          lesson: 'Ese llanto amargo fue el inicio de un arrepentimiento genuino que abrió la puerta a su transformación espiritual.'
+          title: '6. La Mirada del Señor y el Llanto Amargo de Pedro',
+          whatHappened: 'En ese preciso instante ocurrió el momento más conmovedor de aquella madrugada: en medio de sus acusadores, «el Señor se volvió y miró a Pedro». No fue una mirada de odio ni de desprecio, sino la mirada del Maestro que ya sabía que Pedro fallaría y aun así iba camino a la cruz para salvarlo. Las palabras de Jesús pasaron rápidamente por la mente de Pedro, y saliendo del patio, lloró amargamente.',
+          quote: '«61 En ese momento, el Señor se volvió y miró a Pedro. De repente, las palabras del Señor pasaron rápidamente por la mente de Pedro: “Mañana por la mañana, antes de que cante el gallo, negarás tres veces que me conoces”. 62 Y Pedro salió del patio, llorando amargamente.» (Lucas 22:61-62 NTV)',
+          lesson: 'La mirada de Jesús no es para hundirnos en desesperación, sino para quebrantar nuestro orgullo y llevarnos a un arrepentimiento genuino.'
         },
         {
-          badge: 'ESCENA 6 DE 6 • JUAN 21:15-19',
-          icon: '🌅',
-          title: '6. La Restauración de Pedro junto al Mar de Galilea',
-          whatHappened: 'La historia no terminó en derrota. Después de resucitar, Jesús buscó a Pedro en la orilla del mar de Galilea junto a unas brasas de fuego. Así como Pedro lo había negado tres veces junto al fuego, Jesús le preguntó tres veces con amor: «Simón, hijo de Jonás, ¿me amas?». En cada respuesta de Pedro («Sí, Señor; tú sabes que te amo»), Jesús lo perdonó y le devolvió su propósito: «Apacienta mis ovejas».',
-          quote: '«Le dijo la tercera vez: Simón, hijo de Jonás, ¿me amas?... Jesús le dijo: Apacienta mis ovejas.» (Juan 21:17)',
-          lesson: 'En Dios ningún error tiene la última palabra cuando hay arrepentimiento sincero: Jesús perdona, restaura y vuelve a confiar en nosotros.'
+          badge: 'ESCENA 7 DE 7 • APLICACIÓN A NUESTRA VIDA',
+          icon: '❤️‍🩹',
+          title: '7. El Señor ya lo sabía... y a veces nosotros también somos como Pedro',
+          whatHappened: '¿Por qué es tan importante recordar que el mismo Señor ya sabía que Pedro lo negaría? Porque muchas veces nosotros somos exactamente como Pedro: cuando todo está bien decimos con seguridad «Señor, yo jamás te fallaría», pero cuando enfrentamos presión, miedo al qué dirán o tentación, terminamos callando nuestra fe o actuando como si no lo conociéramos. La buena noticia es que Jesús ya conocía nuestra debilidad antes de llamarnos, y así como no desechó a Pedro sino que lo miró con amor y luego lo restauró en Galilea, hoy también nos tiende su mano para levantarnos.',
+          quote: '«Simón, hijo de Jonás, ¿me amas?... Señor, tú lo sabes todo; tú sabes que te amo. Jesús le dijo: Apacienta mis ovejas.» (Juan 21:17)',
+          lesson: 'Reconozcamos con humildad que sin Dios somos frágiles como Pedro, pero que en el amor y el perdón de Cristo siempre hay restauración para quien vuelve a Él de corazón.'
         }
       ];
     }

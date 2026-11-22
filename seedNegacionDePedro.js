@@ -2,104 +2,104 @@ const { connectionPromise, Activity, Question, Group, Subject, CourseAssignment 
 
 const negacionPedroQuestions = [
     {
-        q: "¿En qué momento anunció Jesús que Pedro lo negaría?",
+        q: "Según Juan 13:36-37 (NTV), cuando Simón Pedro le preguntó «Señor, ¿adónde vas?», ¿qué le contestó Jesús antes de que Pedro dijera que estaba dispuesto a morir por Él?",
         opts: [
-            "Durante la Última Cena, antes de salir hacia el monte de los Olivos",
-            "Cuando multiplicó los panes y los peces en Galilea",
-            "Al inicio de su ministerio en el río Jordán",
-            "Después de la resurrección camino a Emaús"
+            "«Ahora no puedes venir conmigo, pero me seguirás después»",
+            "«Ven conmigo ahora mismo al palacio del gobernador»",
+            "«Ya no volveremos a vernos en Galilea»",
+            "«Debes quedarte en el templo con los fariseos»"
         ],
-        correct: "Durante la Última Cena, antes de salir hacia el monte de los Olivos"
+        correct: "«Ahora no puedes venir conmigo, pero me seguirás después»"
     },
     {
-        q: "¿Cuántas veces dijo Jesús que Pedro lo negaría antes de que cantara el gallo?",
+        q: "En Mateo 26:31 (NTV) y Marcos 14:27 (NTV), Jesús sabía de antemano que todos lo abandonarían aquella noche. ¿Qué profecía de las Escrituras citó el Señor?",
         opts: [
-            "Tres veces",
-            "Dos veces",
-            "Siete veces",
-            "Una sola vez"
+            "«Dios golpeará al Pastor, y las ovejas del rebaño se dispersarán»",
+            "«El Pastor reunirá a todos los reyes de la tierra en Jerusalén»",
+            "«Las ovejas nunca tendrán temor en medio de la noche»",
+            "«Ninguno de mis seguidores tropezará jamás»"
         ],
-        correct: "Tres veces"
+        correct: "«Dios golpeará al Pastor, y las ovejas del rebaño se dispersarán»"
     },
     {
-        q: "¿Cuál fue la respuesta de Pedro cuando Jesús advirtió que todos se escandalizarían aquella noche?",
+        q: "A pesar de saber que lo abandonarían y que Pedro lo negaría, ¿qué promesa de esperanza les dio Jesús por adelantado en Mateo 26:32 y Marcos 14:28 (NTV)?",
         opts: [
-            "Aseguró con firmeza que estaba dispuesto a ir con Jesús a la cárcel y a la muerte",
-            "Guardó silencio y se retiró inmediatamente del aposento alto",
-            "Pidió a los demás discípulos que huyeran hacia Galilea",
-            "Dijo que no conocía el camino hacia el huerto de Getsemaní"
+            "«Sin embargo, después de ser levantado de los muertos, iré delante de ustedes a Galilea y allí los veré»",
+            "«No permitiré que ningún soldado entre al huerto de Getsemaní»",
+            "«Les enviaré doce legiones de ángeles para evitar el arresto»",
+            "«Me quedaré oculto en Betania durante cuarenta días»"
         ],
-        correct: "Aseguró con firmeza que estaba dispuesto a ir con Jesús a la cárcel y a la muerte"
+        correct: "«Sin embargo, después de ser levantado de los muertos, iré delante de ustedes a Galilea y allí los veré»"
     },
     {
-        q: "Tras el arresto de Jesús en Getsemaní, ¿cómo lo siguió Pedro y hasta dónde llegó?",
+        q: "¿Cómo reaccionaron Pedro y los demás discípulos en Mateo 26:33-35 (NTV) cuando Jesús les advirtió lo que iba a suceder?",
         opts: [
-            "Lo siguió de lejos hasta el patio de la casa del sumo sacerdote Caifás",
-            "Fue corriendo delante de los soldados hasta el templo de Belén",
-            "Se quedó esperando en el monte Sinaí junto a Juan el Bautista",
-            "Regresó inmediatamente a su barca en Capernaúm"
+            "Pedro insistió: «¡No! Aunque tenga que morir contigo, ¡jamás te negaré!», y los demás discípulos juraron lo mismo",
+            "Reconocieron humildemente su debilidad y pidieron perdón en ese instante",
+            "Guardaron silencio y decidieron no acompañar a Jesús al monte de los Olivos",
+            "Dijeron que preferían regresar a sus casas antes de que llegara la noche"
         ],
-        correct: "Lo siguió de lejos hasta el patio de la casa del sumo sacerdote Caifás"
+        correct: "Pedro insistió: «¡No! Aunque tenga que morir contigo, ¡jamás te negaré!», y los demás discípulos juraron lo mismo"
     },
     {
-        q: "¿Quién reconoció e interrogó a Pedro por primera vez mientras se calentaba junto al fuego?",
+        q: "Según el relato de Marcos 14:30 (NTV), ¿qué detalle específico mencionó Jesús en su predicción a Pedro?",
         opts: [
-            "Una criada del sumo sacerdote que lo vio sentado a la luz de la fogata",
-            "El gobernador romano Poncio Pilato",
-            "Un centurión romano en la puerta de la ciudad",
-            "Nicodemo, miembro del concilio"
+            "«Esta misma noche, antes de que cante el gallo dos veces, negarás tres veces que me conoces»",
+            "«Mañana al mediodía me negarás frente a Poncio Pilato»",
+            "«Antes de que salga el sol me negarás siete veces en el templo»",
+            "«Me negarás cuando estés navegando en el mar de Galilea»"
         ],
-        correct: "Una criada del sumo sacerdote que lo vio sentado a la luz de la fogata"
+        correct: "«Esta misma noche, antes de que cante el gallo dos veces, negarás tres veces que me conoces»"
     },
     {
-        q: "¿Por qué detalle reconocieron a Pedro la tercera vez los que estaban en el patio?",
+        q: "Según Lucas 22:54-55 (NTV), cuando arrestaron a Jesús y lo llevaron a la casa del sumo sacerdote, ¿qué hizo Pedro?",
         opts: [
-            "Por su manera de hablar y su acento de Galilea, y un pariente de Malco lo identificó",
-            "Porque llevaba escrita una inscripción en su manto",
-            "Porque portaba las redes de pesca en sus manos",
-            "Porque él mismo anunció su nombre en voz alta"
+            "Los siguió de lejos y luego se sumó al grupo de guardias que se sentaron alrededor de una fogata en medio del patio",
+            "Entró junto a Jesús a la sala del juicio para defenderlo públicamente",
+            "Huyó inmediatamente fuera de Jerusalén hacia el río Jordán",
+            "Se escondió dentro del aposento alto con las puertas cerradas"
         ],
-        correct: "Por su manera de hablar y su acento de Galilea, y un pariente de Malco lo identificó"
+        correct: "Los siguió de lejos y luego se sumó al grupo de guardias que se sentaron alrededor de una fogata en medio del patio"
     },
     {
-        q: "¿Qué ocurrió inmediatamente después de que Pedro negó por tercera vez conocer a Jesús?",
+        q: "En Lucas 22:56-57 (NTV), ¿cómo ocurrió la primera negación de Pedro?",
         opts: [
-            "Cantó el gallo y el Señor se volvió y miró a Pedro",
-            "Se produjo un eclipse sobre toda la región de Judea",
-            "Las puertas del patio se cerraron por completo",
-            "Los soldados liberaron a los demás discípulos"
+            "Una sirvienta lo vio a la luz de la fogata, lo miró fijamente y dijo: «Este hombre era uno de los seguidores de Jesús», pero Pedro negó: «¡Mujer, ni siquiera lo conozco!»",
+            "El sumo sacerdote le preguntó su nombre en la puerta del templo",
+            "Un soldado romano le quitó su manto en el camino a Getsemaní",
+            "Sus propios compañeros lo señalaron frente a la multitud"
         ],
-        correct: "Cantó el gallo y el Señor se volvió y miró a Pedro"
+        correct: "Una sirvienta lo vio a la luz de la fogata, lo miró fijamente y dijo: «Este hombre era uno de los seguidores de Jesús», pero Pedro negó: «¡Mujer, ni siquiera lo conozco!»"
     },
     {
-        q: "¿Cómo reaccionó Pedro al recordar las palabras de Jesús cuando escuchó cantar al gallo y vio la mirada del Señor?",
+        q: "Según Lucas 22:59-60 (NTV), alrededor de una hora más tarde, ¿por qué razón insistió otra persona en que Pedro era seguidor de Jesús, y qué sucedió mientras Pedro aún hablaba?",
         opts: [
-            "Salió afuera y lloró amargamente con profundo arrepentimiento",
-            "Se quedó dormido junto a la fogata del patio",
-            "Entró a discutir con los guardias del sumo sacerdote",
-            "Negó que el gallo hubiera cantado aquella madrugada"
+            "Insistió porque Pedro también era galileo; Pedro dijo «¡Hombre, no sé de qué hablas!» e inmediatamente, mientras aún hablaba, el gallo cantó",
+            "Lo reconocieron por sus sandalias y en ese momento comenzó a llover",
+            "Lo identificaron porque llevaba un rollo de las Escrituras en la mano",
+            "Lo reconocieron porque cantaba un salmo junto a la fogata"
         ],
-        correct: "Salió afuera y lloró amargamente con profundo arrepentimiento"
+        correct: "Insistió porque Pedro también era galileo; Pedro dijo «¡Hombre, no sé de qué hablas!» e inmediatamente, mientras aún hablaba, el gallo cantó"
     },
     {
-        q: "Después de resucitar, ¿cómo restauró Jesús a Pedro junto al mar de Galilea (Juan 21)?",
+        q: "Según Lucas 22:61-62 (NTV), ¿qué hizo el Señor apenas cantó el gallo y qué pasó en el corazón de Pedro?",
         opts: [
-            "Le preguntó tres veces «¿Me amas?» junto al fuego y le encomendó: «Apacienta mis ovejas»",
-            "Le pidió que escribiera tres cartas antes de volver a Jerusalén",
-            "Lo envió a construir un templo en la orilla del lago",
-            "Le entregó una corona frente a todos los pescadores"
+            "El Señor se volvió y miró a Pedro; las palabras de Jesús pasaron rápidamente por su mente y Pedro salió del patio llorando amargamente",
+            "El Señor le dio la espalda y Pedro se quedó sentado junto a la fogata",
+            "Pedro intentó justificarse delante de los guardias del patio",
+            "Los soldados expulsaron a Pedro del patio sin que él pudiera ver a Jesús"
         ],
-        correct: "Le preguntó tres veces «¿Me amas?» junto al fuego y le encomendó: «Apacienta mis ovejas»"
+        correct: "El Señor se volvió y miró a Pedro; las palabras de Jesús pasaron rápidamente por su mente y Pedro salió del patio llorando amargamente"
     },
     {
-        q: "¿Qué enseñanza fundamental nos deja lo que pasó en la negación y restauración de Pedro?",
+        q: "El Señor sabía de antemano que Pedro lo negaría, y sin embargo no lo desechó. ¿Por qué esta historia nos muestra que a veces nosotros también podemos ser como Pedro?",
         opts: [
-            "Que no debemos confiar solo en nuestras fuerzas, y que el amor de Jesús restaura a quien se arrepiente de corazón",
-            "Que los discípulos nunca enfrentaron momentos de temor o debilidad",
-            "Que la fe depende únicamente de la valentía humana sin necesidad de oración",
-            "Que un error impide para siempre servir a Dios y a los demás"
+            "Porque a veces prometemos ser fieles apoyados en nuestras propias fuerzas, pero ante el temor o la presión fallamos; aun así, Jesús ya nos conoce, nos mira con amor y nos restaura si nos arrepentimos",
+            "Porque solo los discípulos del primer siglo podían equivocarse y hoy nadie pasa por pruebas de fe",
+            "Porque basta con hacer grandes promesas verbales sin necesidad de orar ni depender de Dios",
+            "Porque cuando una persona falla una vez, Dios ya no vuelve a darle otra oportunidad"
         ],
-        correct: "Que no debemos confiar solo en nuestras fuerzas, y que el amor de Jesús restaura a quien se arrepiente de corazón"
+        correct: "Porque a veces prometemos ser fieles apoyados en nuestras propias fuerzas, pero ante el temor o la presión fallamos; aun así, Jesús ya nos conoce, nos mira con amor y nos restaura si nos arrepentimos"
     }
 ];
 
@@ -123,7 +123,7 @@ async function seedNegacionDePedro() {
         act = await Activity.create({
             title: 'La negación de Pedro',
             type: 'Taller',
-            theme: 'Clase Bíblica General',
+            theme: 'Clase Bíblica General (NTV)',
             group_id: null,
             target_groups: [],
             subject_id: cristianismoSub.id,
@@ -135,7 +135,7 @@ async function seedNegacionDePedro() {
     } else {
         act.subject_id = cristianismoSub.id;
         act.subject_name = 'Cristianismo';
-        act.theme = 'Clase Bíblica General';
+        act.theme = 'Clase Bíblica General (NTV)';
         act.group_id = null;
         act.target_groups = [];
         act.map_icon = '✝️';
@@ -163,7 +163,7 @@ async function seedNegacionDePedro() {
         });
     }
 
-    console.log(`✅ Clase y preguntas listas para "La negación de Pedro" (Sin asignación de aula, Materia: Cristianismo)`);
+    console.log(`✅ Clase y preguntas (NTV) listas para "La negación de Pedro" (Sin asignación de aula, Materia: Cristianismo)`);
 }
 
 if (require.main === module) {
